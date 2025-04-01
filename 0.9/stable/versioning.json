@@ -1,8 +1,8 @@
 {
-  "buildTime": "2025-04-01T15:20:42.041Z",
+  "buildTime": "2025-04-01T15:21:24.654Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.39",
-    "types": "1.0.0-alpha.39"
+    "toolchain": "1.0.0-alpha.46",
+    "types": "1.0.0-alpha.46"
   },
   "repository": {
     "name": "Template Extensions (0.9)",
