@@ -4,6 +4,7 @@ import {
   SourceManga,
   Tag,
   TagSection,
+  PagedResults, DiscoverSectionItem
 } from "@paperback/types";
 import {
   ContentRating,
@@ -150,5 +151,69 @@ export class Parser {
       });
     }
     return results;
+  }
+  
+  parseInTendenzaOggi($: any): Promise<PagedResults<DiscoverSectionItem>> {
+    const trending: DiscoverSectionItem[] = []
+    const arrTrending = $('.entry.vertical').toArray()
+    for (const obj of arrTrending) {
+      const tmp = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ['null'])[0] ?? ''
+      const id = tmp.split("/")[0] ?? ""
+      const image = $('a img', obj).attr('src') ?? ''
+      const title = $('.manga-title', obj).text().trim()
+      trending.push({
+        metadata: undefined,
+        type:'featuredCarouselItem',
+        contentRating: undefined,
+        imageUrl: image,
+        mangaId: id,
+        title: title
+      })
+    }
+    return { items: trending }
+  }
+
+  parseInTendenzaMese($: any): Promise<PagedResults<DiscoverSectionItem>> {
+    const arrHotTitle = $('.col-12 .top-wrapper .entry').toArray()
+    const hot: DiscoverSectionItem[] = []
+    for (const obj of arrHotTitle) {
+      const tmp = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ['null'])[0] ?? ''
+      const id = tmp.split("/")[0] ?? ""
+      const image = $('.img-fluid', obj).attr('src') ?? ''
+      const title = $('.name', obj).text().trim()
+      hot.push({
+        metadata: undefined,
+        type:'prominentCarouselItem',
+        contentRating: undefined,
+        imageUrl: image,
+        mangaId: id,
+        title: title
+      })
+    }
+    return { items: hot }
+  }
+
+  parseLastAddedSetcion($: any): Promise<PagedResults<DiscoverSectionItem>> {
+    const arrLatest = $('.col-sm-12.col-md-8.col-xl-9 .comics-grid .entry').toArray()
+    const latest: DiscoverSectionItem[] = []
+    for (const obj of arrLatest) {
+      const tmp = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ['null'])[0] ?? ''
+      const id = tmp.split("/")[0] ?? ''
+      const title = $('a', obj).attr('title') ?? ''
+      const image = $('a img', obj).attr('src') ?? ''
+      const sub = $('.d-flex.flex-wrap.flex-row a', obj).first().attr('title') ?? ''
+      const chapterId = $('a xanh', obj).attr('title') ?? ''
+      latest.push({
+        chapterId: chapterId,
+        metadata: undefined,
+        type:'chapterUpdatesCarouselItem',
+        contentRating: undefined,
+        imageUrl: image,
+        mangaId: id,
+        title: title,
+        subtitle: sub
+      })
+    }
+    return { items: latest }
   }
 }

@@ -1,3 +1,5 @@
+import {parser} from "typescript-eslint";
+
 ;
 
 // TODO:
@@ -67,75 +69,6 @@ export class MangaWorldExtension
         return new SettingsForm();
     }
 
-    async getDiscoverSections(): Promise<DiscoverSection[]> {
-        // First template discover section, gets populated by the getDiscoverSectionItems method
-        const discover_section_template1: DiscoverSection = {
-            id: "discover-section-template1",
-            title: "Discover Section Template 1",
-            subtitle: "This is a template",
-            type: DiscoverSectionType.featured,
-        };
-
-        // Second template discover section, gets populated by the getDiscoverSectionItems method
-        const discover_section_template2: DiscoverSection = {
-            id: "discover-section-template2",
-            title: "Discover Section Template 2",
-            subtitle: "This is another template",
-            type: DiscoverSectionType.prominentCarousel,
-        };
-
-        // Second template discover section, gets populated by the getDiscoverSectionItems method
-        const discover_section_template3: DiscoverSection = {
-            id: "discover-section-template3",
-            title: "Discover Section Template 3",
-            subtitle: "This is yet another template",
-            type: DiscoverSectionType.simpleCarousel,
-        };
-
-        return [
-            discover_section_template1,
-            discover_section_template2,
-            discover_section_template3,
-        ];
-    }
-
-    // Populates both the discover sections
-    async getDiscoverSectionItems(
-        section: DiscoverSection,
-        metadata: number | undefined,
-    ): Promise<PagedResults<DiscoverSectionItem>> {
-
-        void metadata;
-
-        let i: number = 0;
-        let j: number = 1;
-        let type:
-            | "featuredCarouselItem"
-            | "simpleCarouselItem"
-            | "prominentCarouselItem"
-            | "chapterUpdatesCarouselItem"
-            | "genresCarouselItem";
-        switch (section.id) {
-            case "discover-section-template1":
-                j = 2;
-                type = "featuredCarouselItem";
-                break;
-            case "discover-section-template2":
-                i = 0;
-                j = 2;
-                type = "prominentCarouselItem";
-                break;
-            case "discover-section-template3":
-                type = "simpleCarouselItem";
-                break;
-        }
-
-        return {
-            items: [],
-        };
-    }
-
-    // Populate search filters
     async getSearchFilters(): Promise<SearchFilter[]> {
         return [
             {
@@ -236,6 +169,44 @@ export class MangaWorldExtension
                 }),
             method: "GET",
         });
+    }
+    async getDiscoverSections(): Promise<DiscoverSection[]> {
+        return [
+            {
+                id: "mese_section",
+                title: "Manga del Mese",
+                type: DiscoverSectionType.featured,
+            },
+            {
+                id: "updated_section",
+                title: "Recently Updated",
+                type: DiscoverSectionType.chapterUpdates,
+            },
+            {
+                id: "popular_section",
+                title: "In Tendenza",
+                type: DiscoverSectionType.featured,
+            }
+        ];
+    }
+    async getDiscoverSectionItems(section: DiscoverSection,
+metadata: unknown | undefined): Promise<PagedResults<DiscoverSectionItem>> {
+        const data = (await Application.scheduleRequest({
+            url: `${this.baseUrl}`,
+            method: "GET",
+        }))[1]
+        const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+        let type = "simpleCarouselItem"
+        switch (section.id) {
+            case "mese_section":
+                return await this.parser.parseInTendenzaMese($)
+            case "updated_section":
+                return await this.parser.parseLastAddedSetcion($)
+            case "popular_section":
+                return await this.parser.parseInTendenzaOggi($);
+            default:
+                return { items: [] }
+        }
     }
 }
 
