@@ -64,8 +64,7 @@ export class Parser {
         artist: artist,
         thumbnailUrl: image,
         synopsis: desc,
-        primaryTitle: title[0],
-        secondaryTitles: title[1] ? title.slice(1) : [],
+        primaryTitle: title,
         contentRating: hentai ? ContentRating.ADULT : ContentRating.EVERYONE,
         status: status,
         author: author,
@@ -152,7 +151,7 @@ export class Parser {
     }
     return results;
   }
-  
+
   parseInTendenzaOggi($: any): Promise<PagedResults<DiscoverSectionItem>> {
     const trending: DiscoverSectionItem[] = []
     const arrTrending = $('.entry.vertical').toArray()
@@ -192,7 +191,20 @@ export class Parser {
     }
     return { items: hot }
   }
-
+  getDate(dataString: string): Date {
+    const mesi: { [key: string]: number } = {
+      "Gennaio": 0, "Febbraio": 1, "Marzo": 2, "Aprile": 3,
+      "Maggio": 4, "Giugno": 5, "Luglio": 6, "Agosto": 7,
+      "Settembre": 8, "Ottobre": 9, "Novembre": 10, "Dicembre": 11
+    };
+    const oggi = new Date(); // Se la stringa è errata, restituisci oggi
+    const parts = dataString.split(" ");
+    if (parts.length > 3) return new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDay()) // Controlla che ci siano esattamente due elementi
+    const mese = parseInt(parts[0], 10);
+    const giorno = mesi[parts[1]];
+    if (isNaN(giorno) || mese === undefined) return oggi; // Se non è valido, restituisci oggi
+    return new Date(oggi.getFullYear(),giorno,mese)
+  }
   parseLastAddedSetcion($: any): Promise<PagedResults<DiscoverSectionItem>> {
     const arrLatest = $('.col-sm-12.col-md-8.col-xl-9 .comics-grid .entry').toArray()
     const latest: DiscoverSectionItem[] = []
@@ -203,8 +215,10 @@ export class Parser {
       const image = $('a img', obj).attr('src') ?? ''
       const sub = $('.d-flex.flex-wrap.flex-row a', obj).first().attr('title') ?? ''
       const chapterId = $('a xanh', obj).attr('title') ?? ''
+      const addedDate = $('i.ml-auto.mt-auto', obj).first().text().trimEnd()
       latest.push({
-        chapterId: chapterId,
+        chapterId: '', //todo
+        publishDate: this.getDate(addedDate),
         metadata: undefined,
         type:'chapterUpdatesCarouselItem',
         contentRating: undefined,
