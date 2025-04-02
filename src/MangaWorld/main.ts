@@ -87,12 +87,15 @@ export class MangaWorldExtension
         query: SearchQuery,
         metadata: any,
     ): Promise<PagedResults<SearchResultItem>> {
+        let page = metadata?.page ?? 1
+        if (page == -1) return { items: [] }
         if (!query.title) return { items: [] }
         const request = await this.constructSearchRequest(0, query)
         const $ = cheerio.load(Application.arrayBufferToUTF8String(request[1]));
         let manga = this.parser.parseSearchResults($)
         page++
         if (manga.length < 16) page = -1;
+        return {items: manga, metadata};
     }
 
     // Populates the title details
