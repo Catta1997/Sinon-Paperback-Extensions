@@ -16981,8 +16981,7 @@ var source = (() => {
           artist,
           thumbnailUrl: image,
           synopsis: desc,
-          primaryTitle: title[0],
-          secondaryTitles: title[1] ? title.slice(1) : [],
+          primaryTitle: title,
           contentRating: hentai ? import_lib.ContentRating.ADULT : import_lib.ContentRating.EVERYONE,
           status,
           author,
@@ -17098,6 +17097,29 @@ var source = (() => {
       }
       return { items: hot };
     }
+    getDate(dataString) {
+      const mesi = {
+        "Gennaio": 0,
+        "Febbraio": 1,
+        "Marzo": 2,
+        "Aprile": 3,
+        "Maggio": 4,
+        "Giugno": 5,
+        "Luglio": 6,
+        "Agosto": 7,
+        "Settembre": 8,
+        "Ottobre": 9,
+        "Novembre": 10,
+        "Dicembre": 11
+      };
+      const oggi = /* @__PURE__ */ new Date();
+      const parts = dataString.split(" ");
+      if (parts.length > 3) return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
+      const mese = parseInt(parts[0], 10);
+      const giorno = mesi[parts[1]];
+      if (isNaN(giorno) || mese === void 0) return oggi;
+      return new Date(oggi.getFullYear(), giorno, mese);
+    }
     parseLastAddedSetcion($2) {
       const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
       const latest = [];
@@ -17108,8 +17130,11 @@ var source = (() => {
         const image = $2("a img", obj).attr("src") ?? "";
         const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
         const chapterId = $2("a xanh", obj).attr("title") ?? "";
+        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
         latest.push({
-          chapterId,
+          chapterId: "",
+          //todo
+          publishDate: this.getDate(addedDate),
           metadata: void 0,
           type: "chapterUpdatesCarouselItem",
           contentRating: void 0,
