@@ -17053,8 +17053,7 @@ var source = (() => {
         results.push({
           imageUrl: image,
           title,
-          mangaId: id,
-          subtitle: void 0
+          mangaId: id
         });
       }
       return results;
@@ -17081,21 +17080,41 @@ var source = (() => {
     parseInTendenzaMese($2) {
       const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
       const hot = [];
+      const newTitle = [];
       for (const obj of arrHotTitle) {
         const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).text().trim();
-        hot.push({
-          metadata: void 0,
-          type: "prominentCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title
-        });
+        if (hot.length < 10) {
+          hot.push({
+            metadata: void 0,
+            type: "prominentCarouselItem",
+            contentRating: void 0,
+            imageUrl: image,
+            mangaId: id,
+            title
+          });
+          continue;
+        }
+        if (newTitle.length < 5) {
+          newTitle.push({
+            chapterId: "",
+            publishDate: this.getDate($2(".font-weight-bold").next().text()),
+            subtitle: "",
+            metadata: void 0,
+            type: "chapterUpdatesCarouselItem",
+            contentRating: void 0,
+            imageUrl: image,
+            mangaId: id,
+            title
+          });
+        }
       }
-      return { items: hot };
+      return [
+        { items: hot },
+        { items: newTitle }
+      ];
     }
     getDate(dataString) {
       const mesi = {
@@ -17145,6 +17164,25 @@ var source = (() => {
         });
       }
       return { items: latest };
+    }
+    parseLastAddedMangaSetcion($2) {
+      const arrNewTitle = $2(".col-12 .top-wrapper .entry").toArray();
+      const newTitle = [];
+      for (const obj of arrNewTitle) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const image = $2(".img-fluid", obj).attr("src") ?? "";
+        const title = $2(".name", obj).text().trim();
+        newTitle.push({
+          metadata: void 0,
+          type: "prominentCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title
+        });
+      }
+      return { items: newTitle };
     }
   };
 
@@ -17278,16 +17316,12 @@ var source = (() => {
     }
     // Populates search
     async getSearchResults(query, metadata) {
-      let page = metadata?.page ?? 1;
-      if (page == -1) return { items: [] };
       if (!query.title) return { items: [] };
-      const request = this.constructSearchRequest(page, query);
-      const data2 = (await Application.scheduleRequest(request))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      const manga = this.parser.parseSearchResults($2);
+      const request = await this.constructSearchRequest(0, query);
+      const $2 = load(Application.arrayBufferToUTF8String(request[1]));
+      let manga = this.parser.parseSearchResults($2);
       page++;
       if (manga.length < 16) page = -1;
-      return { items: manga, metadata };
     }
     // Populates the title details
     async getMangaDetails(mangaId) {
@@ -17337,9 +17371,9 @@ var source = (() => {
         }
       });
     }
-    constructSearchRequest(page, query) {
+    constructSearchRequest(page2, query) {
       return Application.scheduleRequest({
-        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page.toString()).buildUrl({
+        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page2.toString()).buildUrl({
           addTrailingSlash: true,
           includeUndefinedParameters: false
         }),
@@ -17355,16 +17389,41 @@ var source = (() => {
         },
         {
           id: "updated_section",
-          title: "Recently Updated",
+          title: "Aggiornati di Recente",
           type: import_types3.DiscoverSectionType.chapterUpdates
         },
         {
           id: "popular_section",
           title: "In Tendenza",
           type: import_types3.DiscoverSectionType.featured
+        },
+        {
+          id: "new_manga_section",
+          title: "Nuove Aggiunte",
+          type: import_types3.DiscoverSectionType.simpleCarousel
         }
       ];
     }
+    /*
+        getTagSections($): DiscoverSection[] {
+            const uniqueGroups = new Set<string>();
+            const sections: DiscoverSection[] = [];
+    
+            for (const tag of this.parser.parseTags($, this.baseUrl)) {
+                const group = tag.data.attributes.group;
+    
+                if (!uniqueGroups.has(group)) {
+                    uniqueGroups.add(group);
+                    sections.push({
+                        id: group,
+                        title: group.charAt(0).toUpperCase() + group.slice(1),
+                        type: DiscoverSectionType.genres,
+                    });
+                }
+            }
+            return sections;
+        }
+        */
     async getDiscoverSectionItems(section, metadata) {
       const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}`,
@@ -17372,13 +17431,16 @@ var source = (() => {
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       let type = "simpleCarouselItem";
+      const mangas = await this.parser.parseInTendenzaMese($2);
       switch (section.id) {
         case "mese_section":
-          return await this.parser.parseInTendenzaMese($2);
-        case "updated_section":
-          return await this.parser.parseLastAddedSetcion($2);
+          return mangas[0];
         case "popular_section":
           return await this.parser.parseInTendenzaOggi($2);
+        case "updated_section":
+          return await this.parser.parseLastAddedSetcion($2);
+        case "new_manga_section":
+          return mangas[1];
         default:
           return { items: [] };
       }
