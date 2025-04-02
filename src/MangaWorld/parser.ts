@@ -1,0 +1,154 @@
+import {
+  Chapter,
+  ChapterDetails,
+  SourceManga,
+  Tag,
+  TagSection,
+} from "@paperback/types";
+import {
+  ContentRating,
+  MangaInfo,
+  SearchResultItem,
+} from "@paperback/types/lib";
+
+export class Parser {
+  parseMangaDetails($: any, mangaId: string): SourceManga {
+    const title: string = $(".name.bigger").text().trim() ?? ""
+    const image: any = $(".thumb.mb-3.text-center img").attr("src") ?? ""
+    const desc: string = $("#noidungm").text().trim() ?? ""
+    let hentai = false
+    const artists: string[] = []
+    const authors: string[] = []
+    const data = {
+      genre: [] as string[],
+      state: "",
+    };
+    for (const obj of $(".meta-data.row.px-1 .col-12").toArray()) {
+      const text = $(obj).text().trim();
+      if (text.includes("Stato")) {
+        const stateLink = $(obj).find("a").first();
+        if (stateLink.length) data.state = stateLink.text().trim();
+      } else if (text.includes("Artist")) {
+        $(obj)
+          .find("a")
+          .each((_: any, e: any) => artists.push($(e).text().trim()));
+      } else if (text.includes("Autor")) {
+        $(obj)
+          .find("a")
+          .each((_: any, e: any) => authors.push($(e).text().trim()));
+      } else if (text.includes("Gener")) {
+        $(obj)
+          .find("a")
+          .each((_: any, e: any) => data.genre.push($(e).text().trim()));
+      }
+    }
+
+    const author = authors.join(", ");
+    const artist = artists.join(", ");
+    const status = data.state;
+    const arrayTags: Tag[] = [];
+
+    for (const tag in data.genre) {
+      if (["ADULTI", "SMUT", "MATURO", "HENTAI"].includes(tag.toUpperCase()))
+        hentai = true;
+      if (!tag) continue;
+      arrayTags.push({ title: tag, id: tag });
+    }
+    const tagSections: TagSection[] = [
+      { id: "0", title: "genres", tags: arrayTags },
+    ];
+    return {
+      mangaId: mangaId,
+      mangaInfo: {
+        artist: artist,
+        thumbnailUrl: image,
+        synopsis: desc,
+        primaryTitle: title[0],
+        secondaryTitles: title[1] ? title.slice(1) : [],
+        contentRating: hentai ? ContentRating.ADULT : ContentRating.EVERYONE,
+        status: status,
+        author: author,
+        tagGroups: tagSections,
+      } as MangaInfo,
+    } as SourceManga;
+  }
+
+  parseChapters($: any, sourceManga: SourceManga): Chapter[] {
+    const chapters: Chapter[] = [];
+    const arrChapters = $(".chapter").toArray().reverse();
+    for (const item of arrChapters) {
+      const href = $("a", item).attr("href") ?? "";
+      const regex = /\/manga\/\d+\/([^/]+\/read\/[a-zA-Z0-9]+)/;
+      const match = href.match(regex);
+      const extractedPart = match ? match[1] : "";
+      const id = extractedPart.replace("/read/", "_read_");
+      const name = $("a", item).attr("title") ?? "";
+      const chapNum =
+        Number($(".d-inline-block", item).text().split(" ")[1]) ?? -1;
+      chapters.push({
+        chapterId: id,
+        sourceManga: sourceManga,
+        langCode: "it",
+        chapNum: chapNum,
+        title: name,
+      });
+    }
+    return chapters;
+  }
+
+  parseChapterDetails($: any, mangaId: string, id: string): ChapterDetails {
+    const pages: string[] = [];
+    for (const item of $(
+      ".col-12.text-center.position-relative img",
+    ).toArray()) {
+      const imageUrl = $(item).attr("src");
+      if (!imageUrl) continue;
+      pages.push(imageUrl.trim());
+    }
+    return {
+      id: id,
+      mangaId: mangaId,
+      pages: pages,
+    };
+  }
+
+  parseTags($: any, baseUrl: any): TagSection[] {
+    const genres: Tag[] = [];
+    let first_label = "";
+    let i = 0;
+    for (const item of $(
+      ".dropdown-menu.dropdown-multicol .dropdown-item",
+    ).toArray()) {
+      const id =
+        $(item).attr("href")?.replace(`${baseUrl}/archive?genre=`, "") ?? "";
+
+      const label = $(item).text().trim();
+      if (i == 0) first_label = label;
+      if (label == first_label && i > 0) break;
+
+      genres.push({ title: label, id: id });
+      i++;
+    }
+    return [{ id: "genres", title: "genres", tags: genres }];
+  }
+
+  parseSearchResults($: any): SearchResultItem[] {
+    const results: SearchResultItem[] = [];
+    for (const item of $(".comics-grid .entry").toArray()) {
+      const tmp =
+        (($("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? [
+          "null",
+        ])[0] ?? "";
+      const id = tmp.split("/")[0] ?? "";
+      const title = $("a", item).attr("title") ?? "";
+      const image = $("a img", item).attr("src") ?? "";
+      results.push({
+        imageUrl: image,
+        title: title,
+        mangaId: id,
+        subtitle: undefined,
+      });
+    }
+    return results;
+  }
+}
