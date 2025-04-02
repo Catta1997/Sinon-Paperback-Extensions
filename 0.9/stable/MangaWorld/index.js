@@ -17060,6 +17060,67 @@ var source = (() => {
       }
       return results;
     }
+    parseInTendenzaOggi($2) {
+      const trending = [];
+      const arrTrending = $2(".entry.vertical").toArray();
+      for (const obj of arrTrending) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const image = $2("a img", obj).attr("src") ?? "";
+        const title = $2(".manga-title", obj).text().trim();
+        trending.push({
+          metadata: void 0,
+          type: "featuredCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title
+        });
+      }
+      return { items: trending };
+    }
+    parseInTendenzaMese($2) {
+      const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
+      const hot = [];
+      for (const obj of arrHotTitle) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const image = $2(".img-fluid", obj).attr("src") ?? "";
+        const title = $2(".name", obj).text().trim();
+        hot.push({
+          metadata: void 0,
+          type: "prominentCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title
+        });
+      }
+      return { items: hot };
+    }
+    parseLastAddedSetcion($2) {
+      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
+      const latest = [];
+      for (const obj of arrLatest) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const title = $2("a", obj).attr("title") ?? "";
+        const image = $2("a img", obj).attr("src") ?? "";
+        const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
+        const chapterId = $2("a xanh", obj).attr("title") ?? "";
+        latest.push({
+          chapterId,
+          metadata: void 0,
+          type: "chapterUpdatesCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title,
+          subtitle: sub
+        });
+      }
+      return { items: latest };
+    }
   };
 
   // src/MangaWorld/SettingsForm.ts
@@ -17176,56 +17237,6 @@ var source = (() => {
     async getSettingsForm() {
       return new SettingsForm();
     }
-    async getDiscoverSections() {
-      const discover_section_template1 = {
-        id: "discover-section-template1",
-        title: "Discover Section Template 1",
-        subtitle: "This is a template",
-        type: import_types3.DiscoverSectionType.featured
-      };
-      const discover_section_template2 = {
-        id: "discover-section-template2",
-        title: "Discover Section Template 2",
-        subtitle: "This is another template",
-        type: import_types3.DiscoverSectionType.prominentCarousel
-      };
-      const discover_section_template3 = {
-        id: "discover-section-template3",
-        title: "Discover Section Template 3",
-        subtitle: "This is yet another template",
-        type: import_types3.DiscoverSectionType.simpleCarousel
-      };
-      return [
-        discover_section_template1,
-        discover_section_template2,
-        discover_section_template3
-      ];
-    }
-    // Populates both the discover sections
-    async getDiscoverSectionItems(section, metadata) {
-      void metadata;
-      let i = 0;
-      let j = 1;
-      let type;
-      switch (section.id) {
-        case "discover-section-template1":
-          j = 2;
-          type = "featuredCarouselItem";
-          break;
-        case "discover-section-template2":
-          i = 0;
-          j = 2;
-          type = "prominentCarouselItem";
-          break;
-        case "discover-section-template3":
-          type = "simpleCarouselItem";
-          break;
-      }
-      return {
-        items: []
-      };
-    }
-    // Populate search filters
     async getSearchFilters() {
       return [
         {
@@ -17309,6 +17320,43 @@ var source = (() => {
         }),
         method: "GET"
       });
+    }
+    async getDiscoverSections() {
+      return [
+        {
+          id: "mese_section",
+          title: "Manga del Mese",
+          type: import_types3.DiscoverSectionType.featured
+        },
+        {
+          id: "updated_section",
+          title: "Recently Updated",
+          type: import_types3.DiscoverSectionType.chapterUpdates
+        },
+        {
+          id: "popular_section",
+          title: "In Tendenza",
+          type: import_types3.DiscoverSectionType.featured
+        }
+      ];
+    }
+    async getDiscoverSectionItems(section, metadata) {
+      const data2 = (await Application.scheduleRequest({
+        url: `${this.baseUrl}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      let type = "simpleCarouselItem";
+      switch (section.id) {
+        case "mese_section":
+          return await this.parser.parseInTendenzaMese($2);
+        case "updated_section":
+          return await this.parser.parseLastAddedSetcion($2);
+        case "popular_section":
+          return await this.parser.parseInTendenzaOggi($2);
+        default:
+          return { items: [] };
+      }
     }
   };
   var MangaWorld = new MangaWorldExtension();
