@@ -145,8 +145,7 @@ export class Parser {
       results.push({
         imageUrl: image,
         title: title,
-        mangaId: id,
-        subtitle: undefined,
+        mangaId: id
       });
     }
     return results;
@@ -172,24 +171,44 @@ export class Parser {
     return { items: trending }
   }
 
-  parseInTendenzaMese($: any): Promise<PagedResults<DiscoverSectionItem>> {
+  parseInTendenzaMese($: any): [Promise<PagedResults<DiscoverSectionItem>>] {
     const arrHotTitle = $('.col-12 .top-wrapper .entry').toArray()
     const hot: DiscoverSectionItem[] = []
+    const newTitle: DiscoverSectionItem[] = []
     for (const obj of arrHotTitle) {
       const tmp = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ['null'])[0] ?? ''
       const id = tmp.split("/")[0] ?? ""
       const image = $('.img-fluid', obj).attr('src') ?? ''
       const title = $('.name', obj).text().trim()
-      hot.push({
-        metadata: undefined,
-        type:'prominentCarouselItem',
-        contentRating: undefined,
-        imageUrl: image,
-        mangaId: id,
-        title: title
-      })
+      if (hot.length < 10) {
+        hot.push({
+          metadata: undefined,
+          type:'prominentCarouselItem',
+          contentRating: undefined,
+          imageUrl: image,
+          mangaId: id,
+          title: title
+        })
+        continue
+      }
+      if (newTitle.length < 5) {
+        newTitle.push({
+          chapterId: "",
+          publishDate: this.getDate($('.font-weight-bold').next().text()),
+          subtitle: "",
+          metadata: undefined,
+          type:'chapterUpdatesCarouselItem',
+          contentRating: undefined,
+          imageUrl: image,
+          mangaId: id,
+          title: title
+        })
+      }
     }
-    return { items: hot }
+    return[
+      { items: hot },
+      { items: newTitle }
+    ]
   }
   getDate(dataString: string): Date {
     const mesi: { [key: string]: number } = {
@@ -229,5 +248,24 @@ export class Parser {
       })
     }
     return { items: latest }
+  }
+  parseLastAddedMangaSetcion($: any): Promise<PagedResults<DiscoverSectionItem>> {
+    const arrNewTitle = $('.col-12 .top-wrapper .entry').toArray()
+    const newTitle: DiscoverSectionItem[] = []
+    for (const obj of arrNewTitle) {
+      const tmp = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ['null'])[0] ?? ''
+      const id = tmp.split("/")[0] ?? ""
+      const image = $('.img-fluid', obj).attr('src') ?? ''
+      const title = $('.name', obj).text().trim()
+      newTitle.push({
+        metadata: undefined,
+        type:'prominentCarouselItem',
+        contentRating: undefined,
+        imageUrl: image,
+        mangaId: id,
+        title: title
+      })
+    }
+    return { items: newTitle }
   }
 }

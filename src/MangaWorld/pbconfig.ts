@@ -1,7 +1,7 @@
 import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "0.3.1",
+    version: "0.6.1",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "icon.png",
@@ -12,12 +12,13 @@ export default {
         SourceIntents.MANGA_CHAPTERS,
         SourceIntents.DISCOVER_SECIONS,
         SourceIntents.MANGA_SEARCH,
+        SourceIntents.MANGA_PROGRESS
     ],
     badges: [],
     developers: [
         {
-            name: "Paperback Community",
-            website: "https://github.com/paperback-community",
+            name: "Catta1997",
+            website: "https://github.com/Catta1997",
         },
     ],
 } satisfies SourceInfo;

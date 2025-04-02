@@ -1,7 +1,5 @@
 import {parser} from "typescript-eslint";
 
-;
-
 // TODO:
 // - Add the English name to the title view
 // - Add additional info to the title view
@@ -89,16 +87,12 @@ export class MangaWorldExtension
         query: SearchQuery,
         metadata: any,
     ): Promise<PagedResults<SearchResultItem>> {
-        let page = metadata?.page ?? 1;
-        if (page == -1) return { items: [] };
-        if (!query.title) return { items: [] };
-        const request = this.constructSearchRequest(page, query);
-        const data = (await Application.scheduleRequest(request))[1];
-        const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const manga = this.parser.parseSearchResults($);
-        page++;
+        if (!query.title) return { items: [] }
+        const request = await this.constructSearchRequest(0, query)
+        const $ = cheerio.load(Application.arrayBufferToUTF8String(request[1]));
+        let manga = this.parser.parseSearchResults($)
+        page++
         if (manga.length < 16) page = -1;
-        return { items: manga, metadata: metadata };
     }
 
     // Populates the title details
@@ -168,7 +162,7 @@ export class MangaWorldExtension
                     includeUndefinedParameters: false,
                 }),
             method: "GET",
-        });
+        })
     }
     async getDiscoverSections(): Promise<DiscoverSection[]> {
         return [
@@ -179,16 +173,41 @@ export class MangaWorldExtension
             },
             {
                 id: "updated_section",
-                title: "Recently Updated",
+                title: "Aggiornati di Recente",
                 type: DiscoverSectionType.chapterUpdates,
             },
             {
                 id: "popular_section",
                 title: "In Tendenza",
                 type: DiscoverSectionType.featured,
+            },
+            {
+                id: "new_manga_section",
+                title: "Nuove Aggiunte",
+                type: DiscoverSectionType.simpleCarousel,
             }
         ];
     }
+    /*
+    getTagSections($): DiscoverSection[] {
+        const uniqueGroups = new Set<string>();
+        const sections: DiscoverSection[] = [];
+
+        for (const tag of this.parser.parseTags($, this.baseUrl)) {
+            const group = tag.data.attributes.group;
+
+            if (!uniqueGroups.has(group)) {
+                uniqueGroups.add(group);
+                sections.push({
+                    id: group,
+                    title: group.charAt(0).toUpperCase() + group.slice(1),
+                    type: DiscoverSectionType.genres,
+                });
+            }
+        }
+        return sections;
+    }
+    */
     async getDiscoverSectionItems(section: DiscoverSection,
 metadata: unknown | undefined): Promise<PagedResults<DiscoverSectionItem>> {
         const data = (await Application.scheduleRequest({
@@ -197,13 +216,16 @@ metadata: unknown | undefined): Promise<PagedResults<DiscoverSectionItem>> {
         }))[1]
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         let type = "simpleCarouselItem"
+        const mangas: [Promise<PagedResults<DiscoverSectionItem>>] = await this.parser.parseInTendenzaMese($)
         switch (section.id) {
             case "mese_section":
-                return await this.parser.parseInTendenzaMese($)
-            case "updated_section":
-                return await this.parser.parseLastAddedSetcion($)
+                return mangas[0]
             case "popular_section":
                 return await this.parser.parseInTendenzaOggi($);
+            case "updated_section":
+                return await this.parser.parseLastAddedSetcion($)
+            case "new_manga_section":
+                return mangas[1]
             default:
                 return { items: [] }
         }
