@@ -17316,12 +17316,15 @@ var source = (() => {
     }
     // Populates search
     async getSearchResults(query, metadata) {
+      let page = metadata?.page ?? 1;
+      if (page == -1) return { items: [] };
       if (!query.title) return { items: [] };
       const request = await this.constructSearchRequest(0, query);
       const $2 = load(Application.arrayBufferToUTF8String(request[1]));
       let manga = this.parser.parseSearchResults($2);
       page++;
       if (manga.length < 16) page = -1;
+      return { items: manga, metadata };
     }
     // Populates the title details
     async getMangaDetails(mangaId) {
@@ -17371,9 +17374,9 @@ var source = (() => {
         }
       });
     }
-    constructSearchRequest(page2, query) {
+    constructSearchRequest(page, query) {
       return Application.scheduleRequest({
-        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page2.toString()).buildUrl({
+        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page.toString()).buildUrl({
           addTrailingSlash: true,
           includeUndefinedParameters: false
         }),
