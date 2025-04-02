@@ -61,13 +61,12 @@ export class Parser {
 		const status = data.state;
 		const arrayTags: Tag[] = [];
 
-		for (const tag in data.genre) {
-			if (!tag) continue;
-			arrayTags.push({ title: tag, id: tag });
+		for (const tag of data.genre) {
+			arrayTags.push({ title: tag.toString(), id: "generi" });
 		}
 		let rating = this.getRating(arrayTags.map(tag => tag.title))
 		const tagSections: TagSection[] = [
-			{ id: "0", title: "genres", tags: arrayTags },
+			{ id: "generi", title: "genres", tags: arrayTags },
 		];
 		return {
 			mangaId: mangaId,
