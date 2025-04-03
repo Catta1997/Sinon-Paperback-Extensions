@@ -3059,9 +3059,11 @@ var source = (() => {
       for (const tag of tags) {
         if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
           rating = import_lib.ContentRating.ADULT;
+          break;
         }
         if (["MATURO", "DOUJINSHI", "HORROR", "TRAGICO", "ECCHI"].includes(tag.toUpperCase())) {
           rating = import_lib.ContentRating.MATURE;
+          break;
         }
       }
       return rating;
@@ -3132,13 +3134,14 @@ var source = (() => {
         const extractedPart = match ? match[1] : "";
         const id = extractedPart.replace("/read/", "_read_");
         const name = $2("a", item).attr("title") ?? "";
-        const chapNum = Number($2(".d-inline-block", item).text().split(" ")[1]) ?? -1;
+        const chapNum = Number($2(".d-inline-block", item).text().split(" ")[1]);
+        const chapter = isNaN(chapNum) ? 1 : chapNum;
         const date = $2("i.text-right.text-muted.chap-date", item).text();
         chapters.push({
           chapterId: id,
           sourceManga,
           langCode: "it",
-          chapNum,
+          chapNum: chapter,
           title: name,
           publishDate: this.getDate(date)
         });
