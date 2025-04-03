@@ -2799,14 +2799,14 @@ var source = (() => {
       init_buffer();
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.DiscoverSectionType = void 0;
-      var DiscoverSectionType2;
-      (function(DiscoverSectionType3) {
-        DiscoverSectionType3[DiscoverSectionType3["featured"] = 0] = "featured";
-        DiscoverSectionType3[DiscoverSectionType3["simpleCarousel"] = 1] = "simpleCarousel";
-        DiscoverSectionType3[DiscoverSectionType3["prominentCarousel"] = 2] = "prominentCarousel";
-        DiscoverSectionType3[DiscoverSectionType3["chapterUpdates"] = 3] = "chapterUpdates";
-        DiscoverSectionType3[DiscoverSectionType3["genres"] = 4] = "genres";
-      })(DiscoverSectionType2 || (exports.DiscoverSectionType = DiscoverSectionType2 = {}));
+      var DiscoverSectionType3;
+      (function(DiscoverSectionType4) {
+        DiscoverSectionType4[DiscoverSectionType4["featured"] = 0] = "featured";
+        DiscoverSectionType4[DiscoverSectionType4["simpleCarousel"] = 1] = "simpleCarousel";
+        DiscoverSectionType4[DiscoverSectionType4["prominentCarousel"] = 2] = "prominentCarousel";
+        DiscoverSectionType4[DiscoverSectionType4["chapterUpdates"] = 3] = "chapterUpdates";
+        DiscoverSectionType4[DiscoverSectionType4["genres"] = 4] = "genres";
+      })(DiscoverSectionType3 || (exports.DiscoverSectionType = DiscoverSectionType3 = {}));
     }
   });
 
@@ -3047,6 +3047,347 @@ var source = (() => {
     MangaWorld: () => MangaWorld,
     MangaWorldExtension: () => MangaWorldExtension
   });
+  init_buffer();
+  var import_types4 = __toESM(require_lib(), 1);
+
+  // src/parser.ts
+  init_buffer();
+  var import_lib = __toESM(require_lib(), 1);
+  var Parser = class {
+    getRating(tags) {
+      let rating = import_lib.ContentRating.EVERYONE;
+      for (const tag of tags) {
+        if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
+          rating = import_lib.ContentRating.ADULT;
+        }
+        if (["MATURO", "DOUJINSHI", "HORROR", "TRAGICO", "ECCHI"].includes(tag.toUpperCase())) {
+          rating = import_lib.ContentRating.MATURE;
+        }
+      }
+      return rating;
+    }
+    parseMangaDetails($2, mangaId) {
+      const title = $2(".name.bigger").text().trim() ?? "";
+      const image = $2(".thumb.mb-3.text-center img").attr("src") ?? "";
+      const desc = $2("#noidungm").text().trim() ?? "";
+      const artists = [];
+      const authors = [];
+      const titles = [];
+      const data2 = {
+        genre: [],
+        state: ""
+      };
+      for (const obj of $2(".meta-data.row.px-1 .col-12").toArray()) {
+        const text3 = $2(obj).text().trim();
+        if (text3.includes("Stato")) {
+          const stateLink = $2(obj).find("a").first();
+          if (stateLink.length) data2.state = stateLink.text().trim();
+        } else if (text3.includes("Artist")) {
+          $2(obj).find("a").each((_, e) => artists.push($2(e).text().trim()));
+        } else if (text3.includes("Autor")) {
+          $2(obj).find("a").each((_, e) => authors.push($2(e).text().trim()));
+        } else if (text3.includes("Gener")) {
+          $2(obj).find("a").each((_, e) => data2.genre.push($2(e).text().trim()));
+        } else if (text3.includes("Titol")) {
+          let t = $2(obj).text().trim();
+          t = t.slice(t.indexOf(":") + 1, t.length);
+          t.split(",").forEach((element) => {
+            titles.push(element.trim());
+          });
+        }
+      }
+      const author = authors.join(", ");
+      const artist = artists.join(", ");
+      const status = data2.state;
+      const arrayTags = [];
+      for (const tag of data2.genre) {
+        arrayTags.push({ title: tag.toString(), id: "generi" });
+      }
+      let rating = this.getRating(arrayTags.map((tag) => tag.title));
+      const tagSections = [
+        { id: "generi", title: "genres", tags: arrayTags }
+      ];
+      return {
+        mangaId,
+        mangaInfo: {
+          artist,
+          thumbnailUrl: image,
+          synopsis: desc,
+          primaryTitle: title,
+          contentRating: rating,
+          status,
+          author,
+          tagGroups: tagSections,
+          secondaryTitles: titles
+        }
+      };
+    }
+    parseChapters($2, sourceManga) {
+      const chapters = [];
+      const arrChapters = $2(".chapter").toArray().reverse();
+      for (const item of arrChapters) {
+        const href = $2("a", item).attr("href") ?? "";
+        const regex = /\/manga\/\d+\/([^/]+\/read\/[a-zA-Z0-9]+)/;
+        const match = href.match(regex);
+        const extractedPart = match ? match[1] : "";
+        const id = extractedPart.replace("/read/", "_read_");
+        const name = $2("a", item).attr("title") ?? "";
+        const chapNum = Number($2(".d-inline-block", item).text().split(" ")[1]) ?? -1;
+        const date = $2("i.text-right.text-muted.chap-date", item).text();
+        chapters.push({
+          chapterId: id,
+          sourceManga,
+          langCode: "it",
+          chapNum,
+          title: name,
+          publishDate: this.getDate(date)
+        });
+      }
+      return chapters;
+    }
+    parseChapterDetails($2, mangaId, id) {
+      const pages = [];
+      for (const item of $2(
+        ".col-12.text-center.position-relative img"
+      ).toArray()) {
+        const imageUrl = $2(item).attr("src");
+        if (!imageUrl) continue;
+        pages.push(imageUrl.trim());
+      }
+      return {
+        id,
+        mangaId,
+        pages
+      };
+    }
+    parseTags($2, baseUrl) {
+      const genres = [];
+      let first_label = "";
+      let i = 0;
+      for (const item of $2(
+        ".dropdown-menu.dropdown-multicol .dropdown-item"
+      ).toArray()) {
+        const id = $2(item).attr("href")?.replace(`${baseUrl}/archive?genre=`, "") ?? "";
+        const label = $2(item).text().trim();
+        if (i == 0) first_label = label;
+        if (label == first_label && i > 0) break;
+        genres.push({ title: label, id });
+        i++;
+      }
+      return [{ id: "genres", title: "genres", tags: genres }];
+    }
+    parseSearchResults($2) {
+      const results = [];
+      const tags = [];
+      for (const item of $2(".comics-grid .entry").toArray()) {
+        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? [
+          "null"
+        ])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const title = $2("a", item).attr("title") ?? "";
+        const image = $2("a img", item).attr("src") ?? "";
+        $2("div.genres", item).find("a").each((_, e) => tags.push($2(e).text().trim()));
+        results.push({
+          imageUrl: image,
+          title,
+          mangaId: id,
+          contentRating: this.getRating(tags)
+        });
+      }
+      return results;
+    }
+    parseCapitoliInTendenza($2) {
+      const trending = [];
+      const arrTrending = $2(".entry.vertical").toArray();
+      for (const obj of arrTrending) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const image = $2("a img", obj).attr("src") ?? "";
+        const chapNum = $2("a div", obj).text() ?? "";
+        const title = $2(".manga-title", obj).text().trim();
+        trending.push({
+          metadata: void 0,
+          type: "featuredCarouselItem",
+          contentRating: void 0,
+          supertitle: chapNum,
+          imageUrl: image,
+          mangaId: id,
+          title
+        });
+      }
+      return { items: trending };
+    }
+    parseInTendenzaMese($2) {
+      const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
+      const hot = [];
+      const newTitle = [];
+      for (const obj of arrHotTitle) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const image = $2(".img-fluid", obj).attr("src") ?? "";
+        const title = $2(".name", obj).first().text().trim() ?? "";
+        if (hot.length < 10) {
+          hot.push({
+            metadata: void 0,
+            type: "prominentCarouselItem",
+            contentRating: void 0,
+            imageUrl: image,
+            mangaId: id,
+            title
+          });
+        } else if (newTitle.length < 5) {
+          newTitle.push({
+            metadata: void 0,
+            type: "simpleCarouselItem",
+            contentRating: void 0,
+            imageUrl: image,
+            mangaId: id,
+            title
+          });
+        }
+      }
+      return [
+        { items: hot },
+        { items: newTitle }
+      ];
+    }
+    getDate(dataString) {
+      const mesi = {
+        "Gennaio": 0,
+        "Febbraio": 1,
+        "Marzo": 2,
+        "Aprile": 3,
+        "Maggio": 4,
+        "Giugno": 5,
+        "Luglio": 6,
+        "Agosto": 7,
+        "Settembre": 8,
+        "Ottobre": 9,
+        "Novembre": 10,
+        "Dicembre": 11
+      };
+      const oggi = /* @__PURE__ */ new Date();
+      const parts = dataString.split(" ");
+      if (parts.length === 2) {
+        parts.push(oggi.getFullYear().toString());
+      }
+      if (parts.length > 3) return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
+      const mese = parseInt(parts[0], 10);
+      const giorno = mesi[parts[1]];
+      const anno = parseInt(parts[2], 10);
+      if (isNaN(giorno) || mese === void 0) return oggi;
+      return new Date(anno, giorno, mese);
+    }
+    parseLastAddedSetcion($2) {
+      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
+      const latest = [];
+      for (const obj of arrLatest) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const title = $2("a", obj).attr("title") ?? "";
+        const image = $2("a img", obj).attr("src") ?? "";
+        let sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
+        let chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
+        latest.push({
+          chapterId: chapterId.replace("/read/", "_read_"),
+          //todo
+          publishDate: this.getDate(addedDate),
+          metadata: void 0,
+          type: "chapterUpdatesCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title,
+          subtitle: sub
+        });
+      }
+      return { items: latest };
+    }
+  };
+
+  // src/SettingsForm.ts
+  init_buffer();
+  var import_types = __toESM(require_lib(), 1);
+  var SettingsForm = class extends import_types.Form {
+    getSections() {
+      return [
+        (0, import_types.Section)("playground", [
+          (0, import_types.NavigationRow)("playground", {
+            title: "SourceUI Playground",
+            form: new SourceUIPlaygroundForm()
+          })
+        ])
+      ];
+    }
+  };
+  var State = class {
+    constructor(form, value) {
+      this.form = form;
+      this._value = value;
+    }
+    _value;
+    get value() {
+      return this._value;
+    }
+    get selector() {
+      return Application.Selector(this, "updateValue");
+    }
+    async updateValue(value) {
+      this._value = value;
+      this.form.reloadForm();
+    }
+  };
+  var SourceUIPlaygroundForm = class extends import_types.Form {
+    inputValue = new State(this, "");
+    rowsVisible = new State(this, false);
+    items = [];
+    getSections() {
+      return [
+        (0, import_types.Section)("hideStuff", [
+          (0, import_types.ToggleRow)("toggle", {
+            title: "Toggles can hide rows",
+            value: this.rowsVisible.value,
+            onValueChange: this.rowsVisible.selector
+          })
+        ]),
+        ...(() => this.rowsVisible.value ? [
+          (0, import_types.Section)("hiddenSection", [
+            (0, import_types.InputRow)("input", {
+              title: "Dynamic Input",
+              value: this.inputValue.value,
+              onValueChange: this.inputValue.selector
+            }),
+            (0, import_types.LabelRow)("boundLabel", {
+              title: "Bound label to input",
+              subtitle: "This label updates with the input",
+              value: this.inputValue.value
+            })
+          ]),
+          (0, import_types.Section)("items", [
+            ...this.items.map(
+              (item) => (0, import_types.LabelRow)(item, {
+                title: item
+              })
+            ),
+            (0, import_types.ButtonRow)("addNewItem", {
+              title: "Add New Item",
+              onSelect: Application.Selector(
+                this,
+                "addNewItem"
+              )
+            })
+          ])
+        ] : [])()
+      ];
+    }
+    async addNewItem() {
+      this.items.push("Item " + (this.items.length + 1));
+      this.reloadForm();
+    }
+  };
+
+  // src/Functions.ts
   init_buffer();
   var import_types3 = __toESM(require_lib(), 1);
 
@@ -8816,7 +9157,7 @@ var source = (() => {
   }
 
   // node_modules/parse5/dist/tokenizer/index.js
-  var State;
+  var State2;
   (function(State4) {
     State4[State4["DATA"] = 0] = "DATA";
     State4[State4["RCDATA"] = 1] = "RCDATA";
@@ -8891,14 +9232,14 @@ var source = (() => {
     State4[State4["CDATA_SECTION_END"] = 70] = "CDATA_SECTION_END";
     State4[State4["CHARACTER_REFERENCE"] = 71] = "CHARACTER_REFERENCE";
     State4[State4["AMBIGUOUS_AMPERSAND"] = 72] = "AMBIGUOUS_AMPERSAND";
-  })(State || (State = {}));
+  })(State2 || (State2 = {}));
   var TokenizerMode = {
-    DATA: State.DATA,
-    RCDATA: State.RCDATA,
-    RAWTEXT: State.RAWTEXT,
-    SCRIPT_DATA: State.SCRIPT_DATA,
-    PLAINTEXT: State.PLAINTEXT,
-    CDATA_SECTION: State.CDATA_SECTION
+    DATA: State2.DATA,
+    RCDATA: State2.RCDATA,
+    RAWTEXT: State2.RAWTEXT,
+    SCRIPT_DATA: State2.SCRIPT_DATA,
+    PLAINTEXT: State2.PLAINTEXT,
+    CDATA_SECTION: State2.CDATA_SECTION
   };
   function isAsciiDigit(cp) {
     return cp >= CODE_POINTS.DIGIT_0 && cp <= CODE_POINTS.DIGIT_9;
@@ -8947,8 +9288,8 @@ var source = (() => {
       this.inForeignNode = false;
       this.lastStartTagName = "";
       this.active = false;
-      this.state = State.DATA;
-      this.returnState = State.DATA;
+      this.state = State2.DATA;
+      this.returnState = State2.DATA;
       this.entityStartPos = 0;
       this.consumedAfterSnapshot = -1;
       this.currentCharacterToken = null;
@@ -9247,12 +9588,12 @@ var source = (() => {
     // Character reference helpers
     _startCharacterReference() {
       this.returnState = this.state;
-      this.state = State.CHARACTER_REFERENCE;
+      this.state = State2.CHARACTER_REFERENCE;
       this.entityStartPos = this.preprocessor.pos;
       this.entityDecoder.startEntity(this._isCharacterReferenceInAttribute() ? DecodingMode.Attribute : DecodingMode.Legacy);
     }
     _isCharacterReferenceInAttribute() {
-      return this.returnState === State.ATTRIBUTE_VALUE_DOUBLE_QUOTED || this.returnState === State.ATTRIBUTE_VALUE_SINGLE_QUOTED || this.returnState === State.ATTRIBUTE_VALUE_UNQUOTED;
+      return this.returnState === State2.ATTRIBUTE_VALUE_DOUBLE_QUOTED || this.returnState === State2.ATTRIBUTE_VALUE_SINGLE_QUOTED || this.returnState === State2.ATTRIBUTE_VALUE_UNQUOTED;
     }
     _flushCodePointConsumedAsCharacterReference(cp) {
       if (this._isCharacterReferenceInAttribute()) {
@@ -9264,295 +9605,295 @@ var source = (() => {
     // Calling states this way turns out to be much faster than any other approach.
     _callState(cp) {
       switch (this.state) {
-        case State.DATA: {
+        case State2.DATA: {
           this._stateData(cp);
           break;
         }
-        case State.RCDATA: {
+        case State2.RCDATA: {
           this._stateRcdata(cp);
           break;
         }
-        case State.RAWTEXT: {
+        case State2.RAWTEXT: {
           this._stateRawtext(cp);
           break;
         }
-        case State.SCRIPT_DATA: {
+        case State2.SCRIPT_DATA: {
           this._stateScriptData(cp);
           break;
         }
-        case State.PLAINTEXT: {
+        case State2.PLAINTEXT: {
           this._statePlaintext(cp);
           break;
         }
-        case State.TAG_OPEN: {
+        case State2.TAG_OPEN: {
           this._stateTagOpen(cp);
           break;
         }
-        case State.END_TAG_OPEN: {
+        case State2.END_TAG_OPEN: {
           this._stateEndTagOpen(cp);
           break;
         }
-        case State.TAG_NAME: {
+        case State2.TAG_NAME: {
           this._stateTagName(cp);
           break;
         }
-        case State.RCDATA_LESS_THAN_SIGN: {
+        case State2.RCDATA_LESS_THAN_SIGN: {
           this._stateRcdataLessThanSign(cp);
           break;
         }
-        case State.RCDATA_END_TAG_OPEN: {
+        case State2.RCDATA_END_TAG_OPEN: {
           this._stateRcdataEndTagOpen(cp);
           break;
         }
-        case State.RCDATA_END_TAG_NAME: {
+        case State2.RCDATA_END_TAG_NAME: {
           this._stateRcdataEndTagName(cp);
           break;
         }
-        case State.RAWTEXT_LESS_THAN_SIGN: {
+        case State2.RAWTEXT_LESS_THAN_SIGN: {
           this._stateRawtextLessThanSign(cp);
           break;
         }
-        case State.RAWTEXT_END_TAG_OPEN: {
+        case State2.RAWTEXT_END_TAG_OPEN: {
           this._stateRawtextEndTagOpen(cp);
           break;
         }
-        case State.RAWTEXT_END_TAG_NAME: {
+        case State2.RAWTEXT_END_TAG_NAME: {
           this._stateRawtextEndTagName(cp);
           break;
         }
-        case State.SCRIPT_DATA_LESS_THAN_SIGN: {
+        case State2.SCRIPT_DATA_LESS_THAN_SIGN: {
           this._stateScriptDataLessThanSign(cp);
           break;
         }
-        case State.SCRIPT_DATA_END_TAG_OPEN: {
+        case State2.SCRIPT_DATA_END_TAG_OPEN: {
           this._stateScriptDataEndTagOpen(cp);
           break;
         }
-        case State.SCRIPT_DATA_END_TAG_NAME: {
+        case State2.SCRIPT_DATA_END_TAG_NAME: {
           this._stateScriptDataEndTagName(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPE_START: {
+        case State2.SCRIPT_DATA_ESCAPE_START: {
           this._stateScriptDataEscapeStart(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPE_START_DASH: {
+        case State2.SCRIPT_DATA_ESCAPE_START_DASH: {
           this._stateScriptDataEscapeStartDash(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED: {
+        case State2.SCRIPT_DATA_ESCAPED: {
           this._stateScriptDataEscaped(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED_DASH: {
+        case State2.SCRIPT_DATA_ESCAPED_DASH: {
           this._stateScriptDataEscapedDash(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED_DASH_DASH: {
+        case State2.SCRIPT_DATA_ESCAPED_DASH_DASH: {
           this._stateScriptDataEscapedDashDash(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN: {
+        case State2.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN: {
           this._stateScriptDataEscapedLessThanSign(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED_END_TAG_OPEN: {
+        case State2.SCRIPT_DATA_ESCAPED_END_TAG_OPEN: {
           this._stateScriptDataEscapedEndTagOpen(cp);
           break;
         }
-        case State.SCRIPT_DATA_ESCAPED_END_TAG_NAME: {
+        case State2.SCRIPT_DATA_ESCAPED_END_TAG_NAME: {
           this._stateScriptDataEscapedEndTagName(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPE_START: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPE_START: {
           this._stateScriptDataDoubleEscapeStart(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPED: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPED: {
           this._stateScriptDataDoubleEscaped(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPED_DASH: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPED_DASH: {
           this._stateScriptDataDoubleEscapedDash(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH: {
           this._stateScriptDataDoubleEscapedDashDash(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN: {
           this._stateScriptDataDoubleEscapedLessThanSign(cp);
           break;
         }
-        case State.SCRIPT_DATA_DOUBLE_ESCAPE_END: {
+        case State2.SCRIPT_DATA_DOUBLE_ESCAPE_END: {
           this._stateScriptDataDoubleEscapeEnd(cp);
           break;
         }
-        case State.BEFORE_ATTRIBUTE_NAME: {
+        case State2.BEFORE_ATTRIBUTE_NAME: {
           this._stateBeforeAttributeName(cp);
           break;
         }
-        case State.ATTRIBUTE_NAME: {
+        case State2.ATTRIBUTE_NAME: {
           this._stateAttributeName(cp);
           break;
         }
-        case State.AFTER_ATTRIBUTE_NAME: {
+        case State2.AFTER_ATTRIBUTE_NAME: {
           this._stateAfterAttributeName(cp);
           break;
         }
-        case State.BEFORE_ATTRIBUTE_VALUE: {
+        case State2.BEFORE_ATTRIBUTE_VALUE: {
           this._stateBeforeAttributeValue(cp);
           break;
         }
-        case State.ATTRIBUTE_VALUE_DOUBLE_QUOTED: {
+        case State2.ATTRIBUTE_VALUE_DOUBLE_QUOTED: {
           this._stateAttributeValueDoubleQuoted(cp);
           break;
         }
-        case State.ATTRIBUTE_VALUE_SINGLE_QUOTED: {
+        case State2.ATTRIBUTE_VALUE_SINGLE_QUOTED: {
           this._stateAttributeValueSingleQuoted(cp);
           break;
         }
-        case State.ATTRIBUTE_VALUE_UNQUOTED: {
+        case State2.ATTRIBUTE_VALUE_UNQUOTED: {
           this._stateAttributeValueUnquoted(cp);
           break;
         }
-        case State.AFTER_ATTRIBUTE_VALUE_QUOTED: {
+        case State2.AFTER_ATTRIBUTE_VALUE_QUOTED: {
           this._stateAfterAttributeValueQuoted(cp);
           break;
         }
-        case State.SELF_CLOSING_START_TAG: {
+        case State2.SELF_CLOSING_START_TAG: {
           this._stateSelfClosingStartTag(cp);
           break;
         }
-        case State.BOGUS_COMMENT: {
+        case State2.BOGUS_COMMENT: {
           this._stateBogusComment(cp);
           break;
         }
-        case State.MARKUP_DECLARATION_OPEN: {
+        case State2.MARKUP_DECLARATION_OPEN: {
           this._stateMarkupDeclarationOpen(cp);
           break;
         }
-        case State.COMMENT_START: {
+        case State2.COMMENT_START: {
           this._stateCommentStart(cp);
           break;
         }
-        case State.COMMENT_START_DASH: {
+        case State2.COMMENT_START_DASH: {
           this._stateCommentStartDash(cp);
           break;
         }
-        case State.COMMENT: {
+        case State2.COMMENT: {
           this._stateComment(cp);
           break;
         }
-        case State.COMMENT_LESS_THAN_SIGN: {
+        case State2.COMMENT_LESS_THAN_SIGN: {
           this._stateCommentLessThanSign(cp);
           break;
         }
-        case State.COMMENT_LESS_THAN_SIGN_BANG: {
+        case State2.COMMENT_LESS_THAN_SIGN_BANG: {
           this._stateCommentLessThanSignBang(cp);
           break;
         }
-        case State.COMMENT_LESS_THAN_SIGN_BANG_DASH: {
+        case State2.COMMENT_LESS_THAN_SIGN_BANG_DASH: {
           this._stateCommentLessThanSignBangDash(cp);
           break;
         }
-        case State.COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH: {
+        case State2.COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH: {
           this._stateCommentLessThanSignBangDashDash(cp);
           break;
         }
-        case State.COMMENT_END_DASH: {
+        case State2.COMMENT_END_DASH: {
           this._stateCommentEndDash(cp);
           break;
         }
-        case State.COMMENT_END: {
+        case State2.COMMENT_END: {
           this._stateCommentEnd(cp);
           break;
         }
-        case State.COMMENT_END_BANG: {
+        case State2.COMMENT_END_BANG: {
           this._stateCommentEndBang(cp);
           break;
         }
-        case State.DOCTYPE: {
+        case State2.DOCTYPE: {
           this._stateDoctype(cp);
           break;
         }
-        case State.BEFORE_DOCTYPE_NAME: {
+        case State2.BEFORE_DOCTYPE_NAME: {
           this._stateBeforeDoctypeName(cp);
           break;
         }
-        case State.DOCTYPE_NAME: {
+        case State2.DOCTYPE_NAME: {
           this._stateDoctypeName(cp);
           break;
         }
-        case State.AFTER_DOCTYPE_NAME: {
+        case State2.AFTER_DOCTYPE_NAME: {
           this._stateAfterDoctypeName(cp);
           break;
         }
-        case State.AFTER_DOCTYPE_PUBLIC_KEYWORD: {
+        case State2.AFTER_DOCTYPE_PUBLIC_KEYWORD: {
           this._stateAfterDoctypePublicKeyword(cp);
           break;
         }
-        case State.BEFORE_DOCTYPE_PUBLIC_IDENTIFIER: {
+        case State2.BEFORE_DOCTYPE_PUBLIC_IDENTIFIER: {
           this._stateBeforeDoctypePublicIdentifier(cp);
           break;
         }
-        case State.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED: {
+        case State2.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED: {
           this._stateDoctypePublicIdentifierDoubleQuoted(cp);
           break;
         }
-        case State.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED: {
+        case State2.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED: {
           this._stateDoctypePublicIdentifierSingleQuoted(cp);
           break;
         }
-        case State.AFTER_DOCTYPE_PUBLIC_IDENTIFIER: {
+        case State2.AFTER_DOCTYPE_PUBLIC_IDENTIFIER: {
           this._stateAfterDoctypePublicIdentifier(cp);
           break;
         }
-        case State.BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS: {
+        case State2.BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS: {
           this._stateBetweenDoctypePublicAndSystemIdentifiers(cp);
           break;
         }
-        case State.AFTER_DOCTYPE_SYSTEM_KEYWORD: {
+        case State2.AFTER_DOCTYPE_SYSTEM_KEYWORD: {
           this._stateAfterDoctypeSystemKeyword(cp);
           break;
         }
-        case State.BEFORE_DOCTYPE_SYSTEM_IDENTIFIER: {
+        case State2.BEFORE_DOCTYPE_SYSTEM_IDENTIFIER: {
           this._stateBeforeDoctypeSystemIdentifier(cp);
           break;
         }
-        case State.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED: {
+        case State2.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED: {
           this._stateDoctypeSystemIdentifierDoubleQuoted(cp);
           break;
         }
-        case State.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED: {
+        case State2.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED: {
           this._stateDoctypeSystemIdentifierSingleQuoted(cp);
           break;
         }
-        case State.AFTER_DOCTYPE_SYSTEM_IDENTIFIER: {
+        case State2.AFTER_DOCTYPE_SYSTEM_IDENTIFIER: {
           this._stateAfterDoctypeSystemIdentifier(cp);
           break;
         }
-        case State.BOGUS_DOCTYPE: {
+        case State2.BOGUS_DOCTYPE: {
           this._stateBogusDoctype(cp);
           break;
         }
-        case State.CDATA_SECTION: {
+        case State2.CDATA_SECTION: {
           this._stateCdataSection(cp);
           break;
         }
-        case State.CDATA_SECTION_BRACKET: {
+        case State2.CDATA_SECTION_BRACKET: {
           this._stateCdataSectionBracket(cp);
           break;
         }
-        case State.CDATA_SECTION_END: {
+        case State2.CDATA_SECTION_END: {
           this._stateCdataSectionEnd(cp);
           break;
         }
-        case State.CHARACTER_REFERENCE: {
+        case State2.CHARACTER_REFERENCE: {
           this._stateCharacterReference();
           break;
         }
-        case State.AMBIGUOUS_AMPERSAND: {
+        case State2.AMBIGUOUS_AMPERSAND: {
           this._stateAmbiguousAmpersand(cp);
           break;
         }
@@ -9567,7 +9908,7 @@ var source = (() => {
     _stateData(cp) {
       switch (cp) {
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.TAG_OPEN;
+          this.state = State2.TAG_OPEN;
           break;
         }
         case CODE_POINTS.AMPERSAND: {
@@ -9597,7 +9938,7 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.RCDATA_LESS_THAN_SIGN;
+          this.state = State2.RCDATA_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -9619,7 +9960,7 @@ var source = (() => {
     _stateRawtext(cp) {
       switch (cp) {
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.RAWTEXT_LESS_THAN_SIGN;
+          this.state = State2.RAWTEXT_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -9641,7 +9982,7 @@ var source = (() => {
     _stateScriptData(cp) {
       switch (cp) {
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -9681,22 +10022,22 @@ var source = (() => {
     _stateTagOpen(cp) {
       if (isAsciiLetter(cp)) {
         this._createStartTagToken();
-        this.state = State.TAG_NAME;
+        this.state = State2.TAG_NAME;
         this._stateTagName(cp);
       } else
         switch (cp) {
           case CODE_POINTS.EXCLAMATION_MARK: {
-            this.state = State.MARKUP_DECLARATION_OPEN;
+            this.state = State2.MARKUP_DECLARATION_OPEN;
             break;
           }
           case CODE_POINTS.SOLIDUS: {
-            this.state = State.END_TAG_OPEN;
+            this.state = State2.END_TAG_OPEN;
             break;
           }
           case CODE_POINTS.QUESTION_MARK: {
             this._err(ERR.unexpectedQuestionMarkInsteadOfTagName);
             this._createCommentToken(1);
-            this.state = State.BOGUS_COMMENT;
+            this.state = State2.BOGUS_COMMENT;
             this._stateBogusComment(cp);
             break;
           }
@@ -9709,7 +10050,7 @@ var source = (() => {
           default: {
             this._err(ERR.invalidFirstCharacterOfTagName);
             this._emitChars("<");
-            this.state = State.DATA;
+            this.state = State2.DATA;
             this._stateData(cp);
           }
         }
@@ -9719,13 +10060,13 @@ var source = (() => {
     _stateEndTagOpen(cp) {
       if (isAsciiLetter(cp)) {
         this._createEndTagToken();
-        this.state = State.TAG_NAME;
+        this.state = State2.TAG_NAME;
         this._stateTagName(cp);
       } else
         switch (cp) {
           case CODE_POINTS.GREATER_THAN_SIGN: {
             this._err(ERR.missingEndTagName);
-            this.state = State.DATA;
+            this.state = State2.DATA;
             break;
           }
           case CODE_POINTS.EOF: {
@@ -9737,7 +10078,7 @@ var source = (() => {
           default: {
             this._err(ERR.invalidFirstCharacterOfTagName);
             this._createCommentToken(2);
-            this.state = State.BOGUS_COMMENT;
+            this.state = State2.BOGUS_COMMENT;
             this._stateBogusComment(cp);
           }
         }
@@ -9751,15 +10092,15 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           break;
         }
         case CODE_POINTS.SOLIDUS: {
-          this.state = State.SELF_CLOSING_START_TAG;
+          this.state = State2.SELF_CLOSING_START_TAG;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
@@ -9782,10 +10123,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateRcdataLessThanSign(cp) {
       if (cp === CODE_POINTS.SOLIDUS) {
-        this.state = State.RCDATA_END_TAG_OPEN;
+        this.state = State2.RCDATA_END_TAG_OPEN;
       } else {
         this._emitChars("<");
-        this.state = State.RCDATA;
+        this.state = State2.RCDATA;
         this._stateRcdata(cp);
       }
     }
@@ -9793,11 +10134,11 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateRcdataEndTagOpen(cp) {
       if (isAsciiLetter(cp)) {
-        this.state = State.RCDATA_END_TAG_NAME;
+        this.state = State2.RCDATA_END_TAG_NAME;
         this._stateRcdataEndTagName(cp);
       } else {
         this._emitChars("</");
-        this.state = State.RCDATA;
+        this.state = State2.RCDATA;
         this._stateRcdata(cp);
       }
     }
@@ -9815,18 +10156,18 @@ var source = (() => {
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
           this._advanceBy(this.lastStartTagName.length);
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           return false;
         }
         case CODE_POINTS.SOLIDUS: {
           this._advanceBy(this.lastStartTagName.length);
-          this.state = State.SELF_CLOSING_START_TAG;
+          this.state = State2.SELF_CLOSING_START_TAG;
           return false;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._advanceBy(this.lastStartTagName.length);
           this.emitCurrentTagToken();
-          this.state = State.DATA;
+          this.state = State2.DATA;
           return false;
         }
         default: {
@@ -9839,7 +10180,7 @@ var source = (() => {
     _stateRcdataEndTagName(cp) {
       if (this.handleSpecialEndTag(cp)) {
         this._emitChars("</");
-        this.state = State.RCDATA;
+        this.state = State2.RCDATA;
         this._stateRcdata(cp);
       }
     }
@@ -9847,10 +10188,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateRawtextLessThanSign(cp) {
       if (cp === CODE_POINTS.SOLIDUS) {
-        this.state = State.RAWTEXT_END_TAG_OPEN;
+        this.state = State2.RAWTEXT_END_TAG_OPEN;
       } else {
         this._emitChars("<");
-        this.state = State.RAWTEXT;
+        this.state = State2.RAWTEXT;
         this._stateRawtext(cp);
       }
     }
@@ -9858,11 +10199,11 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateRawtextEndTagOpen(cp) {
       if (isAsciiLetter(cp)) {
-        this.state = State.RAWTEXT_END_TAG_NAME;
+        this.state = State2.RAWTEXT_END_TAG_NAME;
         this._stateRawtextEndTagName(cp);
       } else {
         this._emitChars("</");
-        this.state = State.RAWTEXT;
+        this.state = State2.RAWTEXT;
         this._stateRawtext(cp);
       }
     }
@@ -9871,7 +10212,7 @@ var source = (() => {
     _stateRawtextEndTagName(cp) {
       if (this.handleSpecialEndTag(cp)) {
         this._emitChars("</");
-        this.state = State.RAWTEXT;
+        this.state = State2.RAWTEXT;
         this._stateRawtext(cp);
       }
     }
@@ -9880,17 +10221,17 @@ var source = (() => {
     _stateScriptDataLessThanSign(cp) {
       switch (cp) {
         case CODE_POINTS.SOLIDUS: {
-          this.state = State.SCRIPT_DATA_END_TAG_OPEN;
+          this.state = State2.SCRIPT_DATA_END_TAG_OPEN;
           break;
         }
         case CODE_POINTS.EXCLAMATION_MARK: {
-          this.state = State.SCRIPT_DATA_ESCAPE_START;
+          this.state = State2.SCRIPT_DATA_ESCAPE_START;
           this._emitChars("<!");
           break;
         }
         default: {
           this._emitChars("<");
-          this.state = State.SCRIPT_DATA;
+          this.state = State2.SCRIPT_DATA;
           this._stateScriptData(cp);
         }
       }
@@ -9899,11 +10240,11 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataEndTagOpen(cp) {
       if (isAsciiLetter(cp)) {
-        this.state = State.SCRIPT_DATA_END_TAG_NAME;
+        this.state = State2.SCRIPT_DATA_END_TAG_NAME;
         this._stateScriptDataEndTagName(cp);
       } else {
         this._emitChars("</");
-        this.state = State.SCRIPT_DATA;
+        this.state = State2.SCRIPT_DATA;
         this._stateScriptData(cp);
       }
     }
@@ -9912,7 +10253,7 @@ var source = (() => {
     _stateScriptDataEndTagName(cp) {
       if (this.handleSpecialEndTag(cp)) {
         this._emitChars("</");
-        this.state = State.SCRIPT_DATA;
+        this.state = State2.SCRIPT_DATA;
         this._stateScriptData(cp);
       }
     }
@@ -9920,10 +10261,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataEscapeStart(cp) {
       if (cp === CODE_POINTS.HYPHEN_MINUS) {
-        this.state = State.SCRIPT_DATA_ESCAPE_START_DASH;
+        this.state = State2.SCRIPT_DATA_ESCAPE_START_DASH;
         this._emitChars("-");
       } else {
-        this.state = State.SCRIPT_DATA;
+        this.state = State2.SCRIPT_DATA;
         this._stateScriptData(cp);
       }
     }
@@ -9931,10 +10272,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataEscapeStartDash(cp) {
       if (cp === CODE_POINTS.HYPHEN_MINUS) {
-        this.state = State.SCRIPT_DATA_ESCAPED_DASH_DASH;
+        this.state = State2.SCRIPT_DATA_ESCAPED_DASH_DASH;
         this._emitChars("-");
       } else {
-        this.state = State.SCRIPT_DATA;
+        this.state = State2.SCRIPT_DATA;
         this._stateScriptData(cp);
       }
     }
@@ -9943,12 +10284,12 @@ var source = (() => {
     _stateScriptDataEscaped(cp) {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.SCRIPT_DATA_ESCAPED_DASH;
+          this.state = State2.SCRIPT_DATA_ESCAPED_DASH;
           this._emitChars("-");
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -9971,17 +10312,17 @@ var source = (() => {
     _stateScriptDataEscapedDash(cp) {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.SCRIPT_DATA_ESCAPED_DASH_DASH;
+          this.state = State2.SCRIPT_DATA_ESCAPED_DASH_DASH;
           this._emitChars("-");
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
           this._err(ERR.unexpectedNullCharacter);
-          this.state = State.SCRIPT_DATA_ESCAPED;
+          this.state = State2.SCRIPT_DATA_ESCAPED;
           this._emitChars(REPLACEMENT_CHARACTER);
           break;
         }
@@ -9991,7 +10332,7 @@ var source = (() => {
           break;
         }
         default: {
-          this.state = State.SCRIPT_DATA_ESCAPED;
+          this.state = State2.SCRIPT_DATA_ESCAPED;
           this._emitCodePoint(cp);
         }
       }
@@ -10005,17 +10346,17 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA;
+          this.state = State2.SCRIPT_DATA;
           this._emitChars(">");
           break;
         }
         case CODE_POINTS.NULL: {
           this._err(ERR.unexpectedNullCharacter);
-          this.state = State.SCRIPT_DATA_ESCAPED;
+          this.state = State2.SCRIPT_DATA_ESCAPED;
           this._emitChars(REPLACEMENT_CHARACTER);
           break;
         }
@@ -10025,7 +10366,7 @@ var source = (() => {
           break;
         }
         default: {
-          this.state = State.SCRIPT_DATA_ESCAPED;
+          this.state = State2.SCRIPT_DATA_ESCAPED;
           this._emitCodePoint(cp);
         }
       }
@@ -10034,14 +10375,14 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataEscapedLessThanSign(cp) {
       if (cp === CODE_POINTS.SOLIDUS) {
-        this.state = State.SCRIPT_DATA_ESCAPED_END_TAG_OPEN;
+        this.state = State2.SCRIPT_DATA_ESCAPED_END_TAG_OPEN;
       } else if (isAsciiLetter(cp)) {
         this._emitChars("<");
-        this.state = State.SCRIPT_DATA_DOUBLE_ESCAPE_START;
+        this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPE_START;
         this._stateScriptDataDoubleEscapeStart(cp);
       } else {
         this._emitChars("<");
-        this.state = State.SCRIPT_DATA_ESCAPED;
+        this.state = State2.SCRIPT_DATA_ESCAPED;
         this._stateScriptDataEscaped(cp);
       }
     }
@@ -10049,11 +10390,11 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataEscapedEndTagOpen(cp) {
       if (isAsciiLetter(cp)) {
-        this.state = State.SCRIPT_DATA_ESCAPED_END_TAG_NAME;
+        this.state = State2.SCRIPT_DATA_ESCAPED_END_TAG_NAME;
         this._stateScriptDataEscapedEndTagName(cp);
       } else {
         this._emitChars("</");
-        this.state = State.SCRIPT_DATA_ESCAPED;
+        this.state = State2.SCRIPT_DATA_ESCAPED;
         this._stateScriptDataEscaped(cp);
       }
     }
@@ -10062,7 +10403,7 @@ var source = (() => {
     _stateScriptDataEscapedEndTagName(cp) {
       if (this.handleSpecialEndTag(cp)) {
         this._emitChars("</");
-        this.state = State.SCRIPT_DATA_ESCAPED;
+        this.state = State2.SCRIPT_DATA_ESCAPED;
         this._stateScriptDataEscaped(cp);
       }
     }
@@ -10074,9 +10415,9 @@ var source = (() => {
         for (let i = 0; i < SEQUENCES.SCRIPT.length; i++) {
           this._emitCodePoint(this._consume());
         }
-        this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+        this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
       } else if (!this._ensureHibernation()) {
-        this.state = State.SCRIPT_DATA_ESCAPED;
+        this.state = State2.SCRIPT_DATA_ESCAPED;
         this._stateScriptDataEscaped(cp);
       }
     }
@@ -10085,12 +10426,12 @@ var source = (() => {
     _stateScriptDataDoubleEscaped(cp) {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED_DASH;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED_DASH;
           this._emitChars("-");
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
           this._emitChars("<");
           break;
         }
@@ -10114,18 +10455,18 @@ var source = (() => {
     _stateScriptDataDoubleEscapedDash(cp) {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH;
           this._emitChars("-");
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
           this._emitChars("<");
           break;
         }
         case CODE_POINTS.NULL: {
           this._err(ERR.unexpectedNullCharacter);
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
           this._emitChars(REPLACEMENT_CHARACTER);
           break;
         }
@@ -10135,7 +10476,7 @@ var source = (() => {
           break;
         }
         default: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
           this._emitCodePoint(cp);
         }
       }
@@ -10149,18 +10490,18 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN;
           this._emitChars("<");
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.SCRIPT_DATA;
+          this.state = State2.SCRIPT_DATA;
           this._emitChars(">");
           break;
         }
         case CODE_POINTS.NULL: {
           this._err(ERR.unexpectedNullCharacter);
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
           this._emitChars(REPLACEMENT_CHARACTER);
           break;
         }
@@ -10170,7 +10511,7 @@ var source = (() => {
           break;
         }
         default: {
-          this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+          this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
           this._emitCodePoint(cp);
         }
       }
@@ -10179,10 +10520,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateScriptDataDoubleEscapedLessThanSign(cp) {
       if (cp === CODE_POINTS.SOLIDUS) {
-        this.state = State.SCRIPT_DATA_DOUBLE_ESCAPE_END;
+        this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPE_END;
         this._emitChars("/");
       } else {
-        this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+        this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
         this._stateScriptDataDoubleEscaped(cp);
       }
     }
@@ -10194,9 +10535,9 @@ var source = (() => {
         for (let i = 0; i < SEQUENCES.SCRIPT.length; i++) {
           this._emitCodePoint(this._consume());
         }
-        this.state = State.SCRIPT_DATA_ESCAPED;
+        this.state = State2.SCRIPT_DATA_ESCAPED;
       } else if (!this._ensureHibernation()) {
-        this.state = State.SCRIPT_DATA_DOUBLE_ESCAPED;
+        this.state = State2.SCRIPT_DATA_DOUBLE_ESCAPED;
         this._stateScriptDataDoubleEscaped(cp);
       }
     }
@@ -10213,19 +10554,19 @@ var source = (() => {
         case CODE_POINTS.SOLIDUS:
         case CODE_POINTS.GREATER_THAN_SIGN:
         case CODE_POINTS.EOF: {
-          this.state = State.AFTER_ATTRIBUTE_NAME;
+          this.state = State2.AFTER_ATTRIBUTE_NAME;
           this._stateAfterAttributeName(cp);
           break;
         }
         case CODE_POINTS.EQUALS_SIGN: {
           this._err(ERR.unexpectedEqualsSignBeforeAttributeName);
           this._createAttr("=");
-          this.state = State.ATTRIBUTE_NAME;
+          this.state = State2.ATTRIBUTE_NAME;
           break;
         }
         default: {
           this._createAttr("");
-          this.state = State.ATTRIBUTE_NAME;
+          this.state = State2.ATTRIBUTE_NAME;
           this._stateAttributeName(cp);
         }
       }
@@ -10242,13 +10583,13 @@ var source = (() => {
         case CODE_POINTS.GREATER_THAN_SIGN:
         case CODE_POINTS.EOF: {
           this._leaveAttrName();
-          this.state = State.AFTER_ATTRIBUTE_NAME;
+          this.state = State2.AFTER_ATTRIBUTE_NAME;
           this._stateAfterAttributeName(cp);
           break;
         }
         case CODE_POINTS.EQUALS_SIGN: {
           this._leaveAttrName();
-          this.state = State.BEFORE_ATTRIBUTE_VALUE;
+          this.state = State2.BEFORE_ATTRIBUTE_VALUE;
           break;
         }
         case CODE_POINTS.QUOTATION_MARK:
@@ -10279,15 +10620,15 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.SOLIDUS: {
-          this.state = State.SELF_CLOSING_START_TAG;
+          this.state = State2.SELF_CLOSING_START_TAG;
           break;
         }
         case CODE_POINTS.EQUALS_SIGN: {
-          this.state = State.BEFORE_ATTRIBUTE_VALUE;
+          this.state = State2.BEFORE_ATTRIBUTE_VALUE;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
@@ -10298,7 +10639,7 @@ var source = (() => {
         }
         default: {
           this._createAttr("");
-          this.state = State.ATTRIBUTE_NAME;
+          this.state = State2.ATTRIBUTE_NAME;
           this._stateAttributeName(cp);
         }
       }
@@ -10314,21 +10655,21 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.QUOTATION_MARK: {
-          this.state = State.ATTRIBUTE_VALUE_DOUBLE_QUOTED;
+          this.state = State2.ATTRIBUTE_VALUE_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
-          this.state = State.ATTRIBUTE_VALUE_SINGLE_QUOTED;
+          this.state = State2.ATTRIBUTE_VALUE_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.missingAttributeValue);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
         default: {
-          this.state = State.ATTRIBUTE_VALUE_UNQUOTED;
+          this.state = State2.ATTRIBUTE_VALUE_UNQUOTED;
           this._stateAttributeValueUnquoted(cp);
         }
       }
@@ -10338,7 +10679,7 @@ var source = (() => {
     _stateAttributeValueDoubleQuoted(cp) {
       switch (cp) {
         case CODE_POINTS.QUOTATION_MARK: {
-          this.state = State.AFTER_ATTRIBUTE_VALUE_QUOTED;
+          this.state = State2.AFTER_ATTRIBUTE_VALUE_QUOTED;
           break;
         }
         case CODE_POINTS.AMPERSAND: {
@@ -10365,7 +10706,7 @@ var source = (() => {
     _stateAttributeValueSingleQuoted(cp) {
       switch (cp) {
         case CODE_POINTS.APOSTROPHE: {
-          this.state = State.AFTER_ATTRIBUTE_VALUE_QUOTED;
+          this.state = State2.AFTER_ATTRIBUTE_VALUE_QUOTED;
           break;
         }
         case CODE_POINTS.AMPERSAND: {
@@ -10396,7 +10737,7 @@ var source = (() => {
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
           this._leaveAttrValue();
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           break;
         }
         case CODE_POINTS.AMPERSAND: {
@@ -10405,7 +10746,7 @@ var source = (() => {
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._leaveAttrValue();
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
@@ -10442,17 +10783,17 @@ var source = (() => {
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
           this._leaveAttrValue();
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           break;
         }
         case CODE_POINTS.SOLIDUS: {
           this._leaveAttrValue();
-          this.state = State.SELF_CLOSING_START_TAG;
+          this.state = State2.SELF_CLOSING_START_TAG;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._leaveAttrValue();
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
@@ -10463,7 +10804,7 @@ var source = (() => {
         }
         default: {
           this._err(ERR.missingWhitespaceBetweenAttributes);
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           this._stateBeforeAttributeName(cp);
         }
       }
@@ -10475,7 +10816,7 @@ var source = (() => {
         case CODE_POINTS.GREATER_THAN_SIGN: {
           const token = this.currentToken;
           token.selfClosing = true;
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentTagToken();
           break;
         }
@@ -10486,7 +10827,7 @@ var source = (() => {
         }
         default: {
           this._err(ERR.unexpectedSolidusInTag);
-          this.state = State.BEFORE_ATTRIBUTE_NAME;
+          this.state = State2.BEFORE_ATTRIBUTE_NAME;
           this._stateBeforeAttributeName(cp);
         }
       }
@@ -10497,7 +10838,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentComment(token);
           break;
         }
@@ -10521,23 +10862,23 @@ var source = (() => {
     _stateMarkupDeclarationOpen(cp) {
       if (this._consumeSequenceIfMatch(SEQUENCES.DASH_DASH, true)) {
         this._createCommentToken(SEQUENCES.DASH_DASH.length + 1);
-        this.state = State.COMMENT_START;
+        this.state = State2.COMMENT_START;
       } else if (this._consumeSequenceIfMatch(SEQUENCES.DOCTYPE, false)) {
         this.currentLocation = this.getCurrentLocation(SEQUENCES.DOCTYPE.length + 1);
-        this.state = State.DOCTYPE;
+        this.state = State2.DOCTYPE;
       } else if (this._consumeSequenceIfMatch(SEQUENCES.CDATA_START, true)) {
         if (this.inForeignNode) {
-          this.state = State.CDATA_SECTION;
+          this.state = State2.CDATA_SECTION;
         } else {
           this._err(ERR.cdataInHtmlContent);
           this._createCommentToken(SEQUENCES.CDATA_START.length + 1);
           this.currentToken.data = "[CDATA[";
-          this.state = State.BOGUS_COMMENT;
+          this.state = State2.BOGUS_COMMENT;
         }
       } else if (!this._ensureHibernation()) {
         this._err(ERR.incorrectlyOpenedComment);
         this._createCommentToken(2);
-        this.state = State.BOGUS_COMMENT;
+        this.state = State2.BOGUS_COMMENT;
         this._stateBogusComment(cp);
       }
     }
@@ -10546,18 +10887,18 @@ var source = (() => {
     _stateCommentStart(cp) {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.COMMENT_START_DASH;
+          this.state = State2.COMMENT_START_DASH;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.abruptClosingOfEmptyComment);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           const token = this.currentToken;
           this.emitCurrentComment(token);
           break;
         }
         default: {
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10568,12 +10909,12 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.COMMENT_END;
+          this.state = State2.COMMENT_END;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.abruptClosingOfEmptyComment);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentComment(token);
           break;
         }
@@ -10585,7 +10926,7 @@ var source = (() => {
         }
         default: {
           token.data += "-";
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10596,12 +10937,12 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.COMMENT_END_DASH;
+          this.state = State2.COMMENT_END_DASH;
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
           token.data += "<";
-          this.state = State.COMMENT_LESS_THAN_SIGN;
+          this.state = State2.COMMENT_LESS_THAN_SIGN;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -10627,7 +10968,7 @@ var source = (() => {
       switch (cp) {
         case CODE_POINTS.EXCLAMATION_MARK: {
           token.data += "!";
-          this.state = State.COMMENT_LESS_THAN_SIGN_BANG;
+          this.state = State2.COMMENT_LESS_THAN_SIGN_BANG;
           break;
         }
         case CODE_POINTS.LESS_THAN_SIGN: {
@@ -10635,7 +10976,7 @@ var source = (() => {
           break;
         }
         default: {
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10644,9 +10985,9 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateCommentLessThanSignBang(cp) {
       if (cp === CODE_POINTS.HYPHEN_MINUS) {
-        this.state = State.COMMENT_LESS_THAN_SIGN_BANG_DASH;
+        this.state = State2.COMMENT_LESS_THAN_SIGN_BANG_DASH;
       } else {
-        this.state = State.COMMENT;
+        this.state = State2.COMMENT;
         this._stateComment(cp);
       }
     }
@@ -10654,9 +10995,9 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateCommentLessThanSignBangDash(cp) {
       if (cp === CODE_POINTS.HYPHEN_MINUS) {
-        this.state = State.COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH;
+        this.state = State2.COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH;
       } else {
-        this.state = State.COMMENT_END_DASH;
+        this.state = State2.COMMENT_END_DASH;
         this._stateCommentEndDash(cp);
       }
     }
@@ -10666,7 +11007,7 @@ var source = (() => {
       if (cp !== CODE_POINTS.GREATER_THAN_SIGN && cp !== CODE_POINTS.EOF) {
         this._err(ERR.nestedComment);
       }
-      this.state = State.COMMENT_END;
+      this.state = State2.COMMENT_END;
       this._stateCommentEnd(cp);
     }
     // Comment end dash state
@@ -10675,7 +11016,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
-          this.state = State.COMMENT_END;
+          this.state = State2.COMMENT_END;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -10686,7 +11027,7 @@ var source = (() => {
         }
         default: {
           token.data += "-";
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10697,12 +11038,12 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentComment(token);
           break;
         }
         case CODE_POINTS.EXCLAMATION_MARK: {
-          this.state = State.COMMENT_END_BANG;
+          this.state = State2.COMMENT_END_BANG;
           break;
         }
         case CODE_POINTS.HYPHEN_MINUS: {
@@ -10717,7 +11058,7 @@ var source = (() => {
         }
         default: {
           token.data += "--";
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10729,12 +11070,12 @@ var source = (() => {
       switch (cp) {
         case CODE_POINTS.HYPHEN_MINUS: {
           token.data += "--!";
-          this.state = State.COMMENT_END_DASH;
+          this.state = State2.COMMENT_END_DASH;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.incorrectlyClosedComment);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentComment(token);
           break;
         }
@@ -10746,7 +11087,7 @@ var source = (() => {
         }
         default: {
           token.data += "--!";
-          this.state = State.COMMENT;
+          this.state = State2.COMMENT;
           this._stateComment(cp);
         }
       }
@@ -10759,11 +11100,11 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.BEFORE_DOCTYPE_NAME;
+          this.state = State2.BEFORE_DOCTYPE_NAME;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.BEFORE_DOCTYPE_NAME;
+          this.state = State2.BEFORE_DOCTYPE_NAME;
           this._stateBeforeDoctypeName(cp);
           break;
         }
@@ -10778,7 +11119,7 @@ var source = (() => {
         }
         default: {
           this._err(ERR.missingWhitespaceBeforeDoctypeName);
-          this.state = State.BEFORE_DOCTYPE_NAME;
+          this.state = State2.BEFORE_DOCTYPE_NAME;
           this._stateBeforeDoctypeName(cp);
         }
       }
@@ -10788,7 +11129,7 @@ var source = (() => {
     _stateBeforeDoctypeName(cp) {
       if (isAsciiUpper(cp)) {
         this._createDoctypeToken(String.fromCharCode(toAsciiLower(cp)));
-        this.state = State.DOCTYPE_NAME;
+        this.state = State2.DOCTYPE_NAME;
       } else
         switch (cp) {
           case CODE_POINTS.SPACE:
@@ -10800,7 +11141,7 @@ var source = (() => {
           case CODE_POINTS.NULL: {
             this._err(ERR.unexpectedNullCharacter);
             this._createDoctypeToken(REPLACEMENT_CHARACTER);
-            this.state = State.DOCTYPE_NAME;
+            this.state = State2.DOCTYPE_NAME;
             break;
           }
           case CODE_POINTS.GREATER_THAN_SIGN: {
@@ -10809,7 +11150,7 @@ var source = (() => {
             const token = this.currentToken;
             token.forceQuirks = true;
             this.emitCurrentDoctype(token);
-            this.state = State.DATA;
+            this.state = State2.DATA;
             break;
           }
           case CODE_POINTS.EOF: {
@@ -10823,7 +11164,7 @@ var source = (() => {
           }
           default: {
             this._createDoctypeToken(String.fromCodePoint(cp));
-            this.state = State.DOCTYPE_NAME;
+            this.state = State2.DOCTYPE_NAME;
           }
         }
     }
@@ -10836,11 +11177,11 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.AFTER_DOCTYPE_NAME;
+          this.state = State2.AFTER_DOCTYPE_NAME;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -10873,7 +11214,7 @@ var source = (() => {
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -10886,13 +11227,13 @@ var source = (() => {
         }
         default: {
           if (this._consumeSequenceIfMatch(SEQUENCES.PUBLIC, false)) {
-            this.state = State.AFTER_DOCTYPE_PUBLIC_KEYWORD;
+            this.state = State2.AFTER_DOCTYPE_PUBLIC_KEYWORD;
           } else if (this._consumeSequenceIfMatch(SEQUENCES.SYSTEM, false)) {
-            this.state = State.AFTER_DOCTYPE_SYSTEM_KEYWORD;
+            this.state = State2.AFTER_DOCTYPE_SYSTEM_KEYWORD;
           } else if (!this._ensureHibernation()) {
             this._err(ERR.invalidCharacterSequenceAfterDoctypeName);
             token.forceQuirks = true;
-            this.state = State.BOGUS_DOCTYPE;
+            this.state = State2.BOGUS_DOCTYPE;
             this._stateBogusDoctype(cp);
           }
         }
@@ -10907,25 +11248,25 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.BEFORE_DOCTYPE_PUBLIC_IDENTIFIER;
+          this.state = State2.BEFORE_DOCTYPE_PUBLIC_IDENTIFIER;
           break;
         }
         case CODE_POINTS.QUOTATION_MARK: {
           this._err(ERR.missingWhitespaceAfterDoctypePublicKeyword);
           token.publicId = "";
-          this.state = State.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           this._err(ERR.missingWhitespaceAfterDoctypePublicKeyword);
           token.publicId = "";
-          this.state = State.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.missingDoctypePublicIdentifier);
           token.forceQuirks = true;
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -10939,7 +11280,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypePublicIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -10957,18 +11298,18 @@ var source = (() => {
         }
         case CODE_POINTS.QUOTATION_MARK: {
           token.publicId = "";
-          this.state = State.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           token.publicId = "";
-          this.state = State.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.missingDoctypePublicIdentifier);
           token.forceQuirks = true;
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -10982,7 +11323,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypePublicIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -10993,7 +11334,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.QUOTATION_MARK: {
-          this.state = State.AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
+          this.state = State2.AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -11005,7 +11346,7 @@ var source = (() => {
           this._err(ERR.abruptDoctypePublicIdentifier);
           token.forceQuirks = true;
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11026,7 +11367,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.APOSTROPHE: {
-          this.state = State.AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
+          this.state = State2.AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -11038,7 +11379,7 @@ var source = (() => {
           this._err(ERR.abruptDoctypePublicIdentifier);
           token.forceQuirks = true;
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11062,24 +11403,24 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS;
+          this.state = State2.BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
         case CODE_POINTS.QUOTATION_MARK: {
           this._err(ERR.missingWhitespaceBetweenDoctypePublicAndSystemIdentifiers);
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           this._err(ERR.missingWhitespaceBetweenDoctypePublicAndSystemIdentifiers);
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11092,7 +11433,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -11110,17 +11451,17 @@ var source = (() => {
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.QUOTATION_MARK: {
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11133,7 +11474,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -11147,25 +11488,25 @@ var source = (() => {
         case CODE_POINTS.LINE_FEED:
         case CODE_POINTS.TABULATION:
         case CODE_POINTS.FORM_FEED: {
-          this.state = State.BEFORE_DOCTYPE_SYSTEM_IDENTIFIER;
+          this.state = State2.BEFORE_DOCTYPE_SYSTEM_IDENTIFIER;
           break;
         }
         case CODE_POINTS.QUOTATION_MARK: {
           this._err(ERR.missingWhitespaceAfterDoctypeSystemKeyword);
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           this._err(ERR.missingWhitespaceAfterDoctypeSystemKeyword);
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.missingDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -11179,7 +11520,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -11197,18 +11538,18 @@ var source = (() => {
         }
         case CODE_POINTS.QUOTATION_MARK: {
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED;
           break;
         }
         case CODE_POINTS.APOSTROPHE: {
           token.systemId = "";
-          this.state = State.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
+          this.state = State2.DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED;
           break;
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this._err(ERR.missingDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.DATA;
+          this.state = State2.DATA;
           this.emitCurrentDoctype(token);
           break;
         }
@@ -11222,7 +11563,7 @@ var source = (() => {
         default: {
           this._err(ERR.missingQuoteBeforeDoctypeSystemIdentifier);
           token.forceQuirks = true;
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -11233,7 +11574,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.QUOTATION_MARK: {
-          this.state = State.AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
+          this.state = State2.AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -11245,7 +11586,7 @@ var source = (() => {
           this._err(ERR.abruptDoctypeSystemIdentifier);
           token.forceQuirks = true;
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11266,7 +11607,7 @@ var source = (() => {
       const token = this.currentToken;
       switch (cp) {
         case CODE_POINTS.APOSTROPHE: {
-          this.state = State.AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
+          this.state = State2.AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -11278,7 +11619,7 @@ var source = (() => {
           this._err(ERR.abruptDoctypeSystemIdentifier);
           token.forceQuirks = true;
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11306,7 +11647,7 @@ var source = (() => {
         }
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11318,7 +11659,7 @@ var source = (() => {
         }
         default: {
           this._err(ERR.unexpectedCharacterAfterDoctypeSystemIdentifier);
-          this.state = State.BOGUS_DOCTYPE;
+          this.state = State2.BOGUS_DOCTYPE;
           this._stateBogusDoctype(cp);
         }
       }
@@ -11330,7 +11671,7 @@ var source = (() => {
       switch (cp) {
         case CODE_POINTS.GREATER_THAN_SIGN: {
           this.emitCurrentDoctype(token);
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.NULL: {
@@ -11350,7 +11691,7 @@ var source = (() => {
     _stateCdataSection(cp) {
       switch (cp) {
         case CODE_POINTS.RIGHT_SQUARE_BRACKET: {
-          this.state = State.CDATA_SECTION_BRACKET;
+          this.state = State2.CDATA_SECTION_BRACKET;
           break;
         }
         case CODE_POINTS.EOF: {
@@ -11367,10 +11708,10 @@ var source = (() => {
     //------------------------------------------------------------------
     _stateCdataSectionBracket(cp) {
       if (cp === CODE_POINTS.RIGHT_SQUARE_BRACKET) {
-        this.state = State.CDATA_SECTION_END;
+        this.state = State2.CDATA_SECTION_END;
       } else {
         this._emitChars("]");
-        this.state = State.CDATA_SECTION;
+        this.state = State2.CDATA_SECTION;
         this._stateCdataSection(cp);
       }
     }
@@ -11379,7 +11720,7 @@ var source = (() => {
     _stateCdataSectionEnd(cp) {
       switch (cp) {
         case CODE_POINTS.GREATER_THAN_SIGN: {
-          this.state = State.DATA;
+          this.state = State2.DATA;
           break;
         }
         case CODE_POINTS.RIGHT_SQUARE_BRACKET: {
@@ -11388,7 +11729,7 @@ var source = (() => {
         }
         default: {
           this._emitChars("]]");
-          this.state = State.CDATA_SECTION;
+          this.state = State2.CDATA_SECTION;
           this._stateCdataSection(cp);
         }
       }
@@ -11411,7 +11752,7 @@ var source = (() => {
       if (length === 0) {
         this.preprocessor.pos = this.entityStartPos;
         this._flushCodePointConsumedAsCharacterReference(CODE_POINTS.AMPERSAND);
-        this.state = !this._isCharacterReferenceInAttribute() && isAsciiAlphaNumeric2(this.preprocessor.peek(1)) ? State.AMBIGUOUS_AMPERSAND : this.returnState;
+        this.state = !this._isCharacterReferenceInAttribute() && isAsciiAlphaNumeric2(this.preprocessor.peek(1)) ? State2.AMBIGUOUS_AMPERSAND : this.returnState;
       } else {
         this.state = this.returnState;
       }
@@ -12402,7 +12743,7 @@ var source = (() => {
     treeAdapter: defaultTreeAdapter,
     onParseError: null
   };
-  var Parser = class {
+  var Parser2 = class {
     constructor(options, document, fragmentContext = null, scriptHandler = null) {
       this.fragmentContext = fragmentContext;
       this.scriptHandler = scriptHandler;
@@ -15490,7 +15831,7 @@ var source = (() => {
 
   // node_modules/parse5/dist/index.js
   function parse4(html3, options) {
-    return Parser.parse(html3, options);
+    return Parser2.parse(html3, options);
   }
   function parseFragment(fragmentContext, html3, options) {
     if (typeof fragmentContext === "string") {
@@ -15498,7 +15839,7 @@ var source = (() => {
       html3 = fragmentContext;
       fragmentContext = null;
     }
-    const parser = Parser.getFragmentParser(fragmentContext, options);
+    const parser = Parser2.getFragmentParser(fragmentContext, options);
     parser.tokenizer.write(html3, true);
     return parser.getFragment();
   }
@@ -15776,7 +16117,7 @@ var source = (() => {
     CharCodes3[CharCodes3["LowerX"] = 120] = "LowerX";
     CharCodes3[CharCodes3["OpeningSquareBracket"] = 91] = "OpeningSquareBracket";
   })(CharCodes2 || (CharCodes2 = {}));
-  var State2;
+  var State3;
   (function(State4) {
     State4[State4["Text"] = 1] = "Text";
     State4[State4["BeforeTagName"] = 2] = "BeforeTagName";
@@ -15804,7 +16145,7 @@ var source = (() => {
     State4[State4["SpecialStartSequence"] = 24] = "SpecialStartSequence";
     State4[State4["InSpecialTag"] = 25] = "InSpecialTag";
     State4[State4["InEntity"] = 26] = "InEntity";
-  })(State2 || (State2 = {}));
+  })(State3 || (State3 = {}));
   function isWhitespace3(c) {
     return c === CharCodes2.Space || c === CharCodes2.NewLine || c === CharCodes2.Tab || c === CharCodes2.FormFeed || c === CharCodes2.CarriageReturn;
   }
@@ -15851,12 +16192,12 @@ var source = (() => {
   var Tokenizer2 = class {
     constructor({ xmlMode = false, decodeEntities = true }, cbs) {
       this.cbs = cbs;
-      this.state = State2.Text;
+      this.state = State3.Text;
       this.buffer = "";
       this.sectionStart = 0;
       this.index = 0;
       this.entityStart = 0;
-      this.baseState = State2.Text;
+      this.baseState = State3.Text;
       this.isSpecial = false;
       this.running = true;
       this.offset = 0;
@@ -15867,11 +16208,11 @@ var source = (() => {
       this.entityDecoder = new EntityDecoder(xmlMode ? decode_data_xml_default : decode_data_html_default, (cp, consumed) => this.emitCodePoint(cp, consumed));
     }
     reset() {
-      this.state = State2.Text;
+      this.state = State3.Text;
       this.buffer = "";
       this.sectionStart = 0;
       this.index = 0;
-      this.baseState = State2.Text;
+      this.baseState = State3.Text;
       this.currentSequence = void 0;
       this.running = true;
       this.offset = 0;
@@ -15899,7 +16240,7 @@ var source = (() => {
         if (this.index > this.sectionStart) {
           this.cbs.ontext(this.sectionStart, this.index);
         }
-        this.state = State2.BeforeTagName;
+        this.state = State3.BeforeTagName;
         this.sectionStart = this.index;
       } else if (this.decodeEntities && c === CharCodes2.Amp) {
         this.startEntity();
@@ -15921,7 +16262,7 @@ var source = (() => {
         return;
       }
       this.sequenceIndex = 0;
-      this.state = State2.InTagName;
+      this.state = State3.InTagName;
       this.stateInTagName(c);
     }
     /** Look for an end tag. For <title> tags, also decode entities. */
@@ -15959,14 +16300,14 @@ var source = (() => {
     stateCDATASequence(c) {
       if (c === Sequences.Cdata[this.sequenceIndex]) {
         if (++this.sequenceIndex === Sequences.Cdata.length) {
-          this.state = State2.InCommentLike;
+          this.state = State3.InCommentLike;
           this.currentSequence = Sequences.CdataEnd;
           this.sequenceIndex = 0;
           this.sectionStart = this.index + 1;
         }
       } else {
         this.sequenceIndex = 0;
-        this.state = State2.InDeclaration;
+        this.state = State3.InDeclaration;
         this.stateInDeclaration(c);
       }
     }
@@ -16003,7 +16344,7 @@ var source = (() => {
           }
           this.sequenceIndex = 0;
           this.sectionStart = this.index + 1;
-          this.state = State2.Text;
+          this.state = State3.Text;
         }
       } else if (this.sequenceIndex === 0) {
         if (this.fastForwardTo(this.currentSequence[0])) {
@@ -16026,31 +16367,31 @@ var source = (() => {
       this.isSpecial = true;
       this.currentSequence = sequence;
       this.sequenceIndex = offset;
-      this.state = State2.SpecialStartSequence;
+      this.state = State3.SpecialStartSequence;
     }
     stateBeforeTagName(c) {
       if (c === CharCodes2.ExclamationMark) {
-        this.state = State2.BeforeDeclaration;
+        this.state = State3.BeforeDeclaration;
         this.sectionStart = this.index + 1;
       } else if (c === CharCodes2.Questionmark) {
-        this.state = State2.InProcessingInstruction;
+        this.state = State3.InProcessingInstruction;
         this.sectionStart = this.index + 1;
       } else if (this.isTagStartChar(c)) {
         const lower = c | 32;
         this.sectionStart = this.index;
         if (this.xmlMode) {
-          this.state = State2.InTagName;
+          this.state = State3.InTagName;
         } else if (lower === Sequences.ScriptEnd[2]) {
-          this.state = State2.BeforeSpecialS;
+          this.state = State3.BeforeSpecialS;
         } else if (lower === Sequences.TitleEnd[2]) {
-          this.state = State2.BeforeSpecialT;
+          this.state = State3.BeforeSpecialT;
         } else {
-          this.state = State2.InTagName;
+          this.state = State3.InTagName;
         }
       } else if (c === CharCodes2.Slash) {
-        this.state = State2.BeforeClosingTagName;
+        this.state = State3.BeforeClosingTagName;
       } else {
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.stateText(c);
       }
     }
@@ -16058,16 +16399,16 @@ var source = (() => {
       if (isEndOfTagSection(c)) {
         this.cbs.onopentagname(this.sectionStart, this.index);
         this.sectionStart = -1;
-        this.state = State2.BeforeAttributeName;
+        this.state = State3.BeforeAttributeName;
         this.stateBeforeAttributeName(c);
       }
     }
     stateBeforeClosingTagName(c) {
       if (isWhitespace3(c)) {
       } else if (c === CharCodes2.Gt) {
-        this.state = State2.Text;
+        this.state = State3.Text;
       } else {
-        this.state = this.isTagStartChar(c) ? State2.InClosingTagName : State2.InSpecialComment;
+        this.state = this.isTagStartChar(c) ? State3.InClosingTagName : State3.InSpecialComment;
         this.sectionStart = this.index;
       }
     }
@@ -16075,13 +16416,13 @@ var source = (() => {
       if (c === CharCodes2.Gt || isWhitespace3(c)) {
         this.cbs.onclosetag(this.sectionStart, this.index);
         this.sectionStart = -1;
-        this.state = State2.AfterClosingTagName;
+        this.state = State3.AfterClosingTagName;
         this.stateAfterClosingTagName(c);
       }
     }
     stateAfterClosingTagName(c) {
       if (c === CharCodes2.Gt || this.fastForwardTo(CharCodes2.Gt)) {
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.sectionStart = this.index + 1;
       }
     }
@@ -16089,27 +16430,27 @@ var source = (() => {
       if (c === CharCodes2.Gt) {
         this.cbs.onopentagend(this.index);
         if (this.isSpecial) {
-          this.state = State2.InSpecialTag;
+          this.state = State3.InSpecialTag;
           this.sequenceIndex = 0;
         } else {
-          this.state = State2.Text;
+          this.state = State3.Text;
         }
         this.sectionStart = this.index + 1;
       } else if (c === CharCodes2.Slash) {
-        this.state = State2.InSelfClosingTag;
+        this.state = State3.InSelfClosingTag;
       } else if (!isWhitespace3(c)) {
-        this.state = State2.InAttributeName;
+        this.state = State3.InAttributeName;
         this.sectionStart = this.index;
       }
     }
     stateInSelfClosingTag(c) {
       if (c === CharCodes2.Gt) {
         this.cbs.onselfclosingtag(this.index);
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.sectionStart = this.index + 1;
         this.isSpecial = false;
       } else if (!isWhitespace3(c)) {
-        this.state = State2.BeforeAttributeName;
+        this.state = State3.BeforeAttributeName;
         this.stateBeforeAttributeName(c);
       }
     }
@@ -16117,34 +16458,34 @@ var source = (() => {
       if (c === CharCodes2.Eq || isEndOfTagSection(c)) {
         this.cbs.onattribname(this.sectionStart, this.index);
         this.sectionStart = this.index;
-        this.state = State2.AfterAttributeName;
+        this.state = State3.AfterAttributeName;
         this.stateAfterAttributeName(c);
       }
     }
     stateAfterAttributeName(c) {
       if (c === CharCodes2.Eq) {
-        this.state = State2.BeforeAttributeValue;
+        this.state = State3.BeforeAttributeValue;
       } else if (c === CharCodes2.Slash || c === CharCodes2.Gt) {
         this.cbs.onattribend(QuoteType.NoValue, this.sectionStart);
         this.sectionStart = -1;
-        this.state = State2.BeforeAttributeName;
+        this.state = State3.BeforeAttributeName;
         this.stateBeforeAttributeName(c);
       } else if (!isWhitespace3(c)) {
         this.cbs.onattribend(QuoteType.NoValue, this.sectionStart);
-        this.state = State2.InAttributeName;
+        this.state = State3.InAttributeName;
         this.sectionStart = this.index;
       }
     }
     stateBeforeAttributeValue(c) {
       if (c === CharCodes2.DoubleQuote) {
-        this.state = State2.InAttributeValueDq;
+        this.state = State3.InAttributeValueDq;
         this.sectionStart = this.index + 1;
       } else if (c === CharCodes2.SingleQuote) {
-        this.state = State2.InAttributeValueSq;
+        this.state = State3.InAttributeValueSq;
         this.sectionStart = this.index + 1;
       } else if (!isWhitespace3(c)) {
         this.sectionStart = this.index;
-        this.state = State2.InAttributeValueNq;
+        this.state = State3.InAttributeValueNq;
         this.stateInAttributeValueNoQuotes(c);
       }
     }
@@ -16153,7 +16494,7 @@ var source = (() => {
         this.cbs.onattribdata(this.sectionStart, this.index);
         this.sectionStart = -1;
         this.cbs.onattribend(quote === CharCodes2.DoubleQuote ? QuoteType.Double : QuoteType.Single, this.index + 1);
-        this.state = State2.BeforeAttributeName;
+        this.state = State3.BeforeAttributeName;
       } else if (this.decodeEntities && c === CharCodes2.Amp) {
         this.startEntity();
       }
@@ -16169,7 +16510,7 @@ var source = (() => {
         this.cbs.onattribdata(this.sectionStart, this.index);
         this.sectionStart = -1;
         this.cbs.onattribend(QuoteType.Unquoted, this.index);
-        this.state = State2.BeforeAttributeName;
+        this.state = State3.BeforeAttributeName;
         this.stateBeforeAttributeName(c);
       } else if (this.decodeEntities && c === CharCodes2.Amp) {
         this.startEntity();
@@ -16177,40 +16518,40 @@ var source = (() => {
     }
     stateBeforeDeclaration(c) {
       if (c === CharCodes2.OpeningSquareBracket) {
-        this.state = State2.CDATASequence;
+        this.state = State3.CDATASequence;
         this.sequenceIndex = 0;
       } else {
-        this.state = c === CharCodes2.Dash ? State2.BeforeComment : State2.InDeclaration;
+        this.state = c === CharCodes2.Dash ? State3.BeforeComment : State3.InDeclaration;
       }
     }
     stateInDeclaration(c) {
       if (c === CharCodes2.Gt || this.fastForwardTo(CharCodes2.Gt)) {
         this.cbs.ondeclaration(this.sectionStart, this.index);
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.sectionStart = this.index + 1;
       }
     }
     stateInProcessingInstruction(c) {
       if (c === CharCodes2.Gt || this.fastForwardTo(CharCodes2.Gt)) {
         this.cbs.onprocessinginstruction(this.sectionStart, this.index);
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.sectionStart = this.index + 1;
       }
     }
     stateBeforeComment(c) {
       if (c === CharCodes2.Dash) {
-        this.state = State2.InCommentLike;
+        this.state = State3.InCommentLike;
         this.currentSequence = Sequences.CommentEnd;
         this.sequenceIndex = 2;
         this.sectionStart = this.index + 1;
       } else {
-        this.state = State2.InDeclaration;
+        this.state = State3.InDeclaration;
       }
     }
     stateInSpecialComment(c) {
       if (c === CharCodes2.Gt || this.fastForwardTo(CharCodes2.Gt)) {
         this.cbs.oncomment(this.sectionStart, this.index, 0);
-        this.state = State2.Text;
+        this.state = State3.Text;
         this.sectionStart = this.index + 1;
       }
     }
@@ -16221,7 +16562,7 @@ var source = (() => {
       } else if (lower === Sequences.StyleEnd[3]) {
         this.startSpecial(Sequences.StyleEnd, 4);
       } else {
-        this.state = State2.InTagName;
+        this.state = State3.InTagName;
         this.stateInTagName(c);
       }
     }
@@ -16232,15 +16573,15 @@ var source = (() => {
       } else if (lower === Sequences.TextareaEnd[3]) {
         this.startSpecial(Sequences.TextareaEnd, 4);
       } else {
-        this.state = State2.InTagName;
+        this.state = State3.InTagName;
         this.stateInTagName(c);
       }
     }
     startEntity() {
       this.baseState = this.state;
-      this.state = State2.InEntity;
+      this.state = State3.InEntity;
       this.entityStart = this.index;
-      this.entityDecoder.startEntity(this.xmlMode ? DecodingMode.Strict : this.baseState === State2.Text || this.baseState === State2.InSpecialTag ? DecodingMode.Legacy : DecodingMode.Attribute);
+      this.entityDecoder.startEntity(this.xmlMode ? DecodingMode.Strict : this.baseState === State3.Text || this.baseState === State3.InSpecialTag ? DecodingMode.Legacy : DecodingMode.Attribute);
     }
     stateInEntity() {
       const length = this.entityDecoder.write(this.buffer, this.index - this.offset);
@@ -16258,10 +16599,10 @@ var source = (() => {
      */
     cleanup() {
       if (this.running && this.sectionStart !== this.index) {
-        if (this.state === State2.Text || this.state === State2.InSpecialTag && this.sequenceIndex === 0) {
+        if (this.state === State3.Text || this.state === State3.InSpecialTag && this.sequenceIndex === 0) {
           this.cbs.ontext(this.sectionStart, this.index);
           this.sectionStart = this.index;
-        } else if (this.state === State2.InAttributeValueDq || this.state === State2.InAttributeValueSq || this.state === State2.InAttributeValueNq) {
+        } else if (this.state === State3.InAttributeValueDq || this.state === State3.InAttributeValueSq || this.state === State3.InAttributeValueNq) {
           this.cbs.onattribdata(this.sectionStart, this.index);
           this.sectionStart = this.index;
         }
@@ -16279,107 +16620,107 @@ var source = (() => {
       while (this.shouldContinue()) {
         const c = this.buffer.charCodeAt(this.index - this.offset);
         switch (this.state) {
-          case State2.Text: {
+          case State3.Text: {
             this.stateText(c);
             break;
           }
-          case State2.SpecialStartSequence: {
+          case State3.SpecialStartSequence: {
             this.stateSpecialStartSequence(c);
             break;
           }
-          case State2.InSpecialTag: {
+          case State3.InSpecialTag: {
             this.stateInSpecialTag(c);
             break;
           }
-          case State2.CDATASequence: {
+          case State3.CDATASequence: {
             this.stateCDATASequence(c);
             break;
           }
-          case State2.InAttributeValueDq: {
+          case State3.InAttributeValueDq: {
             this.stateInAttributeValueDoubleQuotes(c);
             break;
           }
-          case State2.InAttributeName: {
+          case State3.InAttributeName: {
             this.stateInAttributeName(c);
             break;
           }
-          case State2.InCommentLike: {
+          case State3.InCommentLike: {
             this.stateInCommentLike(c);
             break;
           }
-          case State2.InSpecialComment: {
+          case State3.InSpecialComment: {
             this.stateInSpecialComment(c);
             break;
           }
-          case State2.BeforeAttributeName: {
+          case State3.BeforeAttributeName: {
             this.stateBeforeAttributeName(c);
             break;
           }
-          case State2.InTagName: {
+          case State3.InTagName: {
             this.stateInTagName(c);
             break;
           }
-          case State2.InClosingTagName: {
+          case State3.InClosingTagName: {
             this.stateInClosingTagName(c);
             break;
           }
-          case State2.BeforeTagName: {
+          case State3.BeforeTagName: {
             this.stateBeforeTagName(c);
             break;
           }
-          case State2.AfterAttributeName: {
+          case State3.AfterAttributeName: {
             this.stateAfterAttributeName(c);
             break;
           }
-          case State2.InAttributeValueSq: {
+          case State3.InAttributeValueSq: {
             this.stateInAttributeValueSingleQuotes(c);
             break;
           }
-          case State2.BeforeAttributeValue: {
+          case State3.BeforeAttributeValue: {
             this.stateBeforeAttributeValue(c);
             break;
           }
-          case State2.BeforeClosingTagName: {
+          case State3.BeforeClosingTagName: {
             this.stateBeforeClosingTagName(c);
             break;
           }
-          case State2.AfterClosingTagName: {
+          case State3.AfterClosingTagName: {
             this.stateAfterClosingTagName(c);
             break;
           }
-          case State2.BeforeSpecialS: {
+          case State3.BeforeSpecialS: {
             this.stateBeforeSpecialS(c);
             break;
           }
-          case State2.BeforeSpecialT: {
+          case State3.BeforeSpecialT: {
             this.stateBeforeSpecialT(c);
             break;
           }
-          case State2.InAttributeValueNq: {
+          case State3.InAttributeValueNq: {
             this.stateInAttributeValueNoQuotes(c);
             break;
           }
-          case State2.InSelfClosingTag: {
+          case State3.InSelfClosingTag: {
             this.stateInSelfClosingTag(c);
             break;
           }
-          case State2.InDeclaration: {
+          case State3.InDeclaration: {
             this.stateInDeclaration(c);
             break;
           }
-          case State2.BeforeDeclaration: {
+          case State3.BeforeDeclaration: {
             this.stateBeforeDeclaration(c);
             break;
           }
-          case State2.BeforeComment: {
+          case State3.BeforeComment: {
             this.stateBeforeComment(c);
             break;
           }
-          case State2.InProcessingInstruction: {
+          case State3.InProcessingInstruction: {
             this.stateInProcessingInstruction(c);
             break;
           }
-          case State2.InEntity: {
+          case State3.InEntity: {
             this.stateInEntity();
             break;
           }
@@ -16389,7 +16730,7 @@ var source = (() => {
       this.cleanup();
     }
     finish() {
-      if (this.state === State2.InEntity) {
+      if (this.state === State3.InEntity) {
         this.entityDecoder.end();
         this.state = this.baseState;
       }
@@ -16402,19 +16743,19 @@ var source = (() => {
       if (this.sectionStart >= endIndex) {
         return;
       }
-      if (this.state === State2.InCommentLike) {
+      if (this.state === State3.InCommentLike) {
         if (this.currentSequence === Sequences.CdataEnd) {
           this.cbs.oncdata(this.sectionStart, endIndex, 0);
         } else {
           this.cbs.oncomment(this.sectionStart, endIndex, 0);
         }
-      } else if (this.state === State2.InTagName || this.state === State2.BeforeAttributeName || this.state === State2.BeforeAttributeValue || this.state === State2.AfterAttributeName || this.state === State2.InAttributeName || this.state === State2.InAttributeValueSq || this.state === State2.InAttributeValueDq || this.state === State2.InAttributeValueNq || this.state === State2.InClosingTagName) {
+      } else if (this.state === State3.InTagName || this.state === State3.BeforeAttributeName || this.state === State3.BeforeAttributeValue || this.state === State3.AfterAttributeName || this.state === State3.InAttributeName || this.state === State3.InAttributeValueSq || this.state === State3.InAttributeValueDq || this.state === State3.InAttributeValueNq || this.state === State3.InClosingTagName) {
       } else {
         this.cbs.ontext(this.sectionStart, endIndex);
       }
     }
     emitCodePoint(cp, consumed) {
-      if (this.baseState !== State2.Text && this.baseState !== State2.InSpecialTag) {
+      if (this.baseState !== State3.Text && this.baseState !== State3.InSpecialTag) {
         if (this.sectionStart < this.entityStart) {
           this.cbs.onattribdata(this.sectionStart, this.entityStart);
         }
@@ -16529,7 +16870,7 @@ var source = (() => {
     "title"
   ]);
   var reNameEnd = /\s|\//;
-  var Parser2 = class {
+  var Parser3 = class {
     constructor(cbs, options = {}) {
       var _a2, _b, _c, _d, _e, _f;
       this.options = options;
@@ -16883,7 +17224,7 @@ var source = (() => {
   // node_modules/htmlparser2/lib/esm/index.js
   function parseDocument(data2, options) {
     const handler = new DomHandler(void 0, options);
-    new Parser2(handler, options).end(data2);
+    new Parser3(handler, options).end(data2);
     return handler.root;
   }
 
@@ -16891,7 +17232,7 @@ var source = (() => {
   var parse5 = getParse((content, options, isDocument2, context) => options._useHtmlParser2 ? parseDocument(content, options) : parseWithParse5(content, options, isDocument2, context));
   var load = getLoad(parse5, (dom, options) => options._useHtmlParser2 ? esm_default(dom, options) : renderWithParse5(dom));
 
-  // src/MangaWorld/helper.ts
+  // src/helper.ts
   init_buffer();
   var URLBuilder = class {
     parameters = {};
@@ -16934,370 +17275,117 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/parser.ts
-  init_buffer();
-  var import_lib = __toESM(require_lib(), 1);
-  var Parser3 = class {
-    getRating(tags) {
-      let rating = import_lib.ContentRating.EVERYONE;
-      for (const tag of tags) {
-        if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.ADULT;
-        }
-        if (["MATURO", "DOUJINSHI", "HORROR", "TRAGICO", "ECCHI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.MATURE;
-        }
-      }
-      return rating;
+  // src/Functions.ts
+  var Functions = class {
+    baseUrl = "";
+    constructor(url) {
+      this.baseUrl = url;
     }
-    parseMangaDetails($2, mangaId) {
-      const title = $2(".name.bigger").text().trim() ?? "";
-      const image = $2(".thumb.mb-3.text-center img").attr("src") ?? "";
-      const desc = $2("#noidungm").text().trim() ?? "";
-      const artists = [];
-      const authors = [];
-      const titles = [];
-      const data2 = {
-        genre: [],
-        state: ""
-      };
-      for (const obj of $2(".meta-data.row.px-1 .col-12").toArray()) {
-        const text3 = $2(obj).text().trim();
-        if (text3.includes("Stato")) {
-          const stateLink = $2(obj).find("a").first();
-          if (stateLink.length) data2.state = stateLink.text().trim();
-        } else if (text3.includes("Artist")) {
-          $2(obj).find("a").each((_, e) => artists.push($2(e).text().trim()));
-        } else if (text3.includes("Autor")) {
-          $2(obj).find("a").each((_, e) => authors.push($2(e).text().trim()));
-        } else if (text3.includes("Gener")) {
-          $2(obj).find("a").each((_, e) => data2.genre.push($2(e).text().trim()));
-        } else if (text3.includes("Titol")) {
-          let t = $2(obj).text().trim();
-          t = t.slice(t.indexOf(":") + 1, t.length);
-          t.split(",").forEach((element) => {
-            titles.push(element.trim());
-          });
-        }
+    parser = new Parser();
+    async getDiscoverSectionItems(section, metadata) {
+      const data2 = (await Application.scheduleRequest({
+        url: `${this.baseUrl}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      let type = "simpleCarouselItem";
+      const mangas = this.parser.parseInTendenzaMese($2);
+      switch (section.id) {
+        case "mese_section":
+          return mangas[0];
+        case "popular_section":
+          return await this.parser.parseCapitoliInTendenza($2);
+        case "updated_section":
+          return await this.parser.parseLastAddedSetcion($2);
+        case "new_manga_section":
+          return mangas[1];
+        default:
+          return { items: [] };
       }
-      const author = authors.join(", ");
-      const artist = artists.join(", ");
-      const status = data2.state;
-      const arrayTags = [];
-      for (const tag of data2.genre) {
-        arrayTags.push({ title: tag.toString(), id: "generi" });
-      }
-      let rating = this.getRating(arrayTags.map((tag) => tag.title));
-      const tagSections = [
-        { id: "generi", title: "genres", tags: arrayTags }
-      ];
-      return {
-        mangaId,
-        mangaInfo: {
-          artist,
-          thumbnailUrl: image,
-          synopsis: desc,
-          primaryTitle: title,
-          contentRating: rating,
-          status,
-          author,
-          tagGroups: tagSections,
-          secondaryTitles: titles
-        }
-      };
     }
-    parseChapters($2, sourceManga) {
-      const chapters = [];
-      const arrChapters = $2(".chapter").toArray().reverse();
-      for (const item of arrChapters) {
-        const href = $2("a", item).attr("href") ?? "";
-        const regex = /\/manga\/\d+\/([^/]+\/read\/[a-zA-Z0-9]+)/;
-        const match = href.match(regex);
-        const extractedPart = match ? match[1] : "";
-        const id = extractedPart.replace("/read/", "_read_");
-        const name = $2("a", item).attr("title") ?? "";
-        const chapNum = Number($2(".d-inline-block", item).text().split(" ")[1]) ?? -1;
-        const date = $2("i.text-right.text-muted.chap-date", item).text();
-        chapters.push({
-          chapterId: id,
-          sourceManga,
-          langCode: "it",
-          chapNum,
-          title: name,
-          publishDate: this.getDate(date)
-        });
-      }
-      return chapters;
+    async getChapterDetails(chapter) {
+      console.log(chapter);
+      chapter.chapterId = chapter.chapterId.replace("_read_", "/read/");
+      const data2 = (await Application.scheduleRequest({
+        url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/${chapter.chapterId}/?style=list`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      chapter.chapterId = chapter.chapterId.replace("/read/", "_read_");
+      return this.parser.parseChapterDetails(
+        $2,
+        chapter.sourceManga.mangaId,
+        chapter.chapterId
+      );
     }
-    parseChapterDetails($2, mangaId, id) {
-      const pages = [];
-      for (const item of $2(
-        ".col-12.text-center.position-relative img"
-      ).toArray()) {
-        const imageUrl = $2(item).attr("src");
-        if (!imageUrl) continue;
-        pages.push(imageUrl.trim());
-      }
-      return {
-        id,
-        mangaId,
-        pages
-      };
-    }
-    parseTags($2, baseUrl) {
-      const genres = [];
-      let first_label = "";
-      let i = 0;
-      for (const item of $2(
-        ".dropdown-menu.dropdown-multicol .dropdown-item"
-      ).toArray()) {
-        const id = $2(item).attr("href")?.replace(`${baseUrl}/archive?genre=`, "") ?? "";
-        const label = $2(item).text().trim();
-        if (i == 0) first_label = label;
-        if (label == first_label && i > 0) break;
-        genres.push({ title: label, id });
-        i++;
-      }
-      return [{ id: "genres", title: "genres", tags: genres }];
-    }
-    parseSearchResults($2) {
-      const results = [];
-      const tags = [];
-      for (const item of $2(".comics-grid .entry").toArray()) {
-        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? [
-          "null"
-        ])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const title = $2("a", item).attr("title") ?? "";
-        const image = $2("a img", item).attr("src") ?? "";
-        $2("div.genres", item).find("a").each((_, e) => tags.push($2(e).text().trim()));
-        results.push({
-          imageUrl: image,
-          title,
-          mangaId: id,
-          contentRating: this.getRating(tags)
-        });
-      }
-      return results;
-    }
-    parseInTendenzaOggi($2) {
-      const trending = [];
-      const arrTrending = $2(".entry.vertical").toArray();
-      for (const obj of arrTrending) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const image = $2("a img", obj).attr("src") ?? "";
-        const title = $2(".manga-title", obj).text().trim();
-        trending.push({
-          metadata: void 0,
-          type: "featuredCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title
-        });
-      }
-      return { items: trending };
-    }
-    parseInTendenzaMese($2) {
-      const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
-      const hot = [];
-      const newTitle = [];
-      for (const obj of arrHotTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const image = $2(".img-fluid", obj).attr("src") ?? "";
-        const title = $2(".name", obj).text().trim();
-        if (hot.length < 10) {
-          hot.push({
-            metadata: void 0,
-            type: "prominentCarouselItem",
-            contentRating: void 0,
-            imageUrl: image,
-            mangaId: id,
-            title
-          });
-          continue;
-        }
-        if (newTitle.length < 5) {
-          newTitle.push({
-            chapterId: "",
-            publishDate: this.getDate($2(".font-weight-bold").next().text()),
-            subtitle: "",
-            metadata: void 0,
-            type: "chapterUpdatesCarouselItem",
-            contentRating: void 0,
-            imageUrl: image,
-            mangaId: id,
-            title
-          });
-        }
-      }
+    async getDiscoverSections() {
       return [
-        { items: hot },
-        { items: newTitle }
+        {
+          id: "mese_section",
+          title: "Manga del Mese",
+          type: import_types3.DiscoverSectionType.prominentCarousel
+        },
+        {
+          id: "popular_section",
+          title: "Capitoli In Tendenza",
+          type: import_types3.DiscoverSectionType.featured
+        },
+        {
+          id: "updated_section",
+          title: "Aggiornati di Recente",
+          type: import_types3.DiscoverSectionType.chapterUpdates
+        },
+        {
+          id: "new_manga_section",
+          title: "Nuove Aggiunte",
+          type: import_types3.DiscoverSectionType.simpleCarousel
+        }
       ];
     }
-    getDate(dataString) {
-      const mesi = {
-        "Gennaio": 0,
-        "Febbraio": 1,
-        "Marzo": 2,
-        "Aprile": 3,
-        "Maggio": 4,
-        "Giugno": 5,
-        "Luglio": 6,
-        "Agosto": 7,
-        "Settembre": 8,
-        "Ottobre": 9,
-        "Novembre": 10,
-        "Dicembre": 11
-      };
-      const oggi = /* @__PURE__ */ new Date();
-      const parts = dataString.split(" ");
-      if (parts.length === 2) {
-        parts.push(oggi.getFullYear().toString());
-      }
-      if (parts.length > 3) return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
-      const mese = parseInt(parts[0], 10);
-      const giorno = mesi[parts[1]];
-      const anno = parseInt(parts[2], 10);
-      if (isNaN(giorno) || mese === void 0) return oggi;
-      return new Date(anno, giorno, mese);
+    async getChapters(sourceManga, sinceDate) {
+      console.log(sourceManga);
+      console.log(sourceManga.mangaId);
+      const [response, buffer] = await Application.scheduleRequest({
+        url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
+        method: "GET"
+      });
+      const $2 = load(Application.arrayBufferToUTF8String(buffer));
+      return this.parser.parseChapters($2, sourceManga);
     }
-    parseLastAddedSetcion($2) {
-      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
-      const latest = [];
-      for (const obj of arrLatest) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const title = $2("a", obj).attr("title") ?? "";
-        const image = $2("a img", obj).attr("src") ?? "";
-        const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
-        const chapterId = $2("a xanh", obj).attr("title") ?? "";
-        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
-        latest.push({
-          chapterId: "",
-          //todo
-          publishDate: this.getDate(addedDate),
-          metadata: void 0,
-          type: "chapterUpdatesCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title,
-          subtitle: sub
-        });
-      }
-      return { items: latest };
+    async getSearchResults(query, metadata) {
+      let page = metadata?.page ?? 1;
+      if (page == -1) return { items: [] };
+      if (!query.title) return { items: [] };
+      const request = await this.constructSearchRequest(0, query);
+      const $2 = load(Application.arrayBufferToUTF8String(request[1]));
+      let manga = this.parser.parseSearchResults($2);
+      page++;
+      if (manga.length < 16) page = -1;
+      return { items: manga, metadata };
     }
-    parseLastAddedMangaSetcion($2) {
-      const arrNewTitle = $2(".col-12 .top-wrapper .entry").toArray();
-      const newTitle = [];
-      for (const obj of arrNewTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const image = $2(".img-fluid", obj).attr("src") ?? "";
-        const title = $2(".name", obj).text().trim();
-        newTitle.push({
-          metadata: void 0,
-          type: "prominentCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title
-        });
-      }
-      return {
-        items: newTitle
-      };
+    async getMangaDetails(mangaId) {
+      console.log(mangaId);
+      const data2 = (await Application.scheduleRequest({
+        url: `${this.baseUrl}/manga/${mangaId}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      return this.parser.parseMangaDetails($2, mangaId);
     }
-  };
-
-  // src/MangaWorld/SettingsForm.ts
-  init_buffer();
-  var import_types2 = __toESM(require_lib(), 1);
-  var SettingsForm = class extends import_types2.Form {
-    getSections() {
-      return [
-        (0, import_types2.Section)("playground", [
-          (0, import_types2.NavigationRow)("playground", {
-            title: "SourceUI Playground",
-            form: new SourceUIPlaygroundForm()
-          })
-        ])
-      ];
-    }
-  };
-  var State3 = class {
-    constructor(form, value) {
-      this.form = form;
-      this._value = value;
-    }
-    _value;
-    get value() {
-      return this._value;
-    }
-    get selector() {
-      return Application.Selector(this, "updateValue");
-    }
-    async updateValue(value) {
-      this._value = value;
-      this.form.reloadForm();
-    }
-  };
-  var SourceUIPlaygroundForm = class extends import_types2.Form {
-    inputValue = new State3(this, "");
-    rowsVisible = new State3(this, false);
-    items = [];
-    getSections() {
-      return [
-        (0, import_types2.Section)("hideStuff", [
-          (0, import_types2.ToggleRow)("toggle", {
-            title: "Toggles can hide rows",
-            value: this.rowsVisible.value,
-            onValueChange: this.rowsVisible.selector
-          })
-        ]),
-        ...(() => this.rowsVisible.value ? [
-          (0, import_types2.Section)("hiddenSection", [
-            (0, import_types2.InputRow)("input", {
-              title: "Dynamic Input",
-              value: this.inputValue.value,
-              onValueChange: this.inputValue.selector
-            }),
-            (0, import_types2.LabelRow)("boundLabel", {
-              title: "Bound label to input",
-              subtitle: "This label updates with the input",
-              value: this.inputValue.value
-            })
-          ]),
-          (0, import_types2.Section)("items", [
-            ...this.items.map(
-              (item) => (0, import_types2.LabelRow)(item, {
-                title: item
-              })
-            ),
-            (0, import_types2.ButtonRow)("addNewItem", {
-              title: "Add New Item",
-              onSelect: Application.Selector(
-                this,
-                "addNewItem"
-              )
-            })
-          ])
-        ] : [])()
-      ];
-    }
-    async addNewItem() {
-      this.items.push("Item " + (this.items.length + 1));
-      this.reloadForm();
+    constructSearchRequest(page, query) {
+      return Application.scheduleRequest({
+        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page.toString()).buildUrl({
+          addTrailingSlash: true,
+          includeUndefinedParameters: false
+        }),
+        method: "GET"
+      });
     }
   };
 
   // src/MangaWorld/main.ts
   var MW_DOMAIN = "https://www.mangaworld.nz";
-  var MainInterceptor = class extends import_types3.PaperbackInterceptor {
+  var MainInterceptor = class extends import_types4.PaperbackInterceptor {
     async interceptRequest(request) {
       return request;
     }
@@ -17309,14 +17397,15 @@ var source = (() => {
   };
   var MangaWorldExtension = class {
     // Implementation of the main rate limiter
-    mainRateLimiter = new import_types3.BasicRateLimiter("main", {
+    mainRateLimiter = new import_types4.BasicRateLimiter("main", {
       numberOfRequests: 15,
       bufferInterval: 10,
       ignoreImages: true
     });
     baseUrl = MW_DOMAIN;
     RETRIES = 10;
-    parser = new Parser3();
+    parser = new Parser();
+    functions = new Functions(MW_DOMAIN);
     // Implementation of the main interceptor
     mainInterceptor = new MainInterceptor("main");
     // Method from the Extension interface which we implement, initializes the rate limiter, interceptor, discover sections and search filters
@@ -17344,52 +17433,20 @@ var source = (() => {
     }
     // Populates search
     async getSearchResults(query, metadata) {
-      let page = metadata?.page ?? 1;
-      if (page == -1) return { items: [] };
-      if (!query.title) return { items: [] };
-      const request = await this.constructSearchRequest(0, query);
-      const $2 = load(Application.arrayBufferToUTF8String(request[1]));
-      let manga = this.parser.parseSearchResults($2);
-      page++;
-      if (manga.length < 16) page = -1;
-      return { items: manga, metadata };
+      return this.functions.getSearchResults(query, metadata);
     }
     // Populates the title details
     async getMangaDetails(mangaId) {
       console.log(mangaId);
-      const data2 = (await Application.scheduleRequest({
-        url: `${this.baseUrl}/manga/${mangaId}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      return this.parser.parseMangaDetails($2, mangaId);
+      return this.functions.getMangaDetails(mangaId);
     }
     // Populates the chapter list
     async getChapters(sourceManga, sinceDate) {
-      console.log(sourceManga);
-      console.log(sourceManga.mangaId);
-      const [response, buffer] = await Application.scheduleRequest({
-        url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
-        method: "GET"
-      });
-      const $2 = load(Application.arrayBufferToUTF8String(buffer));
-      return this.parser.parseChapters($2, sourceManga);
+      return this.functions.getChapters(sourceManga, sinceDate);
     }
     // Populates a chapter with images
     async getChapterDetails(chapter) {
-      console.log(chapter);
-      chapter.chapterId = chapter.chapterId.replace("_read_", "/read/");
-      const data2 = (await Application.scheduleRequest({
-        url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/${chapter.chapterId}/?style=list`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      chapter.chapterId = chapter.chapterId.replace("/read/", "_read_");
-      return this.parser.parseChapterDetails(
-        $2,
-        chapter.sourceManga.mangaId,
-        chapter.chapterId
-      );
+      return this.functions.getChapterDetails(chapter);
     }
     async getCloudflareBypassRequestAsync() {
       return Application.scheduleRequest({
@@ -17402,79 +17459,11 @@ var source = (() => {
         }
       });
     }
-    constructSearchRequest(page, query) {
-      return Application.scheduleRequest({
-        url: new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("sort", "most_read").addQueryParameter("page", page.toString()).buildUrl({
-          addTrailingSlash: true,
-          includeUndefinedParameters: false
-        }),
-        method: "GET"
-      });
-    }
     async getDiscoverSections() {
-      return [
-        {
-          id: "mese_section",
-          title: "Manga del Mese",
-          type: import_types3.DiscoverSectionType.featured
-        },
-        {
-          id: "updated_section",
-          title: "Aggiornati di Recente",
-          type: import_types3.DiscoverSectionType.chapterUpdates
-        },
-        {
-          id: "popular_section",
-          title: "In Tendenza",
-          type: import_types3.DiscoverSectionType.featured
-        },
-        {
-          id: "new_manga_section",
-          title: "Nuove Aggiunte",
-          type: import_types3.DiscoverSectionType.simpleCarousel
-        }
-      ];
+      return this.functions.getDiscoverSections();
     }
-    /*
-    	getTagSections($): DiscoverSection[] {
-    		const uniqueGroups = new Set<string>();
-    		const sections: DiscoverSection[] = [];
-    
-    		for (const tag of this.parser.parseTags($, this.baseUrl)) {
-    			const group = tag.data.attributes.group;
-    
-    			if (!uniqueGroups.has(group)) {
-    				uniqueGroups.add(group);
-    				sections.push({
-    					id: group,
-    					title: group.charAt(0).toUpperCase() + group.slice(1),
-    					type: DiscoverSectionType.genres,
-    				});
-    			}
-    		}
-    		return sections;
-    	}
-    	*/
     async getDiscoverSectionItems(section, metadata) {
-      const data2 = (await Application.scheduleRequest({
-        url: `${this.baseUrl}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      let type = "simpleCarouselItem";
-      const mangas = this.parser.parseInTendenzaMese($2);
-      switch (section.id) {
-        case "mese_section":
-          return mangas[0];
-        case "popular_section":
-          return await this.parser.parseInTendenzaOggi($2);
-        case "updated_section":
-          return await this.parser.parseLastAddedSetcion($2);
-        case "new_manga_section":
-          return mangas[1];
-        default:
-          return { items: [] };
-      }
+      return this.functions.getDiscoverSectionItems(section, void 0);
     }
   };
   var MangaWorld = new MangaWorldExtension();
