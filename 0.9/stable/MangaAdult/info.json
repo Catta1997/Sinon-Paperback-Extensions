@@ -1,0 +1,1 @@
+{"version":"0.6.9","name":"MangaAdult","description":"Extension that pulls manga from MangaAdult (0.9).","icon":"icon.png","language":"it","contentRating":"ADULT","capabilities":[8,1,4,64],"badges":[],"developers":[{"name":"Catta1997","website":"https://github.com/Catta1997"}],"id":"MangaAdult"}

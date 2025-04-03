@@ -3041,11 +3041,11 @@ var source = (() => {
     }
   });
 
-  // src/MangaWorld/main.ts
+  // src/MangaAdult/main.ts
   var main_exports = {};
   __export(main_exports, {
-    MangaWorld: () => MangaWorld,
-    MangaWorldExtension: () => MangaWorldExtension
+    MangaAdult: () => MangaAdult,
+    MangaAdultExtension: () => MangaAdultExtension
   });
   init_buffer();
   var import_types3 = __toESM(require_lib(), 1);
@@ -16891,7 +16891,7 @@ var source = (() => {
   var parse5 = getParse((content, options, isDocument2, context) => options._useHtmlParser2 ? parseDocument(content, options) : parseWithParse5(content, options, isDocument2, context));
   var load = getLoad(parse5, (dom, options) => options._useHtmlParser2 ? esm_default(dom, options) : renderWithParse5(dom));
 
-  // src/MangaWorld/helper.ts
+  // src/MangaAdult/helper.ts
   init_buffer();
   var URLBuilder = class {
     parameters = {};
@@ -16934,22 +16934,10 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/parser.ts
+  // src/MangaAdult/parser.ts
   init_buffer();
   var import_lib = __toESM(require_lib(), 1);
   var Parser3 = class {
-    getRating(tags) {
-      let rating = import_lib.ContentRating.EVERYONE;
-      for (const tag of tags) {
-        if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.ADULT;
-        }
-        if (["MATURO", "DOUJINSHI", "HORROR", "TRAGICO", "ECCHI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.MATURE;
-        }
-      }
-      return rating;
-    }
     parseMangaDetails($2, mangaId) {
       const title = $2(".name.bigger").text().trim() ?? "";
       const image = $2(".thumb.mb-3.text-center img").attr("src") ?? "";
@@ -16971,7 +16959,9 @@ var source = (() => {
         } else if (text3.includes("Autor")) {
           $2(obj).find("a").each((_, e) => authors.push($2(e).text().trim()));
         } else if (text3.includes("Gener")) {
-          $2(obj).find("a").each((_, e) => data2.genre.push($2(e).text().trim()));
+          $2(obj).find("a").each(
+            (_, e) => data2.genre.push($2(e).text().trim())
+          );
         } else if (text3.includes("Titol")) {
           let t = $2(obj).text().trim();
           t = t.slice(t.indexOf(":") + 1, t.length);
@@ -16987,7 +16977,6 @@ var source = (() => {
       for (const tag of data2.genre) {
         arrayTags.push({ title: tag.toString(), id: "generi" });
       }
-      let rating = this.getRating(arrayTags.map((tag) => tag.title));
       const tagSections = [
         { id: "generi", title: "genres", tags: arrayTags }
       ];
@@ -16998,7 +16987,7 @@ var source = (() => {
           thumbnailUrl: image,
           synopsis: desc,
           primaryTitle: title,
-          contentRating: rating,
+          contentRating: import_lib.ContentRating.ADULT,
           status,
           author,
           tagGroups: tagSections,
@@ -17064,9 +17053,9 @@ var source = (() => {
       const results = [];
       const tags = [];
       for (const item of $2(".comics-grid .entry").toArray()) {
-        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? [
-          "null"
-        ])[0] ?? "";
+        const tmp = (($2("a", item).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9\-]+/i
+        ) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const title = $2("a", item).attr("title") ?? "";
         const image = $2("a img", item).attr("src") ?? "";
@@ -17075,7 +17064,7 @@ var source = (() => {
           imageUrl: image,
           title,
           mangaId: id,
-          contentRating: this.getRating(tags)
+          contentRating: import_lib.ContentRating.ADULT
         });
       }
       return results;
@@ -17084,14 +17073,16 @@ var source = (() => {
       const trending = [];
       const arrTrending = $2(".entry.vertical").toArray();
       for (const obj of arrTrending) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9\-]+/i
+        ) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
         const title = $2(".manga-title", obj).text().trim();
         trending.push({
           metadata: void 0,
           type: "featuredCarouselItem",
-          contentRating: void 0,
+          contentRating: import_lib.ContentRating.ADULT,
           imageUrl: image,
           mangaId: id,
           title
@@ -17104,7 +17095,9 @@ var source = (() => {
       const hot = [];
       const newTitle = [];
       for (const obj of arrHotTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9\-]+/i
+        ) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).text().trim();
@@ -17112,7 +17105,7 @@ var source = (() => {
           hot.push({
             metadata: void 0,
             type: "prominentCarouselItem",
-            contentRating: void 0,
+            contentRating: import_lib.ContentRating.ADULT,
             imageUrl: image,
             mangaId: id,
             title
@@ -17122,43 +17115,43 @@ var source = (() => {
         if (newTitle.length < 5) {
           newTitle.push({
             chapterId: "",
-            publishDate: this.getDate($2(".font-weight-bold").next().text()),
+            publishDate: this.getDate(
+              $2(".font-weight-bold").next().text()
+            ),
             subtitle: "",
             metadata: void 0,
             type: "chapterUpdatesCarouselItem",
-            contentRating: void 0,
+            contentRating: import_lib.ContentRating.ADULT,
             imageUrl: image,
             mangaId: id,
             title
           });
         }
       }
-      return [
-        { items: hot },
-        { items: newTitle }
-      ];
+      return [{ items: hot }, { items: newTitle }];
     }
     getDate(dataString) {
       const mesi = {
-        "Gennaio": 0,
-        "Febbraio": 1,
-        "Marzo": 2,
-        "Aprile": 3,
-        "Maggio": 4,
-        "Giugno": 5,
-        "Luglio": 6,
-        "Agosto": 7,
-        "Settembre": 8,
-        "Ottobre": 9,
-        "Novembre": 10,
-        "Dicembre": 11
+        Gennaio: 0,
+        Febbraio: 1,
+        Marzo: 2,
+        Aprile: 3,
+        Maggio: 4,
+        Giugno: 5,
+        Luglio: 6,
+        Agosto: 7,
+        Settembre: 8,
+        Ottobre: 9,
+        Novembre: 10,
+        Dicembre: 11
       };
       const oggi = /* @__PURE__ */ new Date();
       const parts = dataString.split(" ");
       if (parts.length === 2) {
         parts.push(oggi.getFullYear().toString());
       }
-      if (parts.length > 3) return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
+      if (parts.length > 3)
+        return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
       const mese = parseInt(parts[0], 10);
       const giorno = mesi[parts[1]];
       const anno = parseInt(parts[2], 10);
@@ -17166,10 +17159,14 @@ var source = (() => {
       return new Date(anno, giorno, mese);
     }
     parseLastAddedSetcion($2) {
-      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
+      const arrLatest = $2(
+        ".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry"
+      ).toArray();
       const latest = [];
       for (const obj of arrLatest) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9\-]+/i
+        ) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const title = $2("a", obj).attr("title") ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
@@ -17182,7 +17179,7 @@ var source = (() => {
           publishDate: this.getDate(addedDate),
           metadata: void 0,
           type: "chapterUpdatesCarouselItem",
-          contentRating: void 0,
+          contentRating: import_lib.ContentRating.ADULT,
           imageUrl: image,
           mangaId: id,
           title,
@@ -17195,14 +17192,16 @@ var source = (() => {
       const arrNewTitle = $2(".col-12 .top-wrapper .entry").toArray();
       const newTitle = [];
       for (const obj of arrNewTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9\-]+/i
+        ) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).text().trim();
         newTitle.push({
           metadata: void 0,
           type: "prominentCarouselItem",
-          contentRating: void 0,
+          contentRating: import_lib.ContentRating.ADULT,
           imageUrl: image,
           mangaId: id,
           title
@@ -17214,7 +17213,7 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/SettingsForm.ts
+  // src/MangaAdult/SettingsForm.ts
   init_buffer();
   var import_types2 = __toESM(require_lib(), 1);
   var SettingsForm = class extends import_types2.Form {
@@ -17295,8 +17294,8 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/main.ts
-  var MW_DOMAIN = "https://www.mangaworld.nz";
+  // src/MangaAdult/main.ts
+  var MW_DOMAIN = "https://www.mangaworldadult.net";
   var MainInterceptor = class extends import_types3.PaperbackInterceptor {
     async interceptRequest(request) {
       return request;
@@ -17307,7 +17306,7 @@ var source = (() => {
       return data2;
     }
   };
-  var MangaWorldExtension = class {
+  var MangaAdultExtension = class {
     // Implementation of the main rate limiter
     mainRateLimiter = new import_types3.BasicRateLimiter("main", {
       numberOfRequests: 15,
@@ -17477,7 +17476,7 @@ var source = (() => {
       }
     }
   };
-  var MangaWorld = new MangaWorldExtension();
+  var MangaAdult = new MangaAdultExtension();
   return __toCommonJS(main_exports);
 })();
 /*! Bundled license information:
