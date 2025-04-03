@@ -1,16 +1,6 @@
-import {
-	Chapter,
-	ChapterDetails,
-	SourceManga,
-	Tag,
-	TagSection,
-	PagedResults, DiscoverSectionItem
-} from "@paperback/types";
-import {
-	ContentRating,
-	MangaInfo,
-	SearchResultItem,
-} from "@paperback/types/lib";
+import { Chapter, ChapterDetails, DiscoverSectionItem, PagedResults, SourceManga, Tag, TagSection } from "@paperback/types";
+import { ContentRating, MangaInfo, SearchResultItem } from "@paperback/types/lib";
+
 
 export class Parser {
 
@@ -32,6 +22,7 @@ export class Parser {
 		const desc: string = $("#noidungm").text().trim() ?? ""
 		const artists: string[] = []
 		const authors: string[] = []
+		const titles: string[] = []
 		const data = {
 			genre: [] as string[],
 			state: "",
@@ -54,13 +45,19 @@ export class Parser {
 					.find("a")
 					.each((_: any, e: any) => data.genre.push($(e).text().trim()));
 			}
+			else if (text.includes("Titol")) {
+				let t = $(obj).text().trim()
+				t = t.slice(t.indexOf(":")+1, t.length)
+				t.split(",").forEach((element: string) => {
+                    titles.push(element.trim());
+                });
+			}
 		}
 
 		const author = authors.join(", ");
 		const artist = artists.join(", ");
 		const status = data.state;
 		const arrayTags: Tag[] = [];
-
 		for (const tag of data.genre) {
 			arrayTags.push({ title: tag.toString(), id: "generi" });
 		}
@@ -79,6 +76,7 @@ export class Parser {
 				status: status,
 				author: author,
 				tagGroups: tagSections,
+				secondaryTitles: titles
 			} as MangaInfo,
 		} as SourceManga;
 	}
@@ -95,12 +93,14 @@ export class Parser {
 			const name = $("a", item).attr("title") ?? "";
 			const chapNum =
 				Number($(".d-inline-block", item).text().split(" ")[1]) ?? -1;
+			const date = $("i.text-right.text-muted.chap-date", item).text()
 			chapters.push({
 				chapterId: id,
 				sourceManga: sourceManga,
 				langCode: "it",
 				chapNum: chapNum,
 				title: name,
+				publishDate: this.getDate(date),
 			});
 		}
 		return chapters;
@@ -151,7 +151,7 @@ export class Parser {
 					"null",
 				])[0] ?? "";
 			const id = tmp.split("/")[0] ?? "";
-			let title = $("a", item).attr("title") ?? "";
+			const title = $("a", item).attr("title") ?? "";
 			const image = $("a img", item).attr("src") ?? "";
 			$("div.genres", item)
 				.find("a")
@@ -186,7 +186,7 @@ export class Parser {
 		return { items: trending }
 	}
 
-	parseInTendenzaMese($: any): [Promise<PagedResults<DiscoverSectionItem>>] {
+	parseInTendenzaMese($: any): [{ items: DiscoverSectionItem[] }, { items: DiscoverSectionItem[] }] {
 		const arrHotTitle = $('.col-12 .top-wrapper .entry').toArray()
 		const hot: DiscoverSectionItem[] = []
 		const newTitle: DiscoverSectionItem[] = []
@@ -233,11 +233,15 @@ export class Parser {
 		};
 		const oggi = new Date(); // Se la stringa è errata, restituisci oggi
 		const parts = dataString.split(" ");
+		if (parts.length === 2) {
+			parts.push(oggi.getFullYear().toString())
+		}
 		if (parts.length > 3) return new Date(oggi.getFullYear(),oggi.getMonth(),oggi.getDay()) // Controlla che ci siano esattamente due elementi
 		const mese = parseInt(parts[0], 10);
 		const giorno = mesi[parts[1]];
+		const anno = parseInt(parts[2], 10);
 		if (isNaN(giorno) || mese === undefined) return oggi; // Se non è valido, restituisci oggi
-		return new Date(oggi.getFullYear(),giorno,mese)
+		return new Date(anno,giorno,mese)
 	}
 	parseLastAddedSetcion($: any): Promise<PagedResults<DiscoverSectionItem>> {
 		const arrLatest = $('.col-sm-12.col-md-8.col-xl-9 .comics-grid .entry').toArray()
@@ -264,6 +268,7 @@ export class Parser {
 		}
 		return { items: latest }
 	}
+
 	parseLastAddedMangaSetcion($: any): Promise<PagedResults<DiscoverSectionItem>> {
 		const arrNewTitle = $('.col-12 .top-wrapper .entry').toArray()
 		const newTitle: DiscoverSectionItem[] = []
@@ -281,6 +286,8 @@ export class Parser {
 				title: title
 			})
 		}
-		return { items: newTitle }
+		return {
+			items: newTitle
+		}
 	}
 }

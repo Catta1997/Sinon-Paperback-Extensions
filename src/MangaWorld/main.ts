@@ -219,7 +219,7 @@ export class MangaWorldExtension
 		}))[1]
 		const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
 		let type = "simpleCarouselItem"
-		const mangas: [Promise<PagedResults<DiscoverSectionItem>>] = await this.parser.parseInTendenzaMese($)
+		const mangas: [{items: DiscoverSectionItem[]}, {items: DiscoverSectionItem[]}] = this.parser.parseInTendenzaMese($)
 		switch (section.id) {
 			case "mese_section":
 				return mangas[0]

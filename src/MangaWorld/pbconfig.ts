@@ -11,8 +11,7 @@ export default {
 		SourceIntents.COLLECTION_MANAGEMENT,
 		SourceIntents.MANGA_CHAPTERS,
 		SourceIntents.DISCOVER_SECIONS,
-		SourceIntents.MANGA_SEARCH,
-		SourceIntents.MANGA_PROGRESS
+		SourceIntents.MANGA_SEARCH
 	],
 	badges: [],
 	developers: [
