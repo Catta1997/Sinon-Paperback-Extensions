@@ -9,9 +9,11 @@ export class Parser {
 		for (const tag of tags){
 			if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
 				rating = ContentRating.ADULT
+				break
 			}
 			if (["MATURO","DOUJINSHI","HORROR","TRAGICO","ECCHI"].includes(tag.toUpperCase())){
 				rating = ContentRating.MATURE
+				break
 			}
 		}
 		return rating;
@@ -92,13 +94,14 @@ export class Parser {
 			const id = extractedPart.replace("/read/", "_read_");
 			const name = $("a", item).attr("title") ?? "";
 			const chapNum =
-				Number($(".d-inline-block", item).text().split(" ")[1]) ?? -1;
+				Number($(".d-inline-block", item).text().split(" ")[1])
+			const chapter = isNaN(chapNum) ? 1 : chapNum
 			const date = $("i.text-right.text-muted.chap-date", item).text()
 			chapters.push({
 				chapterId: id,
 				sourceManga: sourceManga,
 				langCode: "it",
-				chapNum: chapNum,
+				chapNum: chapter,
 				title: name,
 				publishDate: this.getDate(date),
 			});
