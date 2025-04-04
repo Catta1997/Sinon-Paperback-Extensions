@@ -1,11 +1,3 @@
-import {parser} from "typescript-eslint";
-
-// TODO:
-// - Add the English name to the title view
-// - Add additional info to the title view
-// - Make getChapterDetails only return new chapters
-// - Fix exclude search
-
 import {
 	BasicRateLimiter,
 	Chapter,
@@ -14,7 +6,6 @@ import {
 	DiscoverSection,
 	DiscoverSectionItem,
 	DiscoverSectionProviding,
-	DiscoverSectionType,
 	Extension,
 	Form,
 	MangaProviding,
@@ -27,14 +18,12 @@ import {
 	SearchResultItem,
 	SearchResultsProviding,
 	SettingsFormProviding,
-	SourceManga,
-	TagSection
+	SourceManga
 } from "@paperback/types";
 
-import { Parser } from "../parser";
-// Extension settings file
-import { SettingsForm } from "../SettingsForm";
-import {Functions} from "../Functions";
+import { Parser } from "../commons/parser";
+import { SettingsForm } from "../commons/SettingsForm";
+import {Functions} from "../commons/Functions";
 
 const MW_DOMAIN = "https://www.mangaworld.nz";
 // Should match the capabilities which you defined in pbconfig.ts

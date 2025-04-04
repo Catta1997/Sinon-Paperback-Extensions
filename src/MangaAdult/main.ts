@@ -1,16 +1,28 @@
-import {parser} from "typescript-eslint";
-
-// TODO:
-// - Add the English name to the title view
-// - Add additional info to the title view
-// - Make getChapterDetails only return new chapters
-// - Fix exclude search
-
-import { BasicRateLimiter, Chapter, ChapterDetails, ChapterProviding, DiscoverSection, DiscoverSectionItem, DiscoverSectionProviding, Extension, Form, MangaProviding, PagedResults, PaperbackInterceptor, Request, Response, SearchFilter, SearchQuery, SearchResultItem, SearchResultsProviding, SettingsFormProviding, SourceManga } from "@paperback/types";
-import { Parser } from "../parser";
-// Extension settings file
-import { SettingsForm } from "../SettingsForm";
-import { Functions } from "../Functions";
+import {
+	BasicRateLimiter,
+	Chapter,
+	ChapterDetails,
+	ChapterProviding,
+	DiscoverSection,
+	DiscoverSectionItem,
+	DiscoverSectionProviding,
+	Extension,
+	Form,
+	MangaProviding,
+	PagedResults,
+	PaperbackInterceptor,
+	Request,
+	Response,
+	SearchFilter,
+	SearchQuery,
+	SearchResultItem,
+	SearchResultsProviding,
+	SettingsFormProviding,
+	SourceManga
+} from "@paperback/types";
+import { Parser } from "../commons/parser";
+import { SettingsForm } from "../commons/SettingsForm";
+import { Functions } from "../commons/Functions";
 
 const MW_DOMAIN = "https://www.mangaworldadult.net";
 // Should match the capabilities which you defined in pbconfig.ts
