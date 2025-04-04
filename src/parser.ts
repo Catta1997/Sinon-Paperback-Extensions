@@ -1,6 +1,18 @@
-import { Chapter, ChapterDetails, DiscoverSectionItem, PagedResults, SourceManga, Tag, TagSection } from "@paperback/types";
+import {
+	Chapter,
+	ChapterDetails,
+	DiscoverSectionItem,
+	SourceManga,
+	Tag,
+	TagSection,
+	SearchFilter
+} from "@paperback/types";
 import { ContentRating, MangaInfo, SearchResultItem } from "@paperback/types/lib";
-
+import * as cheerio from "cheerio";
+interface FilterOption {
+	id: string;
+	value: string;
+}
 
 export class Parser {
 
@@ -61,11 +73,11 @@ export class Parser {
 		const status = data.state;
 		const arrayTags: Tag[] = [];
 		for (const tag of data.genre) {
-			arrayTags.push({ title: tag.toString(), id: "generi" });
+			arrayTags.push({ title: tag, id: tag.replaceAll(" ","-") });
 		}
 		let rating = this.getRating(arrayTags.map(tag => tag.title))
 		const tagSections: TagSection[] = [
-			{ id: "generi", title: "genres", tags: arrayTags },
+			{ id: "genres", title: "genres", tags: arrayTags },
 		];
 		return {
 			mangaId: mangaId,
@@ -125,26 +137,6 @@ export class Parser {
 		};
 	}
 
-	parseTags($: any, baseUrl: any): TagSection[] {
-		const genres: Tag[] = [];
-		let first_label = "";
-		let i = 0;
-		for (const item of $(
-			".dropdown-menu.dropdown-multicol .dropdown-item",
-		).toArray()) {
-			const id =
-				$(item).attr("href")?.replace(`${baseUrl}/archive?genre=`, "") ?? "";
-
-			const label = $(item).text().trim();
-			if (i == 0) first_label = label;
-			if (label == first_label && i > 0) break;
-
-			genres.push({ title: label, id: id });
-			i++;
-		}
-		return [{ id: "genres", title: "genres", tags: genres }];
-	}
-
 	parseSearchResults($: any): SearchResultItem[] {
 		const results: SearchResultItem[] = [];
 		const tags:String[] = []
@@ -159,6 +151,7 @@ export class Parser {
 			$("div.genres", item)
 				.find("a")
 				.each((_: any, e: any) => tags.push($(e).text().trim()))
+
 			results.push({
 				imageUrl: image,
 				title: title,
@@ -241,7 +234,7 @@ export class Parser {
 		const mese = parseInt(parts[0], 10);
 		const giorno = mesi[parts[1]];
 		const anno = parseInt(parts[2], 10);
-		if (isNaN(giorno) || mese === undefined) return oggi; // Se non è valido, restituisci oggi
+		if (isNaN(giorno) || (isNaN(anno)) || mese === undefined) return oggi; // Se non è valido, restituisci oggi
 		return new Date(anno,giorno,mese)
 	}
 	parseLastAddedSetcion($: any): { items: DiscoverSectionItem[] } {
@@ -268,5 +261,49 @@ export class Parser {
 			})
 		}
 		return { items: latest }
+	}
+	async parseGenresFilters(url: string) {
+		console.log("ParseFilterGenres")
+		const genres: FilterOption[] = []
+		const data = (await Application.scheduleRequest({
+			url: `${url}`,
+			method: "GET",
+		}))[1]
+		const $ = cheerio.load(Application.arrayBufferToUTF8String(data))
+		let first_label = ''
+		let i = 0
+		for (const item of $('.dropdown-menu.dropdown-multicol .dropdown-item').toArray()) {
+			const id = $(item).attr('href')?.replace(`${url}/archive?genre=`, '') ?? ''
+			const label = $(item).text().trim()
+			if (i == 0) first_label = label
+			if (label == first_label && i > 0) break
+			genres.push({ value: label, id: label.replaceAll(" ","-") })
+			i++
+		}
+		console.log(genres.join("-"))
+		return genres
+	}
+
+	async parseTypeFilters(url: string) {
+		console.log("ParseFilterType")
+		const types: FilterOption[] = []
+		const data = (await Application.scheduleRequest({
+			url: `${url}`,
+			method: "GET",
+		}))[1]
+		const $ = cheerio.load(Application.arrayBufferToUTF8String(data))
+		let first_label = ''
+		let i = 0
+		for (const item of $('.dropdown-menu[aria-labelledby="typesDropdown"] .dropdown-item').toArray()) {
+			//<div class="dropdown-menu show" aria-labelledby="typesDropdown" id="typesDropdownMenu">
+			const id = $(item).attr('href')?.replace(`${url}/archive?type=`, '') ?? ''
+			const label = $(item).text().trim()
+			if (i == 0) first_label = label
+			if (label == first_label && i > 0) break
+			types.push({ value: label, id: label.replaceAll(" ","-") })
+			i++
+		}
+		console.log(types.join("-"))
+		return types
 	}
 }

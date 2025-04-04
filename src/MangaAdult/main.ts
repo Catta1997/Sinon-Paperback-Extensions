@@ -67,18 +67,7 @@ export class MangaAdultExtension
 	}
 
 	async getSearchFilters(): Promise<SearchFilter[]> {
-		return [
-			{
-				id: "search-filter-template",
-				type: "dropdown",
-				options: [
-					{ id: "include", value: "include" },
-					{ id: "exclude", value: "exclude" },
-				],
-				value: "Exclude",
-				title: "Search Filter Template",
-			},
-		];
+		return this.functions.getFilterList()
 	}
 
 	// Populates search

@@ -6,7 +6,30 @@ import {parser} from "typescript-eslint";
 // - Make getChapterDetails only return new chapters
 // - Fix exclude search
 
-import { BasicRateLimiter, Chapter, ChapterDetails, ChapterProviding, DiscoverSection, DiscoverSectionItem, DiscoverSectionProviding, DiscoverSectionType, Extension, Form, MangaProviding, PagedResults, PaperbackInterceptor, Request, Response, SearchFilter, SearchQuery, SearchResultItem, SearchResultsProviding, SettingsFormProviding, SourceManga } from "@paperback/types";
+import {
+	BasicRateLimiter,
+	Chapter,
+	ChapterDetails,
+	ChapterProviding,
+	DiscoverSection,
+	DiscoverSectionItem,
+	DiscoverSectionProviding,
+	DiscoverSectionType,
+	Extension,
+	Form,
+	MangaProviding,
+	PagedResults,
+	PaperbackInterceptor,
+	Request,
+	Response,
+	SearchFilter,
+	SearchQuery,
+	SearchResultItem,
+	SearchResultsProviding,
+	SettingsFormProviding,
+	SourceManga,
+	TagSection
+} from "@paperback/types";
 
 import { Parser } from "../parser";
 // Extension settings file
@@ -69,18 +92,7 @@ export class MangaWorldExtension
 	}
 
 	async getSearchFilters(): Promise<SearchFilter[]> {
-		return [
-			{
-				id: "search-filter-template",
-				type: "dropdown",
-				options: [
-					{ id: "include", value: "include" },
-					{ id: "exclude", value: "exclude" },
-				],
-				value: "Exclude",
-				title: "Search Filter Template",
-			},
-		];
+		return this.functions.getFilterList()
 	}
 
 	// Populates search
@@ -90,6 +102,7 @@ export class MangaWorldExtension
 	): Promise<PagedResults<SearchResultItem>> {
 		return this.functions.getSearchResults(query,metadata)
 	}
+
 
 	// Populates the title details
 	async getMangaDetails(mangaId: string): Promise<SourceManga> {
