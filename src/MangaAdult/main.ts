@@ -23,6 +23,7 @@ import {
 import { Parser } from "../commons/parser";
 import { SettingsForm } from "../commons/SettingsForm";
 import { Functions } from "../commons/Functions";
+import {Metadata} from "../commons/helper";
 
 const MW_DOMAIN = "https://www.mangaworldadult.net";
 // Should match the capabilities which you defined in pbconfig.ts
@@ -85,7 +86,7 @@ export class MangaAdultExtension
 	// Populates search
 	async getSearchResults(
 		query: SearchQuery,
-		metadata: any,
+		metadata: Metadata,
 	): Promise<PagedResults<SearchResultItem>> {
 		return this.functions.getSearchResults(query,metadata)
 	}
@@ -126,8 +127,8 @@ export class MangaAdultExtension
 	}
 
 	async getDiscoverSectionItems(section: DiscoverSection,
-								  metadata: unknown | undefined): Promise<PagedResults<DiscoverSectionItem>> {
-		return this.functions.getDiscoverSectionItems(section,undefined)
+								  metadata: Metadata): Promise<PagedResults<DiscoverSectionItem>> {
+		return this.functions.getDiscoverSectionItems(section,metadata)
 	}
 }
 

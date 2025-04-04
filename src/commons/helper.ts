@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export type Metadata = {
+	page?: number
+}
+
 export class URLBuilder {
+
 	parameters: Record<string, any | any[]> = {};
 	pathComponents: string[] = [];
 	baseUrl: string;
