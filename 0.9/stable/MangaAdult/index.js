@@ -2933,12 +2933,12 @@ var source = (() => {
         SourceIntents2[SourceIntents2["SETTINGS_UI"] = 32] = "SETTINGS_UI";
         SourceIntents2[SourceIntents2["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
       })(SourceIntents || (exports.SourceIntents = SourceIntents = {}));
-      var ContentRating2;
-      (function(ContentRating3) {
-        ContentRating3["EVERYONE"] = "SAFE";
-        ContentRating3["MATURE"] = "MATURE";
-        ContentRating3["ADULT"] = "ADULT";
-      })(ContentRating2 || (exports.ContentRating = ContentRating2 = {}));
+      var ContentRating3;
+      (function(ContentRating4) {
+        ContentRating4["EVERYONE"] = "SAFE";
+        ContentRating4["MATURE"] = "MATURE";
+        ContentRating4["ADULT"] = "ADULT";
+      })(ContentRating3 || (exports.ContentRating = ContentRating3 = {}));
     }
   });
 
@@ -3050,7 +3050,7 @@ var source = (() => {
   init_buffer();
   var import_types4 = __toESM(require_lib(), 1);
 
-  // src/parser.ts
+  // src/commons/parser.ts
   init_buffer();
   var import_lib = __toESM(require_lib(), 1);
 
@@ -16895,7 +16895,7 @@ var source = (() => {
   var parse5 = getParse((content, options, isDocument2, context) => options._useHtmlParser2 ? parseDocument(content, options) : parseWithParse5(content, options, isDocument2, context));
   var load = getLoad(parse5, (dom, options) => options._useHtmlParser2 ? esm_default(dom, options) : renderWithParse5(dom));
 
-  // src/parser.ts
+  // src/commons/parser.ts
   var Parser3 = class {
     getRating(tags) {
       let rating = import_lib.ContentRating.EVERYONE;
@@ -16928,11 +16928,17 @@ var source = (() => {
           const stateLink = $2(obj).find("a").first();
           if (stateLink.length) data2.state = stateLink.text().trim();
         } else if (text3.includes("Artist")) {
-          $2(obj).find("a").each((_, e) => artists.push($2(e).text().trim()));
+          $2(obj).find("a").each(function(_, e) {
+            artists.push($2(e).text().trim());
+          });
         } else if (text3.includes("Autor")) {
-          $2(obj).find("a").each((_, e) => authors.push($2(e).text().trim()));
+          $2(obj).find("a").each(function(_, e) {
+            authors.push($2(e).text().trim());
+          });
         } else if (text3.includes("Gener")) {
-          $2(obj).find("a").each((_, e) => data2.genre.push($2(e).text().trim()));
+          $2(obj).find("a").each(function(_, e) {
+            data2.genre.push($2(e).text().trim());
+          });
         } else if (text3.includes("Titol")) {
           let t = $2(obj).text().trim();
           t = t.slice(t.indexOf(":") + 1, t.length);
@@ -16948,7 +16954,7 @@ var source = (() => {
       for (const tag of data2.genre) {
         arrayTags.push({ title: tag, id: tag.replaceAll(" ", "-") });
       }
-      let rating = this.getRating(arrayTags.map((tag) => tag.title));
+      const rating = this.getRating(arrayTags.map((tag) => tag.title));
       const tagSections = [
         { id: "genres", title: "genres", tags: arrayTags }
       ];
@@ -17010,13 +17016,15 @@ var source = (() => {
       const results = [];
       const tags = [];
       for (const item of $2(".comics-grid .entry").toArray()) {
-        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? [
+        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? [
           "null"
         ])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const title = $2("a", item).attr("title") ?? "";
         const image = $2("a img", item).attr("src") ?? "";
-        $2("div.genres", item).find("a").each((_, e) => tags.push($2(e).text().trim()));
+        $2("div.genres", item).find("a").each(function(_, e) {
+          tags.push($2(e).text().trim());
+        });
         results.push({
           imageUrl: image,
           title,
@@ -17026,17 +17034,18 @@ var source = (() => {
       }
       return results;
     }
-    parseCapitoliInTendenza($2) {
+    numberPage = 0;
+    parseCapitoliInTendenza($2, metadata) {
       const trending = [];
       const arrTrending = $2(".entry.vertical").toArray();
       for (const obj of arrTrending) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
         const chapNum = $2("a div", obj).text() ?? "";
         const title = $2(".manga-title", obj).text().trim();
         trending.push({
-          metadata: void 0,
+          metadata,
           type: "featuredCarouselItem",
           contentRating: void 0,
           supertitle: chapNum,
@@ -17047,18 +17056,18 @@ var source = (() => {
       }
       return { items: trending };
     }
-    parseInTendenzaMese($2) {
+    parseInTendenzaMese($2, metadata) {
       const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
       const hot = [];
       const newTitle = [];
       for (const obj of arrHotTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
         const id = tmp.split("/")[0] ?? "";
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).first().text().trim() ?? "";
         if (hot.length < 10) {
           hot.push({
-            metadata: void 0,
+            metadata,
             type: "prominentCarouselItem",
             contentRating: void 0,
             imageUrl: image,
@@ -17067,7 +17076,7 @@ var source = (() => {
           });
         } else if (newTitle.length < 5) {
           newTitle.push({
-            metadata: void 0,
+            metadata,
             type: "simpleCarouselItem",
             contentRating: void 0,
             imageUrl: image,
@@ -17077,9 +17086,94 @@ var source = (() => {
         }
       }
       return [
-        { items: hot },
-        { items: newTitle }
+        { items: hot, metadata },
+        { items: newTitle, metadata }
       ];
+    }
+    //parse ultime aggiunte
+    async parseLastAddedSetcion2(metadata, url) {
+      console.log("ParseLastAddedSetcion2");
+      const latest = [];
+      let page = metadata?.page ?? 1;
+      const data2 = (await Application.scheduleRequest({
+        url: `${url}/archive?sort=newest&page=${page}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      page++;
+      for (const item of $2(".comics-grid .entry").toArray()) {
+        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? [
+          "null"
+        ])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const title = $2("a", item).attr("title") ?? "";
+        const image = $2("a img", item).attr("src") ?? "";
+        latest.push({
+          metadata: { page: page + 1 },
+          type: "simpleCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title
+        });
+      }
+      console.log(page);
+      console.log(latest.length);
+      return { items: latest, metadata: { page } };
+    }
+    //parse nuovi capitoli
+    async parseLastAddedSetcion(metadata, url) {
+      let page = metadata?.page ?? 1;
+      const data2 = (await Application.scheduleRequest({
+        url: `${url}?page=${page}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      page++;
+      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
+      const latest = [];
+      for (const obj of arrLatest) {
+        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
+        const id = tmp.split("/")[0] ?? "";
+        const title = $2("a", obj).attr("title") ?? "";
+        const image = $2("a img", obj).attr("src") ?? "";
+        const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
+        const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
+        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
+        latest.push({
+          chapterId: chapterId.replace("/read/", "_read_"),
+          //todo
+          publishDate: this.getDate(addedDate),
+          metadata,
+          type: "chapterUpdatesCarouselItem",
+          contentRating: void 0,
+          imageUrl: image,
+          mangaId: id,
+          title,
+          subtitle: sub
+        });
+      }
+      return { items: latest, metadata: { page } };
+    }
+    async parseGenresFilters(url) {
+      console.log("ParseFilterGenres");
+      const genres = [];
+      const data2 = (await Application.scheduleRequest({
+        url: `${url}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      let first_label = "";
+      let i = 0;
+      for (const item of $2(".dropdown-menu.dropdown-multicol .dropdown-item").toArray()) {
+        const id = $2(item).attr("href")?.replace(`${url}/archive?genre=`, "") ?? "";
+        const label = $2(item).text().trim();
+        if (i == 0) first_label = label;
+        if (label == first_label && i > 0) break;
+        genres.push({ value: label, id: id.toLowerCase() });
+        i++;
+      }
+      return genres;
     }
     getDate(dataString) {
       const mesi = {
@@ -17108,53 +17202,6 @@ var source = (() => {
       if (isNaN(giorno) || isNaN(anno) || mese === void 0) return oggi;
       return new Date(anno, giorno, mese);
     }
-    parseLastAddedSetcion($2) {
-      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
-      const latest = [];
-      for (const obj of arrLatest) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const title = $2("a", obj).attr("title") ?? "";
-        const image = $2("a img", obj).attr("src") ?? "";
-        let sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
-        let chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read+\/[a-zA-Z0-9\-]+/i) ?? ["null"])[0] ?? "";
-        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
-        latest.push({
-          chapterId: chapterId.replace("/read/", "_read_"),
-          //todo
-          publishDate: this.getDate(addedDate),
-          metadata: void 0,
-          type: "chapterUpdatesCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title,
-          subtitle: sub
-        });
-      }
-      return { items: latest };
-    }
-    async parseGenresFilters(url) {
-      console.log("ParseFilterGenres");
-      const genres = [];
-      const data2 = (await Application.scheduleRequest({
-        url: `${url}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      let first_label = "";
-      let i = 0;
-      for (const item of $2(".dropdown-menu.dropdown-multicol .dropdown-item").toArray()) {
-        const id = $2(item).attr("href")?.replace(`${url}/archive?genre=`, "") ?? "";
-        const label = $2(item).text().trim();
-        if (i == 0) first_label = label;
-        if (label == first_label && i > 0) break;
-        genres.push({ value: label, id: label.replaceAll(" ", "-") });
-        i++;
-      }
-      console.log(genres.join("-"));
-      return genres;
-    }
     async parseTypeFilters(url) {
       console.log("ParseFilterType");
       const types = [];
@@ -17166,19 +17213,17 @@ var source = (() => {
       let first_label = "";
       let i = 0;
       for (const item of $2('.dropdown-menu[aria-labelledby="typesDropdown"] .dropdown-item').toArray()) {
-        const id = $2(item).attr("href")?.replace(`${url}/archive?type=`, "") ?? "";
         const label = $2(item).text().trim();
         if (i == 0) first_label = label;
         if (label == first_label && i > 0) break;
         types.push({ value: label, id: label.replaceAll(" ", "-") });
         i++;
       }
-      console.log(types.join("-"));
       return types;
     }
   };
 
-  // src/SettingsForm.ts
+  // src/commons/SettingsForm.ts
   init_buffer();
   var import_types2 = __toESM(require_lib(), 1);
   var SettingsForm = class extends import_types2.Form {
@@ -17259,11 +17304,11 @@ var source = (() => {
     }
   };
 
-  // src/Functions.ts
+  // src/commons/Functions.ts
   init_buffer();
   var import_types3 = __toESM(require_lib(), 1);
 
-  // src/helper.ts
+  // src/commons/helper.ts
   init_buffer();
   var URLBuilder = class {
     parameters = {};
@@ -17286,53 +17331,160 @@ var source = (() => {
     }) {
       let finalUrl = this.baseUrl + "/";
       finalUrl += this.pathComponents.join("/");
-      finalUrl += addTrailingSlash ? "/" : "";
-      finalUrl += Object.values(this.parameters).length > 0 ? "?" : "";
-      finalUrl += Object.entries(this.parameters).map((entry) => {
-        if (entry[1] == null && !includeUndefinedParameters) {
-          return void 0;
+      if (addTrailingSlash) finalUrl += "/";
+      const entries = Object.entries(this.parameters);
+      if (entries.length > 0) {
+        const queryString = entries.flatMap(([key, value]) => {
+          if (value == null && !includeUndefinedParameters) return [];
+          if (Array.isArray(value)) {
+            return value.filter((v) => v != null || includeUndefinedParameters).map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`);
+          }
+          if (typeof value === "object" && value !== null) {
+            return Object.entries(value).filter(([, v]) => v != null || includeUndefinedParameters).map(
+              ([subKey, v]) => `${encodeURIComponent(key)}[${encodeURIComponent(subKey)}]=${encodeURIComponent(String(v))}`
+            );
+          }
+          return [`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`];
+        }).join("&");
+        if (queryString) {
+          finalUrl += "?" + queryString;
         }
-        if (Array.isArray(entry[1])) {
-          return entry[1].map(
-            (value) => value || includeUndefinedParameters ? `${entry[0]}=${value}` : void 0
-          ).filter((x) => x !== void 0).join("&");
-        }
-        if (typeof entry[1] === "object") {
-          return Object.keys(entry[1]).map((key) => `${entry[0]}[${key}]=${entry[1][key]}`).join("&");
-        }
-        return `${entry[0]}=${entry[1]}`;
-      }).filter((x) => x !== void 0).join("&");
+      }
       return finalUrl;
     }
   };
 
-  // src/Functions.ts
+  // src/commons/Functions.ts
   var Functions = class {
     baseUrl = "";
+    sinceDate;
     constructor(url) {
       this.baseUrl = url;
     }
     parser = new Parser3();
+    numberPage = 0;
     async getDiscoverSectionItems(section, metadata) {
       const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}`,
         method: "GET"
       }))[1];
+      console.log("getDiscoverSectionItems");
+      console.log("getDiscoverSectionItems");
       const $2 = load(Application.arrayBufferToUTF8String(data2));
-      let type = "simpleCarouselItem";
-      const mangas = this.parser.parseInTendenzaMese($2);
+      const mangas = this.parser.parseInTendenzaMese($2, metadata);
+      const genres = await this.parser.parseGenresFilters(this.baseUrl);
+      const read = [];
+      const mangaType = [];
+      const allGenres = [];
+      genres.forEach((filter4) => {
+        allGenres.push(
+          {
+            type: "genresCarouselItem",
+            searchQuery: {
+              title: "",
+              filters: [
+                { id: "genres", value: filter4.id }
+              ]
+            },
+            name: filter4.value,
+            metadata,
+            contentRating: this.parser.getRating([filter4.value])
+          }
+        );
+      });
+      this.getOrderFilter().forEach((filter4) => {
+        read.push(
+          {
+            type: "genresCarouselItem",
+            searchQuery: {
+              title: "",
+              filters: [
+                { id: "order", value: filter4.id }
+              ]
+            },
+            name: filter4.value,
+            metadata,
+            contentRating: import_types3.ContentRating.EVERYONE
+          }
+        );
+      });
+      this.getMangaTypeFilter().forEach((filter4) => {
+        mangaType.push(
+          {
+            type: "genresCarouselItem",
+            searchQuery: {
+              title: "",
+              filters: [
+                { id: "types", value: filter4.id }
+              ]
+            },
+            name: filter4.value,
+            metadata,
+            contentRating: import_types3.ContentRating.EVERYONE
+          }
+        );
+      });
+      console.log(read);
+      console.log(mangaType);
       switch (section.id) {
         case "mese_section":
+          console.log("mese_section");
           return mangas[0];
         case "popular_section":
-          return await this.parser.parseCapitoliInTendenza($2);
+          this.numberPage = 0;
+          console.log("popular_section");
+          return this.parser.parseCapitoliInTendenza($2, metadata);
         case "updated_section":
-          return await this.parser.parseLastAddedSetcion($2);
-        case "new_manga_section":
-          return mangas[1];
+          console.log("updated_section");
+          return this.parser.parseLastAddedSetcion(metadata, this.baseUrl);
+        case "new_manga_section": {
+          console.log("new_manga_section");
+          return this.parser.parseLastAddedSetcion2(metadata, this.baseUrl);
+        }
+        case "read_section": {
+          console.log("read_section");
+          return {
+            items: read,
+            metadata
+          };
+        }
+        case "genre_section": {
+          console.log("type_section");
+          return {
+            items: allGenres,
+            metadata
+          };
+        }
+        case "type_section": {
+          console.log("type_section");
+          return {
+            items: mangaType,
+            metadata
+          };
+        }
         default:
-          return { items: [] };
+          return { items: [], metadata };
       }
+    }
+    getMangaTypeFilter() {
+      return [
+        { value: "Manga", id: "manga" },
+        { value: "Manhua", id: "manhua" },
+        { value: "Manhwa", id: "manhwa" },
+        { value: "Oneshot", id: "oneshot" },
+        { value: "Thai", id: "thai" },
+        { value: "Vietnamita", id: "vietnamese" }
+      ];
+    }
+    getOrderFilter() {
+      return [
+        { value: "Pi\xF9 Letto", id: "most_read" },
+        { value: "Meno Letto", id: "less_read" },
+        { value: "Alfabetico A-Z", id: "a-z" },
+        { value: "Alfabetico Z-A", id: "z-a" },
+        { value: "Pi\xF9 recente", id: "newest" },
+        { value: "Meno recente", id: "oldest" }
+      ];
     }
     async getChapterDetails(chapter) {
       console.log(chapter);
@@ -17370,13 +17522,31 @@ var source = (() => {
           id: "new_manga_section",
           title: "Nuove Aggiunte",
           type: import_types3.DiscoverSectionType.simpleCarousel
+        },
+        {
+          id: "type_section",
+          title: "Tipo",
+          type: import_types3.DiscoverSectionType.genres
+        },
+        {
+          id: "genre_section",
+          title: "Generi",
+          type: import_types3.DiscoverSectionType.genres
         }
+        /*,
+        {
+            id: "read_section",
+            title: "Ordinamento",
+            type: DiscoverSectionType.genres
+        }
+        */
       ];
     }
     async getChapters(sourceManga, sinceDate) {
+      this.sinceDate = sinceDate;
       console.log(sourceManga);
       console.log(sourceManga.mangaId);
-      const [response, buffer] = await Application.scheduleRequest({
+      const [_, buffer] = await Application.scheduleRequest({
         url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
         method: "GET"
       });
@@ -17389,6 +17559,23 @@ var source = (() => {
       const genres = await this.parser.parseGenresFilters(this.baseUrl);
       const types = await this.parser.parseTypeFilters(this.baseUrl);
       filters2.push({
+        type: "dropdown",
+        options: this.getOrderFilter(),
+        id: "order",
+        value: "most_read",
+        title: "Ordine"
+      });
+      filters2.push({
+        type: "multiselect",
+        options: this.getMangaTypeFilter(),
+        id: "types",
+        allowExclusion: false,
+        title: "Tipo",
+        value: {},
+        allowEmptySelection: true,
+        maximum: 1
+      });
+      filters2.push({
         type: "multiselect",
         options: genres,
         id: "genres",
@@ -17398,16 +17585,6 @@ var source = (() => {
         allowEmptySelection: true,
         maximum: 5
       });
-      filters2.push({
-        type: "multiselect",
-        options: types,
-        id: "types",
-        allowExclusion: false,
-        title: "Tipo",
-        value: {},
-        allowEmptySelection: true,
-        maximum: 1
-      });
       console.log(filters2);
       return filters2;
     }
@@ -17416,13 +17593,28 @@ var source = (() => {
       let page = metadata?.page ?? 1;
       if (page == -1) return { items: [] };
       if (query.title.length > 0) {
-        let request = await this.constructSearchRequest(page, query);
-        const $2 = load(Application.arrayBufferToUTF8String(request[1]));
+        const url = this.constructSearchRequest(page, query);
+        const data2 = (await Application.scheduleRequest({
+          url: `${url}`,
+          method: "GET"
+        }))[1];
+        const $2 = load(
+          Application.arrayBufferToUTF8String(data2)
+        );
         manga = this.parser.parseSearchResults($2);
       } else {
-        let request = await this.constructSearchRequest(page, { title: "", filters: query.filters });
-        const $2 = load(Application.arrayBufferToUTF8String(request[1]));
-        manga = manga.concat(this.parser.parseSearchResults($2));
+        const url = this.constructSearchRequest(page, {
+          title: "",
+          filters: query.filters
+        });
+        const data2 = (await Application.scheduleRequest({
+          url: `${url}`,
+          method: "GET"
+        }))[1];
+        const $2 = load(
+          Application.arrayBufferToUTF8String(data2)
+        );
+        manga = this.parser.parseSearchResults($2);
       }
       page++;
       const nextMetadata = manga.length < 16 ? void 0 : { page: page + 1 };
@@ -17441,32 +17633,23 @@ var source = (() => {
       const generi = [];
       const tipologia = [];
       const getFilterValue = (id) => query.filters.find((filter4) => filter4.id == id)?.value;
-      const genres = getFilterValue("genres");
+      console.log(getFilterValue("order"));
+      const genres = getFilterValue("genres") ?? "";
+      const types = getFilterValue("types") ?? "";
       if (genres && typeof genres === "object") {
         for (const tag of Object.entries(genres)) {
           generi.push(tag[0]);
         }
-      }
-      const types = getFilterValue("types");
+      } else
+        generi.push(genres);
       if (types && typeof types === "object") {
         for (const tag of Object.entries(types)) {
           tipologia.push(tag[0]);
         }
-      }
-      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter("sort", "most_read");
-      for (const genre of generi) {
-        urlBuilder.addQueryParameter("genre", genre);
-      }
-      for (const tipo of tipologia) {
-        urlBuilder.addQueryParameter("type", tipo);
-      }
-      return Application.scheduleRequest({
-        url: urlBuilder.buildUrl({
-          addTrailingSlash: true,
-          includeUndefinedParameters: false
-        }),
-        method: "GET"
-      });
+      } else
+        tipologia.push(types);
+      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter("sort", getFilterValue("order")).addQueryParameter("genre", generi).addQueryParameter("type", tipologia);
+      return urlBuilder.buildUrl();
     }
   };
 
@@ -17539,7 +17722,7 @@ var source = (() => {
       return this.functions.getDiscoverSections();
     }
     async getDiscoverSectionItems(section, metadata) {
-      return this.functions.getDiscoverSectionItems(section, void 0);
+      return this.functions.getDiscoverSectionItems(section, metadata);
     }
   };
   var MangaAdult = new MangaAdultExtension();

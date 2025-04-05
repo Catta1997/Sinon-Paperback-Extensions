@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-04-04T09:06:02.390Z",
+  "buildTime": "2025-04-05T11:35:48.873Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.46",
     "types": "1.0.0-alpha.46"
@@ -10,7 +10,7 @@
   },
   "sources": [
     {
-      "version": "0.6.9",
+      "version": "0.9",
       "name": "MangaAdult",
       "description": "Extension that pulls manga from MangaAdult (0.9).",
       "icon": "icon.png",
@@ -22,7 +22,18 @@
         4,
         64
       ],
-      "badges": [],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#187480",
+          "backgroundColor": "#c2ecd8"
+        },
+        {
+          "label": "NSFW",
+          "textColor": "#ff0000",
+          "backgroundColor": "#000000"
+        }
+      ],
       "developers": [
         {
           "name": "Catta1997",
@@ -32,7 +43,7 @@
       "id": "MangaAdult"
     },
     {
-      "version": "0.7",
+      "version": "0.9",
       "name": "MangaWorld",
       "description": "Extension that pulls manga from MangaWorld (0.9).",
       "icon": "icon.png",
@@ -44,7 +55,13 @@
         4,
         64
       ],
-      "badges": [],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#187480",
+          "backgroundColor": "#c2ecd8"
+        }
+      ],
       "developers": [
         {
           "name": "Catta1997",
