@@ -234,7 +234,7 @@ export class Parser {
 	}
 
 	//parse ultime aggiunte
-	async parseLastAddedSetcion2(metadata: Metadata): Promise<{
+	async parseLastAddedSetcion2(metadata: Metadata, url:string): Promise<{
 		items: DiscoverSectionItem[];
 		metadata: Metadata | undefined
 	}>
@@ -243,8 +243,9 @@ export class Parser {
 		const latest: DiscoverSectionItem[] = []
 		let page = metadata?.page ?? 1
 	//	if (metadata?.page == undefined) metadata = { page: 1 }
+
 		const data = (await Application.scheduleRequest({
-			url: `https://www.mangaworld.nz/archive?sort=newest&page=${page}`,
+			url: `${url}/archive?sort=newest&page=${page}`,
 			method: "GET",
 		}))[1]
 		const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
@@ -272,14 +273,14 @@ export class Parser {
 	}
 
 	//parse nuovi capitoli
-	async parseLastAddedSetcion(metadata: Metadata): Promise<{
+	async parseLastAddedSetcion(metadata: Metadata, url: string): Promise<{
 		items: DiscoverSectionItem[];
 		metadata: Metadata | undefined
 	}> {
 		let page = metadata?.page ?? 1
 		//	if (metadata?.page == undefined) metadata = { page: 1 }
 		const data = (await Application.scheduleRequest({
-			url: `https://www.mangaworld.nz?page=${page}`,
+			url: `${url}?page=${page}`,
 			method: "GET",
 		}))[1]
 		const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
@@ -308,6 +309,7 @@ export class Parser {
 		}
 		return {items: latest, metadata: {page: page}};
 	}
+
 	async parseGenresFilters(url: string) {
 		console.log("ParseFilterGenres")
 		const genres: FilterOption[] = []
@@ -319,15 +321,16 @@ export class Parser {
 		let first_label :string = ''
 		let i :number = 0
 		for (const item of $('.dropdown-menu.dropdown-multicol .dropdown-item').toArray()) {
-			//const id :string = $(item).attr('href')?.replace(`${url}/archive?genre=`, '') ?? ''
+			const id :string = $(item).attr('href')?.replace(`${url}/archive?genre=`, '') ?? ''
 			const label :string = $(item).text().trim()
 			if (i == 0) first_label = label
 			if (label == first_label && i > 0) break
-			genres.push({ value: label, id: label.replaceAll(" ","-") })
+			genres.push({ value: label, id: id.toLowerCase() })
 			i++
 		}
 		return genres
 	}
+
 	getDate(dataString: string): Date {
 		const mesi: { [key: string]: number } = {
 			"Gennaio": 0, "Febbraio": 1, "Marzo": 2, "Aprile": 3,

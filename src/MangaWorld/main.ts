@@ -1,4 +1,25 @@
-import { BasicRateLimiter, Chapter, ChapterDetails, ChapterProviding, DiscoverSection, DiscoverSectionItem, DiscoverSectionProviding, Extension, Form, MangaProviding, PagedResults, PaperbackInterceptor, Request, Response, SearchFilter, SearchQuery, SearchResultItem, SearchResultsProviding, SettingsFormProviding, SourceManga } from "@paperback/types";
+import {
+	BasicRateLimiter,
+	Chapter,
+	ChapterDetails,
+	ChapterProviding,
+	DiscoverSection,
+	DiscoverSectionItem,
+	DiscoverSectionProviding,
+	Extension,
+	Form,
+	MangaProviding,
+	PagedResults,
+	PaperbackInterceptor,
+	Request,
+	Response,
+	SearchFilter,
+	SearchQuery,
+	SearchResultItem,
+	SearchResultsProviding,
+	SettingsFormProviding,
+	SourceManga
+} from "@paperback/types";
 import { Functions } from "../commons/Functions";
 import { Metadata } from "../commons/helper";
 import { Parser } from "../commons/parser";

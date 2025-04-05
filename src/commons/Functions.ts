@@ -1,9 +1,21 @@
-import { Chapter, ChapterDetails, DiscoverSection, DiscoverSectionItem, DiscoverSectionType, PagedResults, SearchFilter, SearchQuery, SearchResultItem, SourceManga } from "@paperback/types";
+import {
+    Chapter,
+    ChapterDetails,
+    ContentRating,
+    DiscoverSection,
+    DiscoverSectionItem,
+    DiscoverSectionType,
+    PagedResults,
+    SearchFilter,
+    SearchQuery,
+    SearchResultItem,
+    SourceManga
+} from "@paperback/types";
 import * as cheerio from "cheerio";
-import { CheerioAPI } from "cheerio";
+import {CheerioAPI} from "cheerio";
 // Template content
-import { Metadata, URLBuilder } from "./helper";
-import { Parser } from "./parser";
+import {Metadata, URLBuilder} from "./helper";
+import {Parser} from "./parser";
 
 
 export class Functions {
@@ -33,6 +45,60 @@ export class Functions {
                 items: DiscoverSectionItem[];
             },
         ] = this.parser.parseInTendenzaMese($, metadata);
+
+        const genres = await this.parser.parseGenresFilters(this.baseUrl);
+        const read:DiscoverSectionItem[] = []
+        const mangaType:DiscoverSectionItem[] = []
+        const allGenres:DiscoverSectionItem[] = []
+        genres.forEach(filter => {
+            allGenres.push(
+                {
+                    type: "genresCarouselItem",
+                    searchQuery: {
+                        title: "",
+                        filters: [
+                            {id: "genres", value: filter.id}
+                        ],
+                    },
+                    name: filter.value,
+                    metadata: metadata,
+                    contentRating: this.parser.getRating([filter.value])
+                })
+        })
+        this.getOrderFilter().forEach(filter => {
+            read.push(
+                {
+                    type: "genresCarouselItem",
+                    searchQuery: {
+                        title: "",
+                        filters: [
+                            {id: "order", value: filter.id}
+                        ],
+                    },
+                    name: filter.value,
+                    metadata: metadata,
+                    contentRating: ContentRating.EVERYONE
+            })
+        })
+
+        this.getMangaTypeFilter().forEach(filter => {
+            mangaType.push(
+                {
+                    type: "genresCarouselItem",
+                    searchQuery: {
+                        title: "",
+                        filters: [
+                            {id: "types", value: filter.id}
+                        ],
+                    },
+                    name: filter.value,
+                    metadata: metadata,
+                    contentRating: ContentRating.EVERYONE
+                })
+        })
+
+        console.log(read);
+        console.log(mangaType);
         switch (section.id) {
             case "mese_section":
                 console.log("mese_section");
@@ -43,14 +109,57 @@ export class Functions {
                 return this.parser.parseCapitoliInTendenza($, metadata);
             case "updated_section":
                 console.log("updated_section");
-                return this.parser.parseLastAddedSetcion(metadata);
+                return this.parser.parseLastAddedSetcion(metadata, this.baseUrl);
             case "new_manga_section": {
                 console.log("new_manga_section");
-                return this.parser.parseLastAddedSetcion2(metadata);
+                return this.parser.parseLastAddedSetcion2(metadata, this.baseUrl);
+            }
+            case "read_section": {
+                console.log("read_section")
+                return {
+                    items: read,
+                    metadata: metadata
+                };
+            }
+            case "genre_section": {
+                console.log("type_section")
+                return {
+                    items: allGenres,
+                    metadata: metadata
+                };
+            }
+            case "type_section": {
+                console.log("type_section")
+                return {
+                    items: mangaType,
+                    metadata: metadata
+                };
             }
             default:
                 return { items: [], metadata: metadata };
         }
+    }
+
+    getMangaTypeFilter(){
+        return [
+            { value: "Manga", id: "manga" },
+            { value: "Manhua", id: "manhua" },
+            { value: "Manhwa", id: "manhwa" },
+            { value: "Oneshot", id: "oneshot" },
+            { value: "Thai", id: "thai" },
+            { value: "Vietnamita", id: "vietnamese" }
+        ]
+    }
+
+    getOrderFilter(){
+        return [
+            { value: "Più Letto", id: "most_read" },
+            { value: "Meno Letto", id: "less_read" },
+            { value: "Alfabetico A-Z", id: "a-z" },
+            { value: "Alfabetico Z-A", id: "z-a" },
+            { value: "Più recente", id: "newest" },
+            { value: "Meno recente", id: "oldest" }
+        ]
     }
 
     async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
@@ -92,6 +201,23 @@ export class Functions {
                 title: "Nuove Aggiunte",
                 type: DiscoverSectionType.simpleCarousel,
             },
+            {
+                id: "type_section",
+                title: "Tipo",
+                type: DiscoverSectionType.genres
+            },
+            {
+                id: "genre_section",
+                title: "Generi",
+                type: DiscoverSectionType.genres
+            }
+            /*,
+            {
+                id: "read_section",
+                title: "Ordinamento",
+                type: DiscoverSectionType.genres
+            }
+            */
         ];
     }
     async getChapters(
@@ -117,21 +243,14 @@ export class Functions {
         const types = await this.parser.parseTypeFilters(this.baseUrl);
         filters.push({
             type: "dropdown",
-            options: [
-                { value: "Più Letto", id: "most_read" },
-                { value: "Meno Letto", id: "less_read" },
-                { value: "Alfabetico A-Z", id: "a-z" },
-                { value: "Alfabetico Z-A", id: "z-a" },
-                { value: "Più recente", id: "newest" },
-                { value: "Meno recente", id: "oldest" },
-            ],
+            options: this.getOrderFilter(),
             id: "order",
             value: "most_read",
             title: "Ordine",
         });
         filters.push({
             type: "multiselect",
-            options: types,
+            options: this.getMangaTypeFilter(),
             id: "types",
             allowExclusion: false,
             title: "Tipo",
@@ -217,32 +336,31 @@ export class Functions {
         const tipologia: string[] = [];
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
-
-        const genres = getFilterValue("genres");
+        console.log(getFilterValue("order"));
+        const genres: string | Record<string, "included" | "excluded"> = getFilterValue("genres") ?? "";
+        const types: string | Record<string, "included" | "excluded"> = getFilterValue("types") ?? "";
         if (genres && typeof genres === "object") {
             for (const tag of Object.entries(genres)) {
                 generi.push(tag[0]);
             }
         }
-        const types = getFilterValue("types");
+        else
+            generi.push(genres);
         if (types && typeof types === "object") {
             for (const tag of Object.entries(types)) {
                 tipologia.push(tag[0]);
             }
         }
+        else
+            tipologia.push(types);
 
         const urlBuilder = new URLBuilder(this.baseUrl)
             .addPathComponent("archive")
             .addQueryParameter("keyword", encodeURIComponent(query.title ?? ""))
             .addQueryParameter("page", page.toString())
-            .addQueryParameter("sort", getFilterValue("order"));
-
-        for (const genre of generi) {
-            urlBuilder.addQueryParameter("genre", genre);
-        }
-        for (const tipo of tipologia) {
-            urlBuilder.addQueryParameter("type", tipo);
-        }
+            .addQueryParameter("sort", getFilterValue("order"))
+            .addQueryParameter("genre", generi)
+            .addQueryParameter("type", tipologia);
         return urlBuilder.buildUrl();
     }
 }

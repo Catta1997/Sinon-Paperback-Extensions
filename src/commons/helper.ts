@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Metadata = {
 	page?: number
 }
-
+type QueryValue = string | number | boolean | undefined | null;
+type QueryParam = QueryValue | QueryValue[] | Record<string, QueryValue>;
 export class URLBuilder {
 
-	parameters: Record<string, any | any[]> = {};
+	parameters: Record<string, QueryParam> = {};
 	pathComponents: string[] = [];
 	baseUrl: string;
 	constructor(baseUrl: string) {
@@ -17,7 +17,7 @@ export class URLBuilder {
 		return this;
 	}
 
-	addQueryParameter(key: string, value: any | any[]): URLBuilder {
+	addQueryParameter(key: string, value: QueryParam): URLBuilder {
 		this.parameters[key] = value;
 		return this;
 	}
@@ -30,37 +30,43 @@ export class URLBuilder {
 	): string {
 		let finalUrl = this.baseUrl + "/";
 
+		// Join dei path component
 		finalUrl += this.pathComponents.join("/");
-		finalUrl += addTrailingSlash ? "/" : "";
-		finalUrl += Object.values(this.parameters).length > 0 ? "?" : "";
-		finalUrl += Object.entries(this.parameters)
-			.map((entry) => {
-				if (entry[1] == null && !includeUndefinedParameters) {
-					return undefined;
-				}
+		if (addTrailingSlash) finalUrl += "/";
 
-				if (Array.isArray(entry[1])) {
-					return entry[1]
-						.map((value) =>
-							value || includeUndefinedParameters
-								? `${entry[0]}=${value}`
-								: undefined,
-						)
-						.filter((x) => x !== undefined)
-						.join("&");
-				}
+		const entries = Object.entries(this.parameters);
 
-				if (typeof entry[1] === "object") {
-					return Object.keys(entry[1])
-						.map((key) => `${entry[0]}[${key}]=${entry[1][key]}`)
-						.join("&");
-				}
+		if (entries.length > 0) {
+			const queryString = entries
+				.flatMap(([key, value]) => {
+					if (value == null && !includeUndefinedParameters) return [];
 
-				return `${entry[0]}=${entry[1]}`;
-			})
-			.filter((x) => x !== undefined)
-			.join("&");
+					if (Array.isArray(value)) {
+						return value
+							.filter(v => v != null || includeUndefinedParameters)
+							.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`);
+					}
+
+					if (typeof value === "object" && value !== null) {
+						return Object.entries(value)
+							.filter(([, v]) => v != null || includeUndefinedParameters)
+							.map(
+								([subKey, v]) =>
+									`${encodeURIComponent(key)}[${encodeURIComponent(subKey)}]=${encodeURIComponent(String(v))}`,
+							);
+					}
+
+					// Valore singolo (string, number, boolean)
+					return [`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`];
+				})
+				.join("&");
+
+			if (queryString) {
+				finalUrl += "?" + queryString;
+			}
+		}
 
 		return finalUrl;
 	}
+
 }
