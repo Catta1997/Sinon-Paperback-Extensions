@@ -1,4 +1,4 @@
-# Sinon's Extensions (Beta)
+# Sinon's Extensions (Stable)
 
 ## Installazione
 
