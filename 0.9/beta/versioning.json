@@ -1,0 +1,76 @@
+{
+  "buildTime": "2025-04-07T15:29:23.031Z",
+  "builtWith": {
+    "toolchain": "1.0.0-alpha.46",
+    "types": "1.0.0-alpha.46"
+  },
+  "repository": {
+    "name": "Sinon's Extensions (0.9)",
+    "description": "Some Paperback Extensions"
+  },
+  "sources": [
+    {
+      "version": "1.0 - beta 1",
+      "name": "MangaAdult",
+      "description": "Extension that pulls manga from MangaAdult (0.9).",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "ADULT",
+      "capabilities": [
+        8,
+        1,
+        4,
+        64,
+        32
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#187480",
+          "backgroundColor": "#c2ecd8"
+        },
+        {
+          "label": "NSFW",
+          "textColor": "#ff0000",
+          "backgroundColor": "#000000"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "MangaAdult"
+    },
+    {
+      "version": "1.0 - beta 1",
+      "name": "MangaWorld",
+      "description": "Extension that pulls manga from MangaWorld (0.9).",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "SAFE",
+      "capabilities": [
+        8,
+        1,
+        4,
+        64,
+        32
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#187480",
+          "backgroundColor": "#c2ecd8"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "MangaWorld"
+    }
+  ]
+}
