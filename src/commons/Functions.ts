@@ -36,21 +36,11 @@ export class Functions {
                 method: "GET",
             })
         )[1];
-        console.log("getDiscoverSectionItems");
-        console.log("getDiscoverSectionItems");
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const mangas: [
-            { items: DiscoverSectionItem[] },
-            {
-                items: DiscoverSectionItem[];
-            },
-        ] = this.parser.parseInTendenzaMese($, metadata);
-
-        const genres = await this.parser.parseGenresFilters(this.baseUrl);
         const read:DiscoverSectionItem[] = []
         const mangaType:DiscoverSectionItem[] = []
         const allGenres:DiscoverSectionItem[] = []
-        genres.forEach(filter => {
+        this.getGenreFilter().forEach(filter => {
             allGenres.push(
                 {
                     type: "genresCarouselItem",
@@ -97,39 +87,38 @@ export class Functions {
                 })
         })
 
-        console.log(read);
-        console.log(mangaType);
+
         switch (section.id) {
             case "mese_section":
-                console.log("mese_section");
-                return mangas[0];
+                console.log("mese_section loaded");
+                return this.parser.parseInTendenzaMese($, metadata)
             case "popular_section":
                 this.numberPage = 0;
-                console.log("popular_section");
+                console.log("popular_section loaded");
                 return this.parser.parseCapitoliInTendenza($, metadata);
             case "updated_section":
-                console.log("updated_section");
+                console.log("updated_section loaded");
                 return this.parser.parseLastAddedSetcion(metadata, this.baseUrl);
             case "new_manga_section": {
-                console.log("new_manga_section");
-                return this.parser.parseLastAddedSetcion2(metadata, this.baseUrl);
+                console.log("new_manga_section loaded");
+                return this.parser.parseLastMangaAddedSetcion(metadata, this.baseUrl);
             }
             case "read_section": {
-                console.log("read_section")
+                console.log("read_section loaded")
                 return {
                     items: read,
                     metadata: metadata
                 };
             }
             case "genre_section": {
-                console.log("type_section")
+                console.log("type_section loaded")
                 return {
                     items: allGenres,
                     metadata: metadata
                 };
             }
             case "type_section": {
-                console.log("type_section")
+                console.log("type_section loaded")
                 return {
                     items: mangaType,
                     metadata: metadata
@@ -162,17 +151,55 @@ export class Functions {
         ]
     }
 
+    getGenreFilter(){
+        return [
+            { value: "Adulti", id: "adulti" },
+            { value: "Arti Marziali", id: "arti-marziali" },
+            { value: "Avventura", id: "avventura" },
+            { value: "Azione", id: "azione" },
+            { value: "Commedia", id: "commedia" },
+            { value: "Doujinshi", id: "doujinshi" },
+            { value: "Drammatico", id: "drammatico" },
+            { value: "Ecchi", id: "ecchi" },
+            { value: "Fantasy", id: "fantasy" },
+            { value: "Gender Bender", id: "gender-bender" },
+            { value: "Harem", id: "harem" },
+            { value: "Hentai", id: "hentai" },
+            { value: "Horror", id: "horror" },
+            { value: "Josei", id: "josei" },
+            { value: "Lolicon", id: "lolicon" },
+            { value: "Maturo", id: "maturo" },
+            { value: "Mecha", id: "mecha" },
+            { value: "Mistero", id: "mistero" },
+            { value: "Psicologico", id: "psicologico" },
+            { value: "Romantico", id: "romantico" },
+            { value: "Sci-fi", id: "sci-fi" },
+            { value: "Scolastico", id: "scolastico" },
+            { value: "Seinen", id: "seinen" },
+            { value: "Shotacon", id: "shotacon" },
+            { value: "Shoujo", id: "shoujo" },
+            { value: "Shoujo Ai", id: "shoujo-ai" },
+            { value: "Shounen", id: "shounen" },
+            { value: "Shounen Ai", id: "shounen-ai" },
+            { value: "Slice of Life", id: "slice-of-life" },
+            { value: "Smut", id: "smut" },
+            { value: "Soprannaturale", id: "soprannaturale" },
+            { value: "Sport", id: "sport" },
+            { value: "Storico", id: "storico" },
+            { value: "Tragico", id: "tragico" },
+            { value: "Yaoi", id: "yaoi" },
+            { value: "Yuri", id: "yuri" }
+        ];
+    }
+
     async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-        console.log(chapter);
-        chapter.chapterId = chapter.chapterId.replace("_read_", "/read/");
         const data = (
             await Application.scheduleRequest({
-                url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/${chapter.chapterId}/?style=list`,
+                url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/read/${chapter.chapterId}/?style=list`,
                 method: "GET",
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        chapter.chapterId = chapter.chapterId.replace("/read/", "_read_");
         return this.parser.parseChapterDetails(
             $,
             chapter.sourceManga.mangaId,
@@ -225,8 +252,7 @@ export class Functions {
         sinceDate?: Date,
     ): Promise<Chapter[]> {
         this.sinceDate = sinceDate;
-        console.log(sourceManga);
-        console.log(sourceManga.mangaId);
+        console.log("MangaID " + sourceManga.mangaId);
         const [_, buffer] = await Application.scheduleRequest({
             url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
             method: "GET",
@@ -238,9 +264,6 @@ export class Functions {
     async getFilterList(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
         console.log("getSearchFilter");
-        //return this.parser.parseSearchFilterGenre(this.baseUrl)
-        const genres = await this.parser.parseGenresFilters(this.baseUrl);
-        const types = await this.parser.parseTypeFilters(this.baseUrl);
         filters.push({
             type: "dropdown",
             options: this.getOrderFilter(),
@@ -260,7 +283,7 @@ export class Functions {
         });
         filters.push({
             type: "multiselect",
-            options: genres,
+            options: this.getGenreFilter(),
             id: "genres",
             allowExclusion: false,
             title: "Generi",
@@ -268,7 +291,6 @@ export class Functions {
             allowEmptySelection: true,
             maximum: 5,
         });
-        console.log(filters);
         return filters;
     }
 
@@ -279,45 +301,23 @@ export class Functions {
         let manga: SearchResultItem[] = [];
         let page = metadata?.page ?? 1;
         if (page == -1) return { items: [] };
-        //let request = await this.constructSearchRequest(0,{title:"", filters:query.filters})
-        if (query.title.length > 0) {
-            const url = this.constructSearchRequest(page, query);
-            const data = (
-                await Application.scheduleRequest({
-                    url: `${url}`,
-                    method: "GET",
-                })
-            )[1];
-            //const request :ArrayBuffer = (this.constructSearchRequest(page, {title: "", filters: query.filters}))
-            const $: CheerioAPI = cheerio.load(
-                Application.arrayBufferToUTF8String(data),
-            );
-            manga = this.parser.parseSearchResults($);
-        } else {
-            const url = this.constructSearchRequest(page, {
-                title: "",
-                filters: query.filters,
-            });
-            const data = (
-                await Application.scheduleRequest({
-                    url: `${url}`,
-                    method: "GET",
-                })
-            )[1];
-            //const request :ArrayBuffer = (this.constructSearchRequest(page, {title: "", filters: query.filters}))
-            const $: CheerioAPI = cheerio.load(
-                Application.arrayBufferToUTF8String(data),
-            );
-            manga = this.parser.parseSearchResults($);
-        }
-        page++;
-        const nextMetadata: Metadata | undefined =
-            manga.length < 16 ? undefined : { page: page + 1 };
-        return { items: manga, metadata: nextMetadata };
+        const url = this.constructSearchRequestURL(page, query);
+        const data = (
+            await Application.scheduleRequest({
+                url: `${url}`,
+                method: "GET",
+            })
+        )[1];
+        const $: CheerioAPI = cheerio.load(
+            Application.arrayBufferToUTF8String(data),
+        );
+        manga = this.parser.parseSearchResults($);
+        page++
+        return { items: manga, metadata: { page: page } };
     }
 
     async getMangaDetails(mangaId: string): Promise<SourceManga> {
-        console.log(mangaId);
+        console.log("MangaID " + mangaId);
         const data = (
             await Application.scheduleRequest({
                 url: `${this.baseUrl}/manga/${mangaId}`,
@@ -328,7 +328,7 @@ export class Functions {
         return this.parser.parseMangaDetails($, mangaId);
     }
 
-    constructSearchRequest(
+    constructSearchRequestURL(
         page: number,
         query: SearchQuery = { title: "", filters: [] },
     ): string {
@@ -336,7 +336,6 @@ export class Functions {
         const tipologia: string[] = [];
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
-        console.log(getFilterValue("order"));
         const genres: string | Record<string, "included" | "excluded"> = getFilterValue("genres") ?? "";
         const types: string | Record<string, "included" | "excluded"> = getFilterValue("types") ?? "";
         if (genres && typeof genres === "object") {
