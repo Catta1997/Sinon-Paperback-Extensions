@@ -16916,13 +16916,13 @@ var source = (() => {
     }
     /**
      * controllo Tipi Manga Blacklistati da impostaioni
-     * @param tags : string[] - tags
      * @type {tags:string[]} => boolean
      * @return {boolean} - true: da nascondere
+     * @param type
      */
     blacklistedType(type) {
-      const Bl_tags = Application.getState("hide_tags") ?? [];
-      console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+      const Bl_tags = Application.getState("hide_type") ?? [];
+      console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
       if (Bl_tags.includes(type.toLowerCase())) {
         console.log("Detected :" + type + " manga rimosso dalla lista");
         return true;
@@ -17118,11 +17118,13 @@ var source = (() => {
         });
         const title = $2("a", item).attr("title") ?? "";
         const image = $2("a img", item).attr("src") ?? "";
+        const mangaType = $2("div.genre", item).find("a").text().trim();
         $2("div.genres", item).find("a").each(function(_, e) {
           tags.push($2(e).text().trim());
         });
+        console.log("MangaTypeSearch " + mangaType);
         const author = authors.join(", ");
-        items.push({ id, title, image, tags, authors: author });
+        items.push({ id, title, image, tags, authors: author, type: mangaType });
       }
       return items;
     }
@@ -17135,7 +17137,7 @@ var source = (() => {
       const results = [];
       const parse6 = this.parsePage($2);
       for (const item of parse6) {
-        if (!this.blacklistedTags(item.tags)) {
+        if (!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
           results.push({
             imageUrl: item.image,
             title: item.title,
@@ -17221,7 +17223,7 @@ var source = (() => {
       page++;
       const parse6 = this.parsePage($2);
       for (const item of parse6) {
-        if (!this.blacklistedTags(item.tags)) {
+        if (!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
           latest.push({
             metadata: { page: page + 1 },
             subtitle: item.authors,
@@ -17258,22 +17260,26 @@ var source = (() => {
         const id = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
         console.log("MangaID " + id);
         const title = $2("a", obj).attr("title") ?? "";
+        const mangaType = $2(".genre a", obj).text().trim() ?? "";
+        console.log("MangaType " + mangaType);
         const image = $2("a img", obj).attr("src") ?? "";
         const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
         const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
         const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
         console.log("ChapterID " + chapterId);
-        latest.push({
-          chapterId,
-          publishDate: this.getDate(addedDate),
-          metadata,
-          type: "chapterUpdatesCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title,
-          subtitle: sub
-        });
+        if (!this.blacklistedType(mangaType)) {
+          latest.push({
+            chapterId,
+            publishDate: this.getDate(addedDate),
+            metadata,
+            type: "chapterUpdatesCarouselItem",
+            contentRating: void 0,
+            imageUrl: image,
+            mangaId: id,
+            title,
+            subtitle: sub
+          });
+        }
       }
       return { items: latest, metadata: { page } };
     }
@@ -17284,18 +17290,18 @@ var source = (() => {
      */
     getDate(dataString) {
       const mesi = {
-        "Gennaio": 0,
-        "Febbraio": 1,
-        "Marzo": 2,
-        "Aprile": 3,
-        "Maggio": 4,
-        "Giugno": 5,
-        "Luglio": 6,
-        "Agosto": 7,
-        "Settembre": 8,
-        "Ottobre": 9,
-        "Novembre": 10,
-        "Dicembre": 11
+        "gennaio": 0,
+        "febbraio": 1,
+        "marzo": 2,
+        "aprile": 3,
+        "maggio": 4,
+        "giugno": 5,
+        "luglio": 6,
+        "agosto": 7,
+        "settembre": 8,
+        "ottobre": 9,
+        "novembre": 10,
+        "dicembre": 11
       };
       const oggi = /* @__PURE__ */ new Date();
       const parts = dataString.trim().toLowerCase().split(" ");
@@ -17321,14 +17327,70 @@ var source = (() => {
 
   // src/commons/SettingsForm.ts
   init_buffer();
-  var import_types3 = __toESM(require_lib(), 1);
-
-  // src/commons/Functions.ts
-  init_buffer();
   var import_types2 = __toESM(require_lib(), 1);
 
   // src/commons/helper.ts
   init_buffer();
+  function getMangaTypeFilter() {
+    return [
+      { value: "Manga", id: "manga" },
+      { value: "Manhua", id: "manhua" },
+      { value: "Manhwa", id: "manhwa" },
+      { value: "Oneshot", id: "oneshot" },
+      { value: "Thai", id: "thai" },
+      { value: "Vietnamita", id: "vietnamese" }
+    ];
+  }
+  function getOrderFilter() {
+    return [
+      { value: "Pi\xF9 Letto", id: "most_read" },
+      { value: "Meno Letto", id: "less_read" },
+      { value: "Alfabetico A-Z", id: "a-z" },
+      { value: "Alfabetico Z-A", id: "z-a" },
+      { value: "Pi\xF9 recente", id: "newest" },
+      { value: "Meno recente", id: "oldest" }
+    ];
+  }
+  function getGenreFilter() {
+    return [
+      { value: "Adulti", id: "adulti" },
+      { value: "Arti Marziali", id: "arti-marziali" },
+      { value: "Avventura", id: "avventura" },
+      { value: "Azione", id: "azione" },
+      { value: "Commedia", id: "commedia" },
+      { value: "Doujinshi", id: "doujinshi" },
+      { value: "Drammatico", id: "drammatico" },
+      { value: "Ecchi", id: "ecchi" },
+      { value: "Fantasy", id: "fantasy" },
+      { value: "Gender Bender", id: "gender-bender" },
+      { value: "Harem", id: "harem" },
+      { value: "Hentai", id: "hentai" },
+      { value: "Horror", id: "horror" },
+      { value: "Josei", id: "josei" },
+      { value: "Lolicon", id: "lolicon" },
+      { value: "Maturo", id: "maturo" },
+      { value: "Mecha", id: "mecha" },
+      { value: "Mistero", id: "mistero" },
+      { value: "Psicologico", id: "psicologico" },
+      { value: "Romantico", id: "romantico" },
+      { value: "Sci-fi", id: "sci-fi" },
+      { value: "Scolastico", id: "scolastico" },
+      { value: "Seinen", id: "seinen" },
+      { value: "Shotacon", id: "shotacon" },
+      { value: "Shoujo", id: "shoujo" },
+      { value: "Shoujo Ai", id: "shoujo-ai" },
+      { value: "Shounen", id: "shounen" },
+      { value: "Shounen Ai", id: "shounen-ai" },
+      { value: "Slice of Life", id: "slice-of-life" },
+      { value: "Smut", id: "smut" },
+      { value: "Soprannaturale", id: "soprannaturale" },
+      { value: "Sport", id: "sport" },
+      { value: "Storico", id: "storico" },
+      { value: "Tragico", id: "tragico" },
+      { value: "Yaoi", id: "yaoi" },
+      { value: "Yuri", id: "yuri" }
+    ];
+  }
   var URLBuilder = class {
     parameters = {};
     pathComponents = [];
@@ -17373,7 +17435,155 @@ var source = (() => {
     }
   };
 
+  // src/commons/SettingsForm.ts
+  var SettingsForm = class extends import_types2.Form {
+    getSections() {
+      return [
+        (0, import_types2.Section)("playground", [
+          (0, import_types2.NavigationRow)("playground", {
+            title: "Contenuti",
+            subtitle: "Impostazioni Contenuti",
+            form: new SourceUIPlaygroundForm()
+          })
+        ])
+      ];
+    }
+  };
+  var State3 = class {
+    constructor(form, value) {
+      this.form = form;
+      this._value = value;
+    }
+    _value;
+    get value() {
+      return this._value;
+    }
+    get selector() {
+      return Application.Selector(this, "updateValue");
+    }
+    async updateValue(value) {
+      this._value = value;
+      this.form.reloadForm();
+    }
+  };
+  var SourceUIPlaygroundForm = class extends import_types2.Form {
+    inputValue = new State3(this, "");
+    rowsVisible = new State3(this, false);
+    items = [];
+    genres = getGenreFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    mangaTypes = getMangaTypeFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    defOrder = getOrderFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    getSections() {
+      return [
+        (0, import_types2.Section)(
+          {
+            id: "update_settings",
+            footer: "Nascondi alcuni generi/tag di manga o modifica l'ordinamento di default. Questi cambiameni potrebbero non avvenire in tutte le sezioni"
+          },
+          [
+            (0, import_types2.SelectRow)("hide_tags", {
+              title: "Nascondi Generi",
+              subtitle: "Nascondi alcuni Generi",
+              value: this.HideTagsStatusState.value,
+              options: this.genres,
+              minItemCount: 0,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleHideTagsStatusChange"
+              )
+            }),
+            (0, import_types2.SelectRow)("hide_type", {
+              title: "Nascondi Tipologia",
+              subtitle: "Nascondi alcune Tipologie",
+              value: this.HideTypeStatusState.value,
+              options: this.mangaTypes,
+              minItemCount: 0,
+              maxItemCount: this.mangaTypes.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleHideTypeStatusChange"
+              )
+            }),
+            (0, import_types2.SelectRow)("def_order", {
+              title: "Ordine Ricerca",
+              subtitle: "Ordinamento della Ricerca",
+              value: this.defOrderStatusState.value,
+              options: this.defOrder,
+              minItemCount: 0,
+              maxItemCount: 1,
+              onValueChange: Application.Selector(
+                this,
+                "handleDefOrderStatusChange"
+              )
+            })
+          ]
+        )
+      ];
+    }
+    /////// hide_tags
+    getHideTagsStatus() {
+      return Application.getState("hide_tags") ?? [];
+    }
+    setHideTagsStatus(status) {
+      Application.setState(status, "hide_tags");
+    }
+    async handleHideTagsStatusChange(value) {
+      await this.HideTagsStatusState.updateValue(value);
+      this.setHideTagsStatus(value);
+      this.reloadForm();
+    }
+    HideTagsStatusState = new State3(
+      this,
+      this.getHideTagsStatus()
+    );
+    /////// hide_type
+    getHideTypeStatus() {
+      return Application.getState("hide_type") ?? [];
+    }
+    setHideTypeStatus(status) {
+      Application.setState(status, "hide_type");
+    }
+    async handleHideTypeStatusChange(value) {
+      await this.HideTypeStatusState.updateValue(value);
+      this.setHideTypeStatus(value);
+      this.reloadForm();
+    }
+    HideTypeStatusState = new State3(
+      this,
+      this.getHideTypeStatus()
+    );
+    /////// def_order
+    getDefOrderStatus() {
+      return Application.getState("def_order") ?? [];
+    }
+    setDefOrderStatus(status) {
+      Application.setState(status, "def_order");
+    }
+    async handleDefOrderStatusChange(value) {
+      await this.defOrderStatusState.updateValue(value);
+      this.setDefOrderStatus(value);
+      this.reloadForm();
+      Application.invalidateSearchFilters();
+    }
+    defOrderStatusState = new State3(
+      this,
+      this.getDefOrderStatus()
+    );
+  };
+
   // src/commons/Functions.ts
+  init_buffer();
+  var import_types3 = __toESM(require_lib(), 1);
   var Functions = class {
     baseUrl = "";
     sinceDate;
@@ -17391,7 +17601,7 @@ var source = (() => {
       const read = [];
       const mangaType = [];
       const allGenres = [];
-      this.getGenreFilter().forEach((filter4) => {
+      getGenreFilter().forEach((filter4) => {
         allGenres.push(
           {
             type: "genresCarouselItem",
@@ -17407,7 +17617,7 @@ var source = (() => {
           }
         );
       });
-      this.getOrderFilter().forEach((filter4) => {
+      getOrderFilter().forEach((filter4) => {
         read.push(
           {
             type: "genresCarouselItem",
@@ -17419,11 +17629,11 @@ var source = (() => {
             },
             name: filter4.value,
             metadata,
-            contentRating: import_types2.ContentRating.EVERYONE
+            contentRating: import_types3.ContentRating.EVERYONE
           }
         );
       });
-      this.getMangaTypeFilter().forEach((filter4) => {
+      getMangaTypeFilter().forEach((filter4) => {
         mangaType.push(
           {
             type: "genresCarouselItem",
@@ -17435,7 +17645,7 @@ var source = (() => {
             },
             name: filter4.value,
             metadata,
-            contentRating: import_types2.ContentRating.EVERYONE
+            contentRating: import_types3.ContentRating.EVERYONE
           }
         );
       });
@@ -17479,66 +17689,6 @@ var source = (() => {
           return { items: [], metadata };
       }
     }
-    getMangaTypeFilter() {
-      return [
-        { value: "Manga", id: "manga" },
-        { value: "Manhua", id: "manhua" },
-        { value: "Manhwa", id: "manhwa" },
-        { value: "Oneshot", id: "oneshot" },
-        { value: "Thai", id: "thai" },
-        { value: "Vietnamita", id: "vietnamese" }
-      ];
-    }
-    getOrderFilter() {
-      return [
-        { value: "Pi\xF9 Letto", id: "most_read" },
-        { value: "Meno Letto", id: "less_read" },
-        { value: "Alfabetico A-Z", id: "a-z" },
-        { value: "Alfabetico Z-A", id: "z-a" },
-        { value: "Pi\xF9 recente", id: "newest" },
-        { value: "Meno recente", id: "oldest" }
-      ];
-    }
-    getGenreFilter() {
-      return [
-        { value: "Adulti", id: "adulti" },
-        { value: "Arti Marziali", id: "arti-marziali" },
-        { value: "Avventura", id: "avventura" },
-        { value: "Azione", id: "azione" },
-        { value: "Commedia", id: "commedia" },
-        { value: "Doujinshi", id: "doujinshi" },
-        { value: "Drammatico", id: "drammatico" },
-        { value: "Ecchi", id: "ecchi" },
-        { value: "Fantasy", id: "fantasy" },
-        { value: "Gender Bender", id: "gender-bender" },
-        { value: "Harem", id: "harem" },
-        { value: "Hentai", id: "hentai" },
-        { value: "Horror", id: "horror" },
-        { value: "Josei", id: "josei" },
-        { value: "Lolicon", id: "lolicon" },
-        { value: "Maturo", id: "maturo" },
-        { value: "Mecha", id: "mecha" },
-        { value: "Mistero", id: "mistero" },
-        { value: "Psicologico", id: "psicologico" },
-        { value: "Romantico", id: "romantico" },
-        { value: "Sci-fi", id: "sci-fi" },
-        { value: "Scolastico", id: "scolastico" },
-        { value: "Seinen", id: "seinen" },
-        { value: "Shotacon", id: "shotacon" },
-        { value: "Shoujo", id: "shoujo" },
-        { value: "Shoujo Ai", id: "shoujo-ai" },
-        { value: "Shounen", id: "shounen" },
-        { value: "Shounen Ai", id: "shounen-ai" },
-        { value: "Slice of Life", id: "slice-of-life" },
-        { value: "Smut", id: "smut" },
-        { value: "Soprannaturale", id: "soprannaturale" },
-        { value: "Sport", id: "sport" },
-        { value: "Storico", id: "storico" },
-        { value: "Tragico", id: "tragico" },
-        { value: "Yaoi", id: "yaoi" },
-        { value: "Yuri", id: "yuri" }
-      ];
-    }
     async getChapterDetails(chapter) {
       const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/read/${chapter.chapterId}/?style=list`,
@@ -17556,32 +17706,32 @@ var source = (() => {
         {
           id: "mese_section",
           title: "Manga del Mese",
-          type: import_types2.DiscoverSectionType.prominentCarousel
+          type: import_types3.DiscoverSectionType.prominentCarousel
         },
         {
           id: "popular_section",
           title: "Capitoli In Tendenza",
-          type: import_types2.DiscoverSectionType.featured
+          type: import_types3.DiscoverSectionType.featured
         },
         {
           id: "updated_section",
           title: "Aggiornati di Recente",
-          type: import_types2.DiscoverSectionType.chapterUpdates
+          type: import_types3.DiscoverSectionType.chapterUpdates
         },
         {
           id: "new_manga_section",
           title: "Nuove Aggiunte",
-          type: import_types2.DiscoverSectionType.simpleCarousel
+          type: import_types3.DiscoverSectionType.simpleCarousel
         },
         {
           id: "type_section",
           title: "Tipo",
-          type: import_types2.DiscoverSectionType.genres
+          type: import_types3.DiscoverSectionType.genres
         },
         {
           id: "genre_section",
           title: "Generi",
-          type: import_types2.DiscoverSectionType.genres
+          type: import_types3.DiscoverSectionType.genres
         }
         /*,
         {
@@ -17604,17 +17754,17 @@ var source = (() => {
     }
     async getFilterList() {
       const filters2 = [];
-      console.log("getSearchFilter");
+      console.log("Filter List");
       filters2.push({
         type: "dropdown",
-        options: this.getOrderFilter(),
+        options: getOrderFilter(),
         id: "order",
-        value: "most_read",
+        value: (Application.getState("def_order") ?? ["most_read"])[0],
         title: "Ordine"
       });
       filters2.push({
         type: "multiselect",
-        options: this.getMangaTypeFilter(),
+        options: getMangaTypeFilter(),
         id: "types",
         allowExclusion: false,
         title: "Tipo",
@@ -17624,7 +17774,7 @@ var source = (() => {
       });
       filters2.push({
         type: "multiselect",
-        options: this.getGenreFilter(),
+        options: getGenreFilter(),
         id: "genres",
         allowExclusion: false,
         title: "Generi",
@@ -17677,159 +17827,13 @@ var source = (() => {
         }
       } else
         tipologia.push(types);
-      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter("sort", getFilterValue("order")).addQueryParameter("genre", generi).addQueryParameter("type", tipologia);
+      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter(
+        "sort",
+        /*order[0] ?? */
+        getFilterValue("order")
+      ).addQueryParameter("genre", generi).addQueryParameter("type", tipologia);
       return urlBuilder.buildUrl();
     }
-  };
-
-  // src/commons/SettingsForm.ts
-  var SettingsForm = class extends import_types3.Form {
-    getSections() {
-      return [
-        (0, import_types3.Section)("playground", [
-          (0, import_types3.NavigationRow)("playground", {
-            title: "Contenuti",
-            subtitle: "Imposazioni tag Contenuti",
-            form: new SourceUIPlaygroundForm()
-          })
-        ])
-      ];
-    }
-  };
-  var State3 = class {
-    constructor(form, value) {
-      this.form = form;
-      this._value = value;
-    }
-    _value;
-    get value() {
-      return this._value;
-    }
-    get selector() {
-      return Application.Selector(this, "updateValue");
-    }
-    async updateValue(value) {
-      this._value = value;
-      this.form.reloadForm();
-    }
-  };
-  var SourceUIPlaygroundForm = class extends import_types3.Form {
-    inputValue = new State3(this, "");
-    rowsVisible = new State3(this, false);
-    items = [];
-    function = new Functions("");
-    genres = [
-      { title: "Adulti", id: "adulti" },
-      { title: "Arti Marziali", id: "arti-marziali" },
-      { title: "Avventura", id: "avventura" },
-      { title: "Azione", id: "azione" },
-      { title: "Commedia", id: "commedia" },
-      { title: "Doujinshi", id: "doujinshi" },
-      { title: "Drammatico", id: "drammatico" },
-      { title: "Ecchi", id: "ecchi" },
-      { title: "Fantasy", id: "fantasy" },
-      { title: "Gender Bender", id: "gender-bender" },
-      { title: "Harem", id: "harem" },
-      { title: "Hentai", id: "hentai" },
-      { title: "Horror", id: "horror" },
-      { title: "Josei", id: "josei" },
-      { title: "Lolicon", id: "lolicon" },
-      { title: "Maturo", id: "maturo" },
-      { title: "Mecha", id: "mecha" },
-      { title: "Mistero", id: "mistero" },
-      { title: "Psicologico", id: "psicologico" },
-      { title: "Romantico", id: "romantico" },
-      { title: "Sci-fi", id: "sci-fi" },
-      { title: "Scolastico", id: "scolastico" },
-      { title: "Seinen", id: "seinen" },
-      { title: "Shotacon", id: "shotacon" },
-      { title: "Shoujo", id: "shoujo" },
-      { title: "Shoujo Ai", id: "shoujo-ai" },
-      { title: "Shounen", id: "shounen" },
-      { title: "Shounen Ai", id: "shounen-ai" },
-      { title: "Slice of Life", id: "slice-of-life" },
-      { title: "Smut", id: "smut" },
-      { title: "Soprannaturale", id: "soprannaturale" },
-      { title: "Sport", id: "sport" },
-      { title: "Storico", id: "storico" },
-      { title: "Tragico", id: "tragico" },
-      { title: "Yaoi", id: "yaoi" },
-      { title: "Yuri", id: "yuri" }
-    ];
-    MangaTypes = [
-      { title: "Manga", id: "manga" },
-      { title: "Manhua", id: "manhua" },
-      { title: "Manhwa", id: "manhwa" },
-      { title: "Oneshot", id: "oneshot" },
-      { title: "Thai", id: "thai" },
-      { title: "Vietnamita", id: "vietnamese" }
-    ];
-    getSections() {
-      return [
-        (0, import_types3.Section)(
-          {
-            id: "update_settings",
-            footer: "Note: These settings do not enable automatic updates. Automatic updates are handled by Paperback itself (if implemented). These settings just affect how updates are managed when they occur."
-          },
-          [
-            (0, import_types3.SelectRow)("hide_tags", {
-              title: "Nascondi tags",
-              subtitle: "Nascondi alcuni tag dalla ricerca e da alcune altri",
-              value: this.HideTagsStatusState.value,
-              options: this.genres,
-              minItemCount: 0,
-              maxItemCount: this.genres.length,
-              onValueChange: Application.Selector(
-                this,
-                "handleHideTagsStatusChange"
-              )
-            }),
-            (0, import_types3.SelectRow)("hide_type", {
-              title: "Nascondi Generi",
-              subtitle: "Nascondi alcuni generi dalla ricerca e da alcune altri",
-              value: this.HideTypeStatusState.value,
-              options: this.MangaTypes,
-              minItemCount: 0,
-              maxItemCount: this.MangaTypes.length,
-              onValueChange: Application.Selector(
-                this,
-                "handleHideTagsStatusChange"
-              )
-            })
-          ]
-        )
-      ];
-    }
-    getHideTagsStatus() {
-      return Application.getState("hide_tags") ?? [];
-    }
-    setHideTagsStatus(status) {
-      Application.setState(status, "hide_tags");
-    }
-    async handleHideTagsStatusChange(value) {
-      await this.HideTagsStatusState.updateValue(value);
-      this.setHideTagsStatus(value);
-      this.reloadForm();
-    }
-    HideTagsStatusState = new State3(
-      this,
-      this.getHideTagsStatus()
-    );
-    getHideTypeStatus() {
-      return Application.getState("hide_type") ?? [];
-    }
-    setHideTypeStatus(status) {
-      Application.setState(status, "hide_type");
-    }
-    async handleHideTypeStatusChange(value) {
-      await this.HideTypeStatusState.updateValue(value);
-      this.setHideTypeStatus(value);
-      this.reloadForm();
-    }
-    HideTypeStatusState = new State3(
-      this,
-      this.getHideTypeStatus()
-    );
   };
 
   // src/MangaAdult/main.ts
