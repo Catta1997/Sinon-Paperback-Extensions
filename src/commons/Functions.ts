@@ -14,7 +14,7 @@ import {
 import * as cheerio from "cheerio";
 import {CheerioAPI} from "cheerio";
 // Template content
-import {Metadata, URLBuilder} from "./helper";
+import {Metadata, URLBuilder, getMangaTypeFilter, getOrderFilter, getGenreFilter} from "./helper";
 import {Parser} from "./parser";
 
 
@@ -40,7 +40,7 @@ export class Functions {
         const read:DiscoverSectionItem[] = []
         const mangaType:DiscoverSectionItem[] = []
         const allGenres:DiscoverSectionItem[] = []
-        this.getGenreFilter().forEach(filter => {
+        getGenreFilter().forEach(filter => {
             allGenres.push(
                 {
                     type: "genresCarouselItem",
@@ -55,7 +55,7 @@ export class Functions {
                     contentRating: this.parser.getRating([filter.value])
                 })
         })
-        this.getOrderFilter().forEach(filter => {
+        getOrderFilter().forEach(filter => {
             read.push(
                 {
                     type: "genresCarouselItem",
@@ -71,7 +71,7 @@ export class Functions {
             })
         })
 
-        this.getMangaTypeFilter().forEach(filter => {
+        getMangaTypeFilter().forEach(filter => {
             mangaType.push(
                 {
                     type: "genresCarouselItem",
@@ -127,69 +127,6 @@ export class Functions {
             default:
                 return { items: [], metadata: metadata };
         }
-    }
-
-    getMangaTypeFilter(){
-        return [
-            { value: "Manga", id: "manga" },
-            { value: "Manhua", id: "manhua" },
-            { value: "Manhwa", id: "manhwa" },
-            { value: "Oneshot", id: "oneshot" },
-            { value: "Thai", id: "thai" },
-            { value: "Vietnamita", id: "vietnamese" }
-        ]
-    }
-
-    getOrderFilter(){
-        return [
-            { value: "Più Letto", id: "most_read" },
-            { value: "Meno Letto", id: "less_read" },
-            { value: "Alfabetico A-Z", id: "a-z" },
-            { value: "Alfabetico Z-A", id: "z-a" },
-            { value: "Più recente", id: "newest" },
-            { value: "Meno recente", id: "oldest" }
-        ]
-    }
-
-    getGenreFilter(){
-        return [
-            { value: "Adulti", id: "adulti" },
-            { value: "Arti Marziali", id: "arti-marziali" },
-            { value: "Avventura", id: "avventura" },
-            { value: "Azione", id: "azione" },
-            { value: "Commedia", id: "commedia" },
-            { value: "Doujinshi", id: "doujinshi" },
-            { value: "Drammatico", id: "drammatico" },
-            { value: "Ecchi", id: "ecchi" },
-            { value: "Fantasy", id: "fantasy" },
-            { value: "Gender Bender", id: "gender-bender" },
-            { value: "Harem", id: "harem" },
-            { value: "Hentai", id: "hentai" },
-            { value: "Horror", id: "horror" },
-            { value: "Josei", id: "josei" },
-            { value: "Lolicon", id: "lolicon" },
-            { value: "Maturo", id: "maturo" },
-            { value: "Mecha", id: "mecha" },
-            { value: "Mistero", id: "mistero" },
-            { value: "Psicologico", id: "psicologico" },
-            { value: "Romantico", id: "romantico" },
-            { value: "Sci-fi", id: "sci-fi" },
-            { value: "Scolastico", id: "scolastico" },
-            { value: "Seinen", id: "seinen" },
-            { value: "Shotacon", id: "shotacon" },
-            { value: "Shoujo", id: "shoujo" },
-            { value: "Shoujo Ai", id: "shoujo-ai" },
-            { value: "Shounen", id: "shounen" },
-            { value: "Shounen Ai", id: "shounen-ai" },
-            { value: "Slice of Life", id: "slice-of-life" },
-            { value: "Smut", id: "smut" },
-            { value: "Soprannaturale", id: "soprannaturale" },
-            { value: "Sport", id: "sport" },
-            { value: "Storico", id: "storico" },
-            { value: "Tragico", id: "tragico" },
-            { value: "Yaoi", id: "yaoi" },
-            { value: "Yuri", id: "yuri" }
-        ];
     }
 
     async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
@@ -263,17 +200,17 @@ export class Functions {
 
     async getFilterList(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
-        console.log("getSearchFilter");
+        console.log("Filter List");
         filters.push({
             type: "dropdown",
-            options: this.getOrderFilter(),
+            options: getOrderFilter(),
             id: "order",
-            value: "most_read",
+            value: (Application.getState("def_order") as string[] ?? ["most_read"])[0],
             title: "Ordine",
         });
         filters.push({
             type: "multiselect",
-            options: this.getMangaTypeFilter(),
+            options: getMangaTypeFilter(),
             id: "types",
             allowExclusion: false,
             title: "Tipo",
@@ -283,7 +220,7 @@ export class Functions {
         });
         filters.push({
             type: "multiselect",
-            options: this.getGenreFilter(),
+            options: getGenreFilter(),
             id: "genres",
             allowExclusion: false,
             title: "Generi",
@@ -352,12 +289,13 @@ export class Functions {
         }
         else
             tipologia.push(types);
-
+        //const order = Application.getState("def_order") as string[] ?? ["most_read"]
+        //console.log("oder " + order.join(", "));
         const urlBuilder = new URLBuilder(this.baseUrl)
             .addPathComponent("archive")
             .addQueryParameter("keyword", encodeURIComponent(query.title ?? ""))
             .addQueryParameter("page", page.toString())
-            .addQueryParameter("sort", getFilterValue("order"))
+            .addQueryParameter("sort", /*order[0] ?? */getFilterValue("order"))
             .addQueryParameter("genre", generi)
             .addQueryParameter("type", tipologia);
         return urlBuilder.buildUrl();

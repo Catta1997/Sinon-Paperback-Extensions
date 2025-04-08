@@ -37,15 +37,15 @@ export class Parser {
 
 	/**
 	 * controllo Tipi Manga Blacklistati da impostaioni
-	 * @param tags : string[] - tags
 	 * @type {tags:string[]} => boolean
 	 * @return {boolean} - true: da nascondere
+	 * @param type
 	 */
 	blacklistedType(type: string): boolean {
-		const Bl_tags = (Application.getState("hide_tags") as
+		const Bl_tags = (Application.getState("hide_type") as
 			| string[]
 			| undefined) ?? []
-		console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","))
+		console.log("Blacklisted Type Loaded: " + Bl_tags.join(","))
 		if (Bl_tags.includes(type.toLowerCase())) {
 			console.log("Detected :" + type + " manga rimosso dalla lista")
 			return true;
@@ -229,8 +229,8 @@ export class Parser {
 	 * @param $ : CheerioAPI - Richiesta
 	 * @return {{id:string,title:string,image:string,tags:string[]}[]}
 	 */
-	parsePage($: CheerioAPI): {id:string,title:string,image:string,tags:string[], authors: string}[]{
-		const items :{id:string,title:string,image:string,tags:string[], authors: string}[] = []
+	parsePage($: CheerioAPI): {id:string,title:string,image:string,tags:string[], authors: string, type: string}[]{
+		const items :{id:string,title:string,image:string,tags:string[], authors: string, type: string}[] = []
 		for (const item of $(".comics-grid .entry").toArray()) {
 			const id =
 				(($("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? [
@@ -246,13 +246,15 @@ export class Parser {
 				});
 			const title = $("a", item).attr("title") ?? "";
 			const image = $("a img", item).attr("src") ?? "";
+			const mangaType = $("div.genre", item).find("a").text().trim();
 			$("div.genres", item)
 				.find("a")
 				.each(function (_, e) {
 					tags.push($(e).text().trim())
 				});
+			console.log("MangaTypeSearch " + mangaType)
 			const author:string = authors.join(", ")
-			items.push({id:id,title:title,image:image,tags:tags, authors:author})
+			items.push({id:id,title:title,image:image,tags:tags, authors:author, type: mangaType})
 		}
 		return items;
 	}
@@ -265,7 +267,7 @@ export class Parser {
 		const results: SearchResultItem[] = [];
 		const parse = this.parsePage($)
 		for (const item of parse) {
-			if(!this.blacklistedTags(item.tags)){
+			if(!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
 				results.push({
 					imageUrl: item.image,
 					title: item.title,
@@ -356,7 +358,7 @@ export class Parser {
 		page++
 		const parse = this.parsePage($)
 		for (const item of parse) {
-			if(!this.blacklistedTags(item.tags)){
+			if(!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
 				latest.push({
 					metadata: { page: page + 1 },
 					subtitle: item.authors,
@@ -399,23 +401,27 @@ export class Parser {
 			const id: string = (($('a', obj).attr('href') ?? '').match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ['null'])[0] ?? ''
 			console.log("MangaID " + id)
 			const title: string = $('a', obj).attr('title') ?? ''
+			const mangaType: string = $(".genre a", obj).text().trim() ?? ''
+			console.log("MangaType " + mangaType)
 			const image: string = $('a img', obj).attr('src') ?? ''
 			const sub: string = $('.d-flex.flex-wrap.flex-row a', obj).first().attr('title') ?? ''
 			const chapterId: string = (($('.d-flex.flex-wrap.flex-row a', obj).attr('href') ?? '')
 				.match(/read\/(.*)\?+/i) ?? ['null', ''])[1];
 			const addedDate: string = $('i.ml-auto.mt-auto', obj).first().text().trimEnd()
 			console.log("ChapterID " + chapterId)
-			latest.push({
-				chapterId: chapterId,
-				publishDate: this.getDate(addedDate),
-				metadata: metadata,
-				type: 'chapterUpdatesCarouselItem',
-				contentRating: undefined,
-				imageUrl: image,
-				mangaId: id,
-				title: title,
-				subtitle: sub
-			})
+			if(!this.blacklistedType(mangaType)) {
+				latest.push({
+					chapterId: chapterId,
+					publishDate: this.getDate(addedDate),
+					metadata: metadata,
+					type: 'chapterUpdatesCarouselItem',
+					contentRating: undefined,
+					imageUrl: image,
+					mangaId: id,
+					title: title,
+					subtitle: sub
+				})
+			}
 		}
 		return {items: latest, metadata: {page: page}};
 	}
@@ -427,9 +433,9 @@ export class Parser {
 	 */
 	getDate(dataString: string): Date {
 		const mesi: { [key: string]: number } = {
-			"Gennaio": 0, "Febbraio": 1, "Marzo": 2, "Aprile": 3,
-			"Maggio": 4, "Giugno": 5, "Luglio": 6, "Agosto": 7,
-			"Settembre": 8, "Ottobre": 9, "Novembre": 10, "Dicembre": 11
+			"gennaio": 0, "febbraio": 1, "marzo": 2, "aprile": 3,
+			"maggio": 4, "giugno": 5, "luglio": 6, "agosto": 7,
+			"settembre": 8, "ottobre": 9, "novembre": 10, "dicembre": 11
 		};
 		const oggi = new Date();
 		const parts = dataString.trim().toLowerCase().split(" ");
@@ -452,5 +458,4 @@ export class Parser {
 		}
 		return new Date(anno, mese, giorno);
 	}
-
 }
