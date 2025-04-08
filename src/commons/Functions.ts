@@ -67,7 +67,7 @@ export class Functions {
                     },
                     name: filter.value,
                     metadata: metadata,
-                    contentRating: ContentRating.EVERYONE
+                    contentRating: undefined
             })
         })
 
@@ -83,7 +83,7 @@ export class Functions {
                     },
                     name: filter.value,
                     metadata: metadata,
-                    contentRating: ContentRating.EVERYONE
+                    contentRating: undefined
                 })
         })
 
@@ -293,7 +293,7 @@ export class Functions {
         //console.log("oder " + order.join(", "));
         const urlBuilder = new URLBuilder(this.baseUrl)
             .addPathComponent("archive")
-            .addQueryParameter("keyword", encodeURIComponent(query.title ?? ""))
+            .addQueryParameter("keyword", query.title.toString() ?? "")
             .addQueryParameter("page", page.toString())
             .addQueryParameter("sort", /*order[0] ?? */getFilterValue("order"))
             .addQueryParameter("genre", generi)
