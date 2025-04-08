@@ -17629,7 +17629,7 @@ var source = (() => {
             },
             name: filter4.value,
             metadata,
-            contentRating: import_types3.ContentRating.EVERYONE
+            contentRating: void 0
           }
         );
       });
@@ -17645,7 +17645,7 @@ var source = (() => {
             },
             name: filter4.value,
             metadata,
-            contentRating: import_types3.ContentRating.EVERYONE
+            contentRating: void 0
           }
         );
       });
@@ -17827,7 +17827,7 @@ var source = (() => {
         }
       } else
         tipologia.push(types);
-      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter(
+      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", query.title.toString() ?? "").addQueryParameter("page", page.toString()).addQueryParameter(
         "sort",
         /*order[0] ?? */
         getFilterValue("order")
