@@ -198,13 +198,14 @@ export class Functions {
             ])[0],
             title: "Ordine",
         });
+        const def_value = (Application.getState("def_type") as string[])[0];
         filters.push({
             type: "multiselect",
             options: getMangaTypeFilter(),
             id: "types",
             allowExclusion: false,
             title: "Tipo",
-            value: {},
+            value: def_value ? { [def_value]: "included" } : {},
             allowEmptySelection: true,
             maximum: 1,
         });
@@ -269,22 +270,32 @@ export class Functions {
             getFilterValue("types") ?? "";
         if (genres && typeof genres === "object") {
             for (const tag of Object.entries(genres)) {
-                generi.push(tag[0]);
+                if (tag[0].length > 0) generi.push(tag[0]);
             }
-        } else generi.push(genres);
+        } else if (genres.length > 0) generi.push(genres);
+
         if (types && typeof types === "object") {
             for (const tag of Object.entries(types)) {
-                tipologia.push(tag[0]);
+                if (tag[0].length > 0) tipologia.push(tag[0]);
             }
-        } else tipologia.push(types);
-        console.log(query.title);
-        const urlBuilder = new URLBuilder(this.baseUrl)
-            .addPathComponent("archive")
-            .addQueryParameter("keyword", query.title.toString() ?? "")
-            .addQueryParameter("page", page.toString())
-            .addQueryParameter("sort", getFilterValue("order"))
-            .addQueryParameter("genre", generi)
-            .addQueryParameter("type", tipologia);
+        } else if (types.length > 0) tipologia.push(types);
+
+        console.log("query: " + query.title);
+        const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent(
+            "archive",
+        );
+        if (query.title.toString().length > 0)
+            urlBuilder.addQueryParameter(
+                "keyword",
+                query.title.toString() ?? "",
+            );
+        if (page.toString().length > 0)
+            urlBuilder.addQueryParameter("page", page.toString());
+        if (getFilterValue("order"))
+            urlBuilder.addQueryParameter("sort", getFilterValue("order"));
+        if (generi.length > 0) urlBuilder.addQueryParameter("genre", generi);
+        if (tipologia.length > 0)
+            urlBuilder.addQueryParameter("type", tipologia);
         return urlBuilder.buildUrl();
     }
 }

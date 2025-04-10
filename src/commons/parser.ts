@@ -23,7 +23,7 @@ export class Parser {
     blacklistedTags(tags: string[]): boolean {
         const Bl_tags =
             (Application.getState("hide_tags") as string[] | undefined) ?? [];
-        console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+        //console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
 
         for (const tag of tags) {
             if (Bl_tags.includes(tag.toLowerCase())) {
@@ -43,7 +43,7 @@ export class Parser {
     blacklistedType(type: string): boolean {
         const Bl_tags =
             (Application.getState("hide_type") as string[] | undefined) ?? [];
-        console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
+        //console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
         if (Bl_tags.includes(type.toLowerCase())) {
             console.log("Detected :" + type + " manga rimosso dalla lista");
             return true;
@@ -192,7 +192,7 @@ export class Parser {
                 "null",
                 "",
             ])[1];
-            console.log("ID " + chapterId);
+            //console.log("ID " + chapterId);
             const name = $("a", item).attr("title") ?? "";
             const volN = $(item)
                 .closest(".volume-element")
@@ -200,8 +200,8 @@ export class Parser {
                 .text()
                 .split(" ")[1];
             const chapN = $(".d-inline-block", item).text().split(" ")[1];
-            console.log("Volume " + volN);
-            console.log("Capitolo " + volN);
+            //console.log("Volume " + volN);
+            //console.log("Capitolo " + volN);
             // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
             const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
@@ -278,7 +278,7 @@ export class Parser {
                 (($("a", item).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            console.log("MangaID " + id);
+            //console.log("MangaID " + id);
             const authors: string[] = [];
             const tags: string[] = [];
             $("div.author", item)
@@ -294,7 +294,7 @@ export class Parser {
                 .each(function (_, e) {
                     tags.push($(e).text().trim());
                 });
-            console.log("MangaTypeSearch " + mangaType);
+            //console.log("MangaTypeSearch " + mangaType);
             const author: string = authors.join(", ");
             items.push({
                 id: id,
@@ -349,7 +349,7 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            console.log("MangaID " + id);
+            //console.log("MangaID " + id);
             const image = $("a img", obj).attr("src") ?? "";
             const chapNum = $("a div", obj).text() ?? "";
             const title = $(".manga-title", obj).text().trim();
@@ -383,7 +383,7 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            console.log("MangaID " + id);
+            //console.log("MangaID " + id);
             const image = $(".img-fluid", obj).attr("src") ?? "";
             const title = $(".name", obj).first().text().trim() ?? "";
             if (hot.length < 10) {
@@ -476,10 +476,10 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            console.log("MangaID " + id);
+            //console.log("MangaID " + id);
             const title: string = $("a", obj).attr("title") ?? "";
             const mangaType: string = $(".genre a", obj).text().trim() ?? "";
-            console.log("MangaType " + mangaType);
+            //console.log("MangaType " + mangaType);
             const image: string = $("a img", obj).attr("src") ?? "";
             const sub: string =
                 $(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ??
@@ -491,7 +491,7 @@ export class Parser {
                 .first()
                 .text()
                 .trimEnd();
-            console.log("ChapterID " + chapterId);
+            //console.log("ChapterID " + chapterId);
             if (!this.blacklistedType(mangaType)) {
                 latest.push({
                     chapterId: chapterId,

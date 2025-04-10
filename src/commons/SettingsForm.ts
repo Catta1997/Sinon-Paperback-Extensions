@@ -63,7 +63,9 @@ class SourceUIPlaygroundForm extends Form {
             Section(
                 {
                     id: "update_settings",
-                    footer: "Nascondi alcuni generi/tag di manga o modifica l'ordinamento di default. Questi cambiameni potrebbero non avvenire in tutte le sezioni",
+                    footer:
+                        "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. " +
+                        "Tieni presente che i generi nascosti restano nascosti anche se esplicitamente cercati nella ricerca",
                 },
                 [
                     SelectRow("hide_tags", {
@@ -90,6 +92,14 @@ class SourceUIPlaygroundForm extends Form {
                             "handleHideTypeStatusChange",
                         ),
                     }),
+                ],
+            ),
+            Section(
+                {
+                    id: "default_settings",
+                    footer: "Cambia i filtri di default della ricerca",
+                },
+                [
                     SelectRow("def_order", {
                         title: "Ordine Ricerca",
                         subtitle: "Ordinamento della Ricerca",
@@ -100,6 +110,18 @@ class SourceUIPlaygroundForm extends Form {
                         onValueChange: Application.Selector(
                             this as SourceUIPlaygroundForm,
                             "handleDefOrderStatusChange",
+                        ),
+                    }),
+                    SelectRow("def_type", {
+                        title: "Tipologia",
+                        subtitle: "Tipologia di default",
+                        value: this.defTypeStatusState.value,
+                        options: this.mangaTypes,
+                        minItemCount: 0,
+                        maxItemCount: 1,
+                        onValueChange: Application.Selector(
+                            this as SourceUIPlaygroundForm,
+                            "handleDefTypeStatusChange",
                         ),
                     }),
                 ],
@@ -113,12 +135,11 @@ class SourceUIPlaygroundForm extends Form {
             (Application.getState("hide_tags") as string[] | undefined) ?? []
         );
     }
-
     setHideTagsStatus(status: string[]): void {
         Application.setState(status, "hide_tags");
     }
-
     async handleHideTagsStatusChange(value: string[]): Promise<void> {
+        console.log("handleHideTagsStatusChange " + value.join(", "));
         await this.HideTagsStatusState.updateValue(value);
         this.setHideTagsStatus(value);
         this.reloadForm();
@@ -127,18 +148,18 @@ class SourceUIPlaygroundForm extends Form {
         this,
         this.getHideTagsStatus(),
     );
+
     /////// hide_type
     getHideTypeStatus(): string[] {
         return (
             (Application.getState("hide_type") as string[] | undefined) ?? []
         );
     }
-
     setHideTypeStatus(status: string[]): void {
         Application.setState(status, "hide_type");
     }
-
     async handleHideTypeStatusChange(value: string[]): Promise<void> {
+        console.log("handleHideTypeStatusChange " + value.join(", "));
         await this.HideTypeStatusState.updateValue(value);
         this.setHideTypeStatus(value);
         this.reloadForm();
@@ -147,18 +168,18 @@ class SourceUIPlaygroundForm extends Form {
         this,
         this.getHideTypeStatus(),
     );
+
     /////// def_order
     getDefOrderStatus(): string[] {
         return (
             (Application.getState("def_order") as string[] | undefined) ?? []
         );
     }
-
     setDefOrderStatus(status: string[]): void {
         Application.setState(status, "def_order");
     }
-
     async handleDefOrderStatusChange(value: string[]): Promise<void> {
+        console.log("handleDefOrderStatusChange " + value.join(", "));
         await this.defOrderStatusState.updateValue(value);
         this.setDefOrderStatus(value);
         this.reloadForm();
@@ -167,5 +188,24 @@ class SourceUIPlaygroundForm extends Form {
     private defOrderStatusState = new State<string[]>(
         this,
         this.getDefOrderStatus(),
+    );
+
+    /////// def_type
+    getDefTypeStatus(): string[] {
+        return (Application.getState("def_type") as string[] | undefined) ?? [];
+    }
+    setDefTypeStatus(status: string[]): void {
+        Application.setState(status, "def_type");
+    }
+    async handleDefTypeStatusChange(value: string[]): Promise<void> {
+        console.log("handleDefTypeStatusChange " + value.join(", "));
+        await this.defTypeStatusState.updateValue(value);
+        this.setDefTypeStatus(value);
+        this.reloadForm();
+        Application.invalidateSearchFilters();
+    }
+    private defTypeStatusState = new State<string[]>(
+        this,
+        this.getDefTypeStatus(),
     );
 }
