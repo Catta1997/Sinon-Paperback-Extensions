@@ -257,9 +257,7 @@ export class Parser {
      * @param $ : CheerioAPI - Richiesta
      * @return {{id:string,title:string,image:string,tags:string[], authors: string, type: string}}
      */
-    parsePage(
-        $: CheerioAPI,
-    ): {
+    parsePage($: CheerioAPI): {
         id: string;
         title: string;
         image: string;
