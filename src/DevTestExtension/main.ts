@@ -72,7 +72,6 @@ export class ScansExtension implements ContentTemplateImplementation {
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         const image = $(".left-column img").attr("data-lazy-src");
-        console.log(image);
         const title = $(".left-column img").attr("alt");
         const elems = $(".wp-block-list li").toArray();
         const trama = $(elems[0]).text();
@@ -89,7 +88,6 @@ export class ScansExtension implements ContentTemplateImplementation {
             .trimEnd()
             .replaceAll(" ", "")
             .split(",");
-        console.log(genres.join(", "));
         const arrayTags: Tag[] = [];
         for (const tag of genres) {
             arrayTags.push({
@@ -125,11 +123,8 @@ export class ScansExtension implements ContentTemplateImplementation {
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         const pages: string[] = [];
         for (const item of $(".separator img").toArray()) {
-            console.log(item);
             const imageUrl = $(item).attr("data-lazy-src");
-            console.log(imageUrl);
-            if (!imageUrl) continue;
-            if (!imageUrl.includes("chapter-")) continue;
+            if (!imageUrl || !imageUrl.includes("chapter-")) continue;
             pages.push(imageUrl.trim());
         }
         return {

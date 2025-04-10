@@ -1,11 +1,11 @@
 import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "0.1",
+    version: "0.1.1",
     name: "DevTestExtension",
     description: "Mangas from various sources.",
-    icon: "icon.png",
-    language: "it",
+    icon: "DevTestExtension.png",
+    language: "en",
     contentRating: ContentRating.EVERYONE,
     capabilities: [
         SourceIntents.MANGA_CHAPTERS,
