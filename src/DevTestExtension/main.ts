@@ -6,20 +6,22 @@ import {
     ContentRating,
     DiscoverSection,
     DiscoverSectionItem,
-    DiscoverSectionProviding, DiscoverSectionType,
+    DiscoverSectionType,
     Extension,
     MangaProviding,
     PagedResults,
     PaperbackInterceptor,
     Request,
     Response,
-    SourceManga, Tag, TagSection,
+    SourceManga,
+    Tag,
+    TagSection,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 
 type Metadata = {
-    page?: number
-}
+    page?: number;
+};
 // Should match the capabilities which you defined in pbconfig.ts
 type ContentTemplateImplementation = Extension &
     MangaProviding &
@@ -43,12 +45,7 @@ class MainInterceptor extends PaperbackInterceptor {
 }
 
 // Main extension class
-export class ScansExtension
-    implements
-        ContentTemplateImplementation,
-        MangaProviding,
-        ChapterProviding,
-        DiscoverSectionProviding {
+export class ScansExtension implements ContentTemplateImplementation {
     // Implementation of the main rate limiter
     mainRateLimiter = new BasicRateLimiter("main", {
         numberOfRequests: 15,
@@ -74,22 +71,35 @@ export class ScansExtension
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const image = $('.left-column img').attr('data-lazy-src')
-        console.log(image)
-        const title = $('.left-column img').attr('alt')
-        const elems = $(".wp-block-list li").toArray()
-        const trama = $(elems[0]).text()
-        const altTitle = ($(elems[1]).text().split("Alternate Name(s):")[1]).replace(" ","").split(",")
-        const author = ($(elems[2]).text().split("Author(s):")[1]).trim()
-        const genres = ($(elems[3]).text().split("Genre(s):")[1].trimStart().trimEnd().replaceAll(" ","").split(","))
-        console.log(genres.join(", "))
+        const image = $(".left-column img").attr("data-lazy-src");
+        console.log(image);
+        const title = $(".left-column img").attr("alt");
+        const elems = $(".wp-block-list li").toArray();
+        const trama = $(elems[0]).text();
+        const altTitle = $(elems[1])
+            .text()
+            .split("Alternate Name(s):")[1]
+            .replace(" ", "")
+            .split(",");
+        const author = $(elems[2]).text().split("Author(s):")[1].trim();
+        const genres = $(elems[3])
+            .text()
+            .split("Genre(s):")[1]
+            .trimStart()
+            .trimEnd()
+            .replaceAll(" ", "")
+            .split(",");
+        console.log(genres.join(", "));
         const arrayTags: Tag[] = [];
         for (const tag of genres) {
-            arrayTags.push({ title: tag, id: tag.replace("  ","").replace(" ","-") });
+            arrayTags.push({
+                title: tag,
+                id: tag.replace("  ", "").replace(" ", "-"),
+            });
         }
         const tagSections: TagSection[] = [
             { id: "genres", title: "genres", tags: arrayTags },
-        ]
+        ];
         return {
             mangaId: mangaId,
             mangaInfo: {
@@ -114,12 +124,10 @@ export class ScansExtension
         //
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         const pages: string[] = [];
-        for (const item of $(
-            ".separator img",
-        ).toArray()) {
-            console.log(item)
+        for (const item of $(".separator img").toArray()) {
+            console.log(item);
             const imageUrl = $(item).attr("data-lazy-src");
-            console.log(imageUrl)
+            console.log(imageUrl);
             if (!imageUrl) continue;
             if (!imageUrl.includes("chapter-")) continue;
             pages.push(imageUrl.trim());
@@ -131,10 +139,7 @@ export class ScansExtension
         };
     }
 
-    async getChapters(
-        sourceManga: SourceManga,
-        sinceDate?: Date,
-    ): Promise<Chapter[]> {
+    async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
         const data = (
             await Application.scheduleRequest({
                 url: `https://${sourceManga.mangaId}`,
@@ -147,11 +152,11 @@ export class ScansExtension
         for (const item of arrChapters) {
             const chapterId = $("a", item).attr("href") ?? "";
             console.log("ID " + chapterId);
-            const chapN = $(item).closest(".item").attr("data-number")//chapterId.match(/chapter-([0-9]+)\//)?.[1] ?? "";
+            const chapN = $(item).closest(".item").attr("data-number"); //chapterId.match(/chapter-([0-9]+)\//)?.[1] ?? "";
             console.log("Capitolo " + chapN);
             // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
-            const date = $("span.chapter-date", item).text()
+            const date = $("span.chapter-date", item).text();
             const dataVar: string[] = date.split(" ");
             const num = Number(dataVar[0]);
             const oggi = new Date();
@@ -170,12 +175,12 @@ export class ScansExtension
             console.log("Data " + oggi.toDateString());
             console.log("Capitolo Num " + chapNum);
             chapters.push({
-                chapterId:  chapterId.match(/manga\/((.)*\/)/)?.[1] ?? "" ,//`89400-kaoru-hana-wa-rin-to-saku-chapter-${chapNum}`,
+                chapterId: chapterId.match(/manga\/((.)*\/)/)?.[1] ?? "", //`89400-kaoru-hana-wa-rin-to-saku-chapter-${chapNum}`,
                 sourceManga: sourceManga,
                 langCode: "en",
                 chapNum: chapNum,
                 title: `${chapNum}`,
-                publishDate: oggi
+                publishDate: oggi,
             });
         }
         return chapters;
@@ -185,24 +190,26 @@ export class ScansExtension
         section: DiscoverSection,
         metadata: Metadata,
     ): Promise<PagedResults<DiscoverSectionItem>> {
-        const latest: DiscoverSectionItem[] = []
+        const latest: DiscoverSectionItem[] = [];
         if (section.id === "mese_section") {
             latest.push({
                 metadata: metadata,
-                type: 'simpleCarouselItem',
-                imageUrl: "https://kaoruhanawarintosaku.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
+                type: "simpleCarouselItem",
+                imageUrl:
+                    "https://kaoruhanawarintosaku.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
                 mangaId: "kaoruhanawarintosaku.com/",
                 title: "Kaoru Hana wa Rin to Saku",
-            })
+            });
             latest.push({
                 metadata: metadata,
-                type: 'simpleCarouselItem',
-                imageUrl: "https://gimaiseikatsu.site/wp-content/uploads/2024/03/Gimai-Seikatsu-cover.webp",
+                type: "simpleCarouselItem",
+                imageUrl:
+                    "https://gimaiseikatsu.site/wp-content/uploads/2024/03/Gimai-Seikatsu-cover.webp",
                 mangaId: "gimaiseikatsu.site/",
                 title: "Gimai Seikatsu",
-            })
+            });
         }
-        return {items: latest, metadata: metadata};
+        return { items: latest, metadata: metadata };
     }
 
     async getDiscoverSections(): Promise<DiscoverSection[]> {
@@ -211,8 +218,8 @@ export class ScansExtension
                 id: "mese_section",
                 title: "Manga",
                 type: DiscoverSectionType.prominentCarousel,
-            }
-        ]
+            },
+        ];
     }
 }
 

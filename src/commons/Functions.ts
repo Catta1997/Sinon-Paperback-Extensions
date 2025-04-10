@@ -1,7 +1,6 @@
 import {
     Chapter,
     ChapterDetails,
-    ContentRating,
     DiscoverSection,
     DiscoverSectionItem,
     DiscoverSectionType,
@@ -9,22 +8,26 @@ import {
     SearchFilter,
     SearchQuery,
     SearchResultItem,
-    SourceManga
+    SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import {CheerioAPI} from "cheerio";
+import { CheerioAPI } from "cheerio";
 // Template content
-import {Metadata, URLBuilder, getMangaTypeFilter, getOrderFilter, getGenreFilter} from "./helper";
-import {Parser} from "./parser";
-
+import {
+    getGenreFilter,
+    getMangaTypeFilter,
+    getOrderFilter,
+    Metadata,
+    URLBuilder,
+} from "./helper";
+import { Parser } from "./parser";
 
 export class Functions {
     baseUrl = "";
-    private sinceDate: Date | undefined;
     constructor(url: string) {
         this.baseUrl = url;
     }
-    parser = new Parser();
+    private parser = new Parser();
     numberPage: number = 0;
     async getDiscoverSectionItems(
         section: DiscoverSection,
@@ -37,91 +40,87 @@ export class Functions {
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const read:DiscoverSectionItem[] = []
-        const mangaType:DiscoverSectionItem[] = []
-        const allGenres:DiscoverSectionItem[] = []
-        getGenreFilter().forEach(filter => {
-            allGenres.push(
-                {
-                    type: "genresCarouselItem",
-                    searchQuery: {
-                        title: "",
-                        filters: [
-                            {id: "genres", value: filter.id}
-                        ],
-                    },
-                    name: filter.value,
-                    metadata: metadata,
-                    contentRating: this.parser.getRating([filter.value])
-                })
-        })
-        getOrderFilter().forEach(filter => {
-            read.push(
-                {
-                    type: "genresCarouselItem",
-                    searchQuery: {
-                        title: "",
-                        filters: [
-                            {id: "order", value: filter.id}
-                        ],
-                    },
-                    name: filter.value,
-                    metadata: metadata,
-                    contentRating: undefined
-            })
-        })
+        const read: DiscoverSectionItem[] = [];
+        const mangaType: DiscoverSectionItem[] = [];
+        const allGenres: DiscoverSectionItem[] = [];
+        getGenreFilter().forEach((filter) => {
+            allGenres.push({
+                type: "genresCarouselItem",
+                searchQuery: {
+                    title: "",
+                    filters: [{ id: "genres", value: filter.id }],
+                },
+                name: filter.value,
+                metadata: metadata,
+                contentRating: this.parser.getRating([filter.value]),
+            });
+        });
+        getOrderFilter().forEach((filter) => {
+            read.push({
+                type: "genresCarouselItem",
+                searchQuery: {
+                    title: "",
+                    filters: [{ id: "order", value: filter.id }],
+                },
+                name: filter.value,
+                metadata: metadata,
+                contentRating: undefined,
+            });
+        });
 
-        getMangaTypeFilter().forEach(filter => {
-            mangaType.push(
-                {
-                    type: "genresCarouselItem",
-                    searchQuery: {
-                        title: "",
-                        filters: [
-                            {id: "types", value: filter.id}
-                        ],
-                    },
-                    name: filter.value,
-                    metadata: metadata,
-                    contentRating: undefined
-                })
-        })
-
+        getMangaTypeFilter().forEach((filter) => {
+            mangaType.push({
+                type: "genresCarouselItem",
+                searchQuery: {
+                    title: "",
+                    filters: [{ id: "types", value: filter.id }],
+                },
+                name: filter.value,
+                metadata: metadata,
+                contentRating: undefined,
+            });
+        });
 
         switch (section.id) {
             case "mese_section":
                 console.log("mese_section loaded");
-                return this.parser.parseInTendenzaMese($, metadata)
+                return this.parser.parseInTendenzaMese($, metadata);
             case "popular_section":
                 this.numberPage = 0;
                 console.log("popular_section loaded");
                 return this.parser.parseCapitoliInTendenza($, metadata);
             case "updated_section":
                 console.log("updated_section loaded");
-                return this.parser.parseLastAddedSetcion(metadata, this.baseUrl);
+                return this.parser.parseLastAddedSetcion(
+                    metadata,
+                    this.baseUrl,
+                );
             case "new_manga_section": {
                 console.log("new_manga_section loaded");
-                return this.parser.parseLastMangaAddedSetcion(metadata, this.baseUrl);
+                return this.parser.parseLastMangaAddedSetcion(
+                    metadata,
+                    this.baseUrl,
+                );
             }
             case "read_section": {
-                console.log("read_section loaded")
+                console.log("read_section loaded");
                 return {
                     items: read,
-                    metadata: metadata
+                    metadata: metadata,
                 };
             }
             case "genre_section": {
-                console.log("type_section loaded")
+                console.log("type_section loaded");
                 return {
                     items: allGenres,
-                    metadata: metadata
+                    metadata: metadata,
                 };
             }
             case "type_section": {
-                console.log("type_section loaded")
+                console.log("type_section loaded");
                 return {
                     items: mangaType,
-                    metadata: metadata
+                    metadata: metadata,
                 };
             }
             default:
@@ -168,27 +167,16 @@ export class Functions {
             {
                 id: "type_section",
                 title: "Tipo",
-                type: DiscoverSectionType.genres
+                type: DiscoverSectionType.genres,
             },
             {
                 id: "genre_section",
                 title: "Generi",
-                type: DiscoverSectionType.genres
-            }
-            /*,
-            {
-                id: "read_section",
-                title: "Ordinamento",
-                type: DiscoverSectionType.genres
-            }
-            */
+                type: DiscoverSectionType.genres,
+            },
         ];
     }
-    async getChapters(
-        sourceManga: SourceManga,
-        sinceDate?: Date,
-    ): Promise<Chapter[]> {
-        this.sinceDate = sinceDate;
+    async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
         console.log("MangaID " + sourceManga.mangaId);
         const [_, buffer] = await Application.scheduleRequest({
             url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
@@ -205,7 +193,9 @@ export class Functions {
             type: "dropdown",
             options: getOrderFilter(),
             id: "order",
-            value: (Application.getState("def_order") as string[] ?? ["most_read"])[0],
+            value: ((Application.getState("def_order") as string[]) ?? [
+                "most_read",
+            ])[0],
             title: "Ordine",
         });
         filters.push({
@@ -249,7 +239,7 @@ export class Functions {
             Application.arrayBufferToUTF8String(data),
         );
         manga = this.parser.parseSearchResults($);
-        page++
+        page++;
         return { items: manga, metadata: { page: page } };
     }
 
@@ -273,29 +263,26 @@ export class Functions {
         const tipologia: string[] = [];
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
-        const genres: string | Record<string, "included" | "excluded"> = getFilterValue("genres") ?? "";
-        const types: string | Record<string, "included" | "excluded"> = getFilterValue("types") ?? "";
+        const genres: string | Record<string, "included" | "excluded"> =
+            getFilterValue("genres") ?? "";
+        const types: string | Record<string, "included" | "excluded"> =
+            getFilterValue("types") ?? "";
         if (genres && typeof genres === "object") {
             for (const tag of Object.entries(genres)) {
                 generi.push(tag[0]);
             }
-        }
-        else
-            generi.push(genres);
+        } else generi.push(genres);
         if (types && typeof types === "object") {
             for (const tag of Object.entries(types)) {
                 tipologia.push(tag[0]);
             }
-        }
-        else
-            tipologia.push(types);
-        //const order = Application.getState("def_order") as string[] ?? ["most_read"]
-        //console.log("oder " + order.join(", "));
+        } else tipologia.push(types);
+        console.log(query.title);
         const urlBuilder = new URLBuilder(this.baseUrl)
             .addPathComponent("archive")
             .addQueryParameter("keyword", query.title.toString() ?? "")
             .addQueryParameter("page", page.toString())
-            .addQueryParameter("sort", /*order[0] ?? */getFilterValue("order"))
+            .addQueryParameter("sort", getFilterValue("order"))
             .addQueryParameter("genre", generi)
             .addQueryParameter("type", tipologia);
         return urlBuilder.buildUrl();
