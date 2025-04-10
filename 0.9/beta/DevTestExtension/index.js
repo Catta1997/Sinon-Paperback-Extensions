@@ -16934,7 +16934,10 @@ var source = (() => {
       console.log(genres.join(", "));
       const arrayTags = [];
       for (const tag of genres) {
-        arrayTags.push({ title: tag, id: tag.replace("  ", "").replace(" ", "-") });
+        arrayTags.push({
+          title: tag,
+          id: tag.replace("  ", "").replace(" ", "-")
+        });
       }
       const tagSections = [
         { id: "genres", title: "genres", tags: arrayTags }
@@ -16959,9 +16962,7 @@ var source = (() => {
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       const pages = [];
-      for (const item of $2(
-        ".separator img"
-      ).toArray()) {
+      for (const item of $2(".separator img").toArray()) {
         console.log(item);
         const imageUrl = $2(item).attr("data-lazy-src");
         console.log(imageUrl);
@@ -16975,7 +16976,7 @@ var source = (() => {
         pages
       };
     }
-    async getChapters(sourceManga, sinceDate) {
+    async getChapters(sourceManga) {
       const data2 = (await Application.scheduleRequest({
         url: `https://${sourceManga.mangaId}`,
         method: "GET"
