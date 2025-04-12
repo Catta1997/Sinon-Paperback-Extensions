@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-04-10T10:35:18.348Z",
+  "buildTime": "2025-04-12T08:54:49.239Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.46",
     "types": "1.0.0-alpha.46"
@@ -10,11 +10,11 @@
   },
   "sources": [
     {
-      "version": "0.1",
+      "version": "0.1.1",
       "name": "DevTestExtension",
       "description": "Mangas from various sources.",
-      "icon": "icon.png",
-      "language": "it",
+      "icon": "DevTestExtension.png",
+      "language": "en",
       "contentRating": "SAFE",
       "capabilities": [
         1,
@@ -36,10 +36,10 @@
       "id": "DevTestExtension"
     },
     {
-      "version": "1.0 - beta 2",
+      "version": "1.0 - beta 3",
       "name": "MangaAdult",
       "description": "Extension that pulls manga from MangaAdult (0.9).",
-      "icon": "icon.png",
+      "icon": "MangaAdultIcon.png",
       "language": "it",
       "contentRating": "ADULT",
       "capabilities": [
@@ -70,10 +70,10 @@
       "id": "MangaAdult"
     },
     {
-      "version": "1.0 - beta 2",
+      "version": "1.0 - beta 3",
       "name": "MangaWorld",
       "description": "Extension that pulls manga from MangaWorld (0.9).",
-      "icon": "icon.png",
+      "icon": "MangaWorldIcon.png",
       "language": "it",
       "contentRating": "SAFE",
       "capabilities": [

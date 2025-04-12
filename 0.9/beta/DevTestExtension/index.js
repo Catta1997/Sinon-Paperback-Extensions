@@ -16924,14 +16924,12 @@ var source = (() => {
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       const image = $2(".left-column img").attr("data-lazy-src");
-      console.log(image);
       const title = $2(".left-column img").attr("alt");
       const elems = $2(".wp-block-list li").toArray();
       const trama = $2(elems[0]).text();
       const altTitle = $2(elems[1]).text().split("Alternate Name(s):")[1].replace(" ", "").split(",");
       const author = $2(elems[2]).text().split("Author(s):")[1].trim();
       const genres = $2(elems[3]).text().split("Genre(s):")[1].trimStart().trimEnd().replaceAll(" ", "").split(",");
-      console.log(genres.join(", "));
       const arrayTags = [];
       for (const tag of genres) {
         arrayTags.push({
@@ -16963,11 +16961,8 @@ var source = (() => {
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       const pages = [];
       for (const item of $2(".separator img").toArray()) {
-        console.log(item);
         const imageUrl = $2(item).attr("data-lazy-src");
-        console.log(imageUrl);
-        if (!imageUrl) continue;
-        if (!imageUrl.includes("chapter-")) continue;
+        if (!imageUrl || !imageUrl.includes("chapter-")) continue;
         pages.push(imageUrl.trim());
       }
       return {

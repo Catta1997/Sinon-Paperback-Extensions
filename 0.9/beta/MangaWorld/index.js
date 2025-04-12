@@ -17023,7 +17023,6 @@ var source = (() => {
      */
     blacklistedTags(tags) {
       const Bl_tags = Application.getState("hide_tags") ?? [];
-      console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
       for (const tag of tags) {
         if (Bl_tags.includes(tag.toLowerCase())) {
           console.log("Detected :" + tag + " manga rimosso dalla lista");
@@ -17040,7 +17039,6 @@ var source = (() => {
      */
     blacklistedType(type) {
       const Bl_tags = Application.getState("hide_type") ?? [];
-      console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
       if (Bl_tags.includes(type.toLowerCase())) {
         console.log("Detected :" + type + " manga rimosso dalla lista");
         return true;
@@ -17174,12 +17172,9 @@ var source = (() => {
           "null",
           ""
         ])[1];
-        console.log("ID " + chapterId);
         const name = $2("a", item).attr("title") ?? "";
         const volN = $2(item).closest(".volume-element").find(".volume-name").text().split(" ")[1];
         const chapN = $2(".d-inline-block", item).text().split(" ")[1];
-        console.log("Volume " + volN);
-        console.log("Capitolo " + volN);
         const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
         const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
         const date = $2("i.text-right.text-muted.chap-date", item).text();
@@ -17233,7 +17228,6 @@ var source = (() => {
         const id = (($2("a", item).attr("href") ?? "").match(
           /[0-9]+\/[a-zA-Z0-9-]+/i
         ) ?? ["null"])[0] ?? "";
-        console.log("MangaID " + id);
         const authors = [];
         const tags = [];
         $2("div.author", item).find("a").each(function(_, e) {
@@ -17245,7 +17239,6 @@ var source = (() => {
         $2("div.genres", item).find("a").each(function(_, e) {
           tags.push($2(e).text().trim());
         });
-        console.log("MangaTypeSearch " + mangaType);
         const author = authors.join(", ");
         items.push({
           id,
@@ -17292,7 +17285,6 @@ var source = (() => {
         const id = (($2("a", obj).attr("href") ?? "").match(
           /[0-9]+\/[a-zA-Z0-9-]+/i
         ) ?? ["null"])[0] ?? "";
-        console.log("MangaID " + id);
         const image = $2("a img", obj).attr("src") ?? "";
         const chapNum = $2("a div", obj).text() ?? "";
         const title = $2(".manga-title", obj).text().trim();
@@ -17321,7 +17313,6 @@ var source = (() => {
         const id = (($2("a", obj).attr("href") ?? "").match(
           /[0-9]+\/[a-zA-Z0-9-]+/i
         ) ?? ["null"])[0] ?? "";
-        console.log("MangaID " + id);
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).first().text().trim() ?? "";
         if (hot.length < 10) {
@@ -17393,15 +17384,12 @@ var source = (() => {
         const id = (($2("a", obj).attr("href") ?? "").match(
           /[0-9]+\/[a-zA-Z0-9-]+/i
         ) ?? ["null"])[0] ?? "";
-        console.log("MangaID " + id);
         const title = $2("a", obj).attr("title") ?? "";
         const mangaType = $2(".genre a", obj).text().trim() ?? "";
-        console.log("MangaType " + mangaType);
         const image = $2("a img", obj).attr("src") ?? "";
         const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
         const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
         const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
-        console.log("ChapterID " + chapterId);
         if (!this.blacklistedType(mangaType)) {
           latest.push({
             chapterId,
@@ -17626,13 +17614,14 @@ var source = (() => {
         ])[0],
         title: "Ordine"
       });
+      const def_value = Application.getState("def_type")[0];
       filters2.push({
         type: "multiselect",
         options: getMangaTypeFilter(),
         id: "types",
         allowExclusion: false,
         title: "Tipo",
-        value: {},
+        value: def_value ? { [def_value]: "included" } : {},
         allowEmptySelection: true,
         maximum: 1
       });
@@ -17681,16 +17670,30 @@ var source = (() => {
       const types = getFilterValue("types") ?? "";
       if (genres && typeof genres === "object") {
         for (const tag of Object.entries(genres)) {
-          generi.push(tag[0]);
+          if (tag[0].length > 0) generi.push(tag[0]);
         }
-      } else generi.push(genres);
+      } else if (genres.length > 0) generi.push(genres);
       if (types && typeof types === "object") {
         for (const tag of Object.entries(types)) {
-          tipologia.push(tag[0]);
+          if (tag[0].length > 0) tipologia.push(tag[0]);
         }
-      } else tipologia.push(types);
-      console.log(query.title);
-      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", query.title.toString() ?? "").addQueryParameter("page", page.toString()).addQueryParameter("sort", getFilterValue("order")).addQueryParameter("genre", generi).addQueryParameter("type", tipologia);
+      } else if (types.length > 0) tipologia.push(types);
+      console.log("query: " + query.title);
+      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent(
+        "archive"
+      );
+      if (query.title.toString().length > 0)
+        urlBuilder.addQueryParameter(
+          "keyword",
+          query.title.toString() ?? ""
+        );
+      if (page.toString().length > 0)
+        urlBuilder.addQueryParameter("page", page.toString());
+      if (getFilterValue("order"))
+        urlBuilder.addQueryParameter("sort", getFilterValue("order"));
+      if (generi.length > 0) urlBuilder.addQueryParameter("genre", generi);
+      if (tipologia.length > 0)
+        urlBuilder.addQueryParameter("type", tipologia);
       return urlBuilder.buildUrl();
     }
   };
@@ -17749,7 +17752,7 @@ var source = (() => {
         (0, import_types4.Section)(
           {
             id: "update_settings",
-            footer: "Nascondi alcuni generi/tag di manga o modifica l'ordinamento di default. Questi cambiameni potrebbero non avvenire in tutte le sezioni"
+            footer: "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. Tieni presente che i generi nascosti restano nascosti anche se esplicitamente cercati nella ricerca"
           },
           [
             (0, import_types4.SelectRow)("hide_tags", {
@@ -17775,7 +17778,15 @@ var source = (() => {
                 this,
                 "handleHideTypeStatusChange"
               )
-            }),
+            })
+          ]
+        ),
+        (0, import_types4.Section)(
+          {
+            id: "default_settings",
+            footer: "Cambia i filtri di default della ricerca"
+          },
+          [
             (0, import_types4.SelectRow)("def_order", {
               title: "Ordine Ricerca",
               subtitle: "Ordinamento della Ricerca",
@@ -17786,6 +17797,18 @@ var source = (() => {
               onValueChange: Application.Selector(
                 this,
                 "handleDefOrderStatusChange"
+              )
+            }),
+            (0, import_types4.SelectRow)("def_type", {
+              title: "Tipologia",
+              subtitle: "Tipologia di default",
+              value: this.defTypeStatusState.value,
+              options: this.mangaTypes,
+              minItemCount: 0,
+              maxItemCount: 1,
+              onValueChange: Application.Selector(
+                this,
+                "handleDefTypeStatusChange"
               )
             })
           ]
@@ -17800,6 +17823,7 @@ var source = (() => {
       Application.setState(status, "hide_tags");
     }
     async handleHideTagsStatusChange(value) {
+      console.log("handleHideTagsStatusChange " + value.join(", "));
       await this.HideTagsStatusState.updateValue(value);
       this.setHideTagsStatus(value);
       this.reloadForm();
@@ -17816,6 +17840,7 @@ var source = (() => {
       Application.setState(status, "hide_type");
     }
     async handleHideTypeStatusChange(value) {
+      console.log("handleHideTypeStatusChange " + value.join(", "));
       await this.HideTypeStatusState.updateValue(value);
       this.setHideTypeStatus(value);
       this.reloadForm();
@@ -17832,6 +17857,7 @@ var source = (() => {
       Application.setState(status, "def_order");
     }
     async handleDefOrderStatusChange(value) {
+      console.log("handleDefOrderStatusChange " + value.join(", "));
       await this.defOrderStatusState.updateValue(value);
       this.setDefOrderStatus(value);
       this.reloadForm();
@@ -17840,6 +17866,24 @@ var source = (() => {
     defOrderStatusState = new State3(
       this,
       this.getDefOrderStatus()
+    );
+    /////// def_type
+    getDefTypeStatus() {
+      return Application.getState("def_type") ?? [];
+    }
+    setDefTypeStatus(status) {
+      Application.setState(status, "def_type");
+    }
+    async handleDefTypeStatusChange(value) {
+      console.log("handleDefTypeStatusChange " + value.join(", "));
+      await this.defTypeStatusState.updateValue(value);
+      this.setDefTypeStatus(value);
+      this.reloadForm();
+      Application.invalidateSearchFilters();
+    }
+    defTypeStatusState = new State3(
+      this,
+      this.getDefTypeStatus()
     );
   };
 
