@@ -198,7 +198,8 @@ export class Functions {
             ])[0],
             title: "Ordine",
         });
-        const def_value = (Application.getState("def_type") as string[])[0];
+        const def_value = ((Application.getState("def_type") as string[]) ??
+            [])[0];
         filters.push({
             type: "multiselect",
             options: getMangaTypeFilter(),

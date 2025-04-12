@@ -60,11 +60,11 @@ export class Parser {
     getRating(tags: string[]): ContentRating {
         let rating: ContentRating = ContentRating.EVERYONE;
         const adult_pref =
-            ((Application.getState("adult_pref") as string[]) || []).length > 0
+            ((Application.getState("adult_pref") as string[]) ?? []).length > 0
                 ? (Application.getState("adult_pref") as string[])
                 : getAdultFilter().map(({ id }) => id);
         const mature_pref =
-            ((Application.getState("mature_pref") as string[]) || []).length > 0
+            ((Application.getState("mature_pref") as string[]) ?? []).length > 0
                 ? (Application.getState("mature_pref") as string[])
                 : getMatureFilter().map(({ id }) => id);
         console.log("AdultTags: " + adult_pref.join(","));
