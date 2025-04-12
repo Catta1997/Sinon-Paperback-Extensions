@@ -4,6 +4,32 @@ export type Metadata = {
 type QueryValue = string | number | boolean | undefined | null;
 type QueryParam = QueryValue | QueryValue[] | Record<string, QueryValue>;
 
+export function getMatureFilter() {
+    return [
+        { value: "Ecchi", id: "ecchi" },
+        { value: "Gender Bender", id: "gender-bender" },
+        { value: "Harem", id: "harem" },
+        { value: "Horror", id: "horror" },
+        { value: "Josei", id: "josei" },
+        { value: "Maturo", id: "maturo" },
+        { value: "Smut", id: "smut" },
+        { value: "Tragico", id: "tragico" },
+        { value: "Yaoi", id: "yaoi" },
+        { value: "Yuri", id: "yuri" },
+    ];
+}
+
+export function getAdultFilter() {
+    return [
+        { value: "Adulti", id: "adulti" },
+        { value: "Doujinshi", id: "doujinshi" },
+        { value: "Drammatico", id: "drammatico" },
+        { value: "Hentai", id: "hentai" },
+        { value: "Lolicon", id: "lolicon" },
+        { value: "Shotacon", id: "shotacon" },
+    ];
+}
+
 export function getMangaTypeFilter() {
     return [
         { value: "Manga", id: "manga" },

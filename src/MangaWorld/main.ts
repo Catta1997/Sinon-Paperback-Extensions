@@ -23,6 +23,7 @@ import {
 import { Functions } from "../commons/Functions";
 import { Metadata } from "../commons/helper";
 import { SettingsForm } from "../commons/SettingsForm";
+import pbconfig from "./pbconfig";
 
 const MW_DOMAIN = "https://www.mangaworld.nz";
 // Should match the capabilities which you defined in pbconfig.ts
@@ -73,7 +74,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
 
     // Implements the settings form, check SettingsForm.ts for more info
     async getSettingsForm(): Promise<Form> {
-        return new SettingsForm();
+        return new SettingsForm(pbconfig.contentRating);
     }
 
     async getSearchFilters(): Promise<SearchFilter[]> {

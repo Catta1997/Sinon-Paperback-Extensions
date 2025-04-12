@@ -1,14 +1,41 @@
-import { Form, NavigationRow, Section, SelectRow } from "@paperback/types";
-import { getGenreFilter, getMangaTypeFilter, getOrderFilter } from "./helper";
+import {
+    ContentRating,
+    Form,
+    NavigationRow,
+    Section,
+    SelectRow,
+} from "@paperback/types";
+import {
+    getAdultFilter,
+    getGenreFilter,
+    getMangaTypeFilter,
+    getMatureFilter,
+    getOrderFilter,
+} from "./helper";
 
 export class SettingsForm extends Form {
+    rating: undefined | ContentRating = undefined;
+    constructor(contentRating: ContentRating) {
+        super();
+        this.rating = contentRating;
+        console.log(this.rating);
+    }
+
     override getSections(): Application.FormSectionElement[] {
         return [
             Section("playground", [
                 NavigationRow("playground", {
                     title: "Contenuti",
                     subtitle: "Impostazioni Contenuti",
-                    form: new SourceUIPlaygroundForm(),
+                    form: new FilterSettings(),
+                }),
+            ]),
+            Section("content_rating", [
+                NavigationRow("content_rating", {
+                    title: "Rating",
+                    subtitle: "Rating Contenuti",
+                    isHidden: this.rating === ContentRating.ADULT,
+                    form: new CustomContentRating(),
                 }),
             ]),
         ];
@@ -38,11 +65,7 @@ class State<T> {
     }
 }
 
-class SourceUIPlaygroundForm extends Form {
-    inputValue = new State(this, "");
-    rowsVisible = new State(this, false);
-    items: string[] = [];
-
+class FilterSettings extends Form {
     genres = getGenreFilter().map(({ value, ...rest }) => ({
         title: value,
         ...rest,
@@ -76,10 +99,11 @@ class SourceUIPlaygroundForm extends Form {
                         minItemCount: 0,
                         maxItemCount: this.genres.length,
                         onValueChange: Application.Selector(
-                            this as SourceUIPlaygroundForm,
+                            this as FilterSettings,
                             "handleHideTagsStatusChange",
                         ),
                     }),
+
                     SelectRow("hide_type", {
                         title: "Nascondi Tipologia",
                         subtitle: "Nascondi alcune Tipologie",
@@ -88,7 +112,7 @@ class SourceUIPlaygroundForm extends Form {
                         minItemCount: 0,
                         maxItemCount: this.mangaTypes.length,
                         onValueChange: Application.Selector(
-                            this as SourceUIPlaygroundForm,
+                            this as FilterSettings,
                             "handleHideTypeStatusChange",
                         ),
                     }),
@@ -108,7 +132,7 @@ class SourceUIPlaygroundForm extends Form {
                         minItemCount: 0,
                         maxItemCount: 1,
                         onValueChange: Application.Selector(
-                            this as SourceUIPlaygroundForm,
+                            this as FilterSettings,
                             "handleDefOrderStatusChange",
                         ),
                     }),
@@ -120,7 +144,7 @@ class SourceUIPlaygroundForm extends Form {
                         minItemCount: 0,
                         maxItemCount: 1,
                         onValueChange: Application.Selector(
-                            this as SourceUIPlaygroundForm,
+                            this as FilterSettings,
                             "handleDefTypeStatusChange",
                         ),
                     }),
@@ -207,5 +231,99 @@ class SourceUIPlaygroundForm extends Form {
     private defTypeStatusState = new State<string[]>(
         this,
         this.getDefTypeStatus(),
+    );
+}
+
+class CustomContentRating extends Form {
+    genres = getGenreFilter().map(({ value, ...rest }) => ({
+        title: value,
+        ...rest,
+    }));
+
+    override getSections(): Application.FormSectionElement[] {
+        return [
+            Section(
+                {
+                    id: "content_settings",
+                    footer:
+                        "Modifica i generi ritenuti per adulti o maturi. " +
+                        "Se uno stesso tag è in entrambi i gruppi, viene preso il livello più restrittivo" +
+                        "Il genere 'per tutti' è per esclusione (il tag non è in nessuno dei due gruppi)",
+                },
+                [
+                    SelectRow("adult_tags", {
+                        title: "Generi Adulti",
+                        subtitle: "Modifica i generi per Adulti",
+                        value:
+                            this.AdultTagsStatusState.value.length > 0
+                                ? this.AdultTagsStatusState.value
+                                : getAdultFilter().map(({ id }) => id),
+                        options: this.genres,
+                        minItemCount: 1,
+                        maxItemCount: this.genres.length,
+                        onValueChange: Application.Selector(
+                            this as CustomContentRating,
+                            "handleAdultTagsStatusChange",
+                        ),
+                    }),
+
+                    SelectRow("mature_tags", {
+                        title: "Generi Maturi",
+                        subtitle: "Modifica i generi Maturi",
+                        value:
+                            this.MatureTagsStatusState.value.length > 0
+                                ? this.MatureTagsStatusState.value
+                                : getMatureFilter().map(({ id }) => id),
+                        options: this.genres,
+                        minItemCount: 1,
+                        maxItemCount: this.genres.length,
+                        onValueChange: Application.Selector(
+                            this as CustomContentRating,
+                            "handleMatureTagsStatusChange",
+                        ),
+                    }),
+                ],
+            ),
+        ];
+    }
+
+    /////// adult_tags
+    getAdultTagsStatus(): string[] {
+        return (
+            (Application.getState("adult_tags") as string[] | undefined) ?? []
+        );
+    }
+    setAdultTagsStatus(status: string[]): void {
+        Application.setState(status, "adult_tags");
+    }
+    async handleAdultTagsStatusChange(value: string[]): Promise<void> {
+        console.log("handleAdultTagsStatusChange " + value.join(", "));
+        await this.AdultTagsStatusState.updateValue(value);
+        this.setAdultTagsStatus(value);
+        this.reloadForm();
+    }
+    private AdultTagsStatusState = new State<string[]>(
+        this,
+        this.getAdultTagsStatus(),
+    );
+
+    /////// mature_tags
+    getMatureTagsStatus(): string[] {
+        return (
+            (Application.getState("mature_tags") as string[] | undefined) ?? []
+        );
+    }
+    setMatureTagsStatus(status: string[]): void {
+        Application.setState(status, "mature_tags");
+    }
+    async handleMatureTagsStatusChange(value: string[]): Promise<void> {
+        console.log("handleMatureTagsStatusChange " + value.join(", "));
+        await this.MatureTagsStatusState.updateValue(value);
+        this.setMatureTagsStatus(value);
+        this.reloadForm();
+    }
+    private MatureTagsStatusState = new State<string[]>(
+        this,
+        this.getMatureTagsStatus(),
     );
 }

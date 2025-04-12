@@ -11,7 +11,7 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { CheerioAPI } from "cheerio";
-import { Metadata } from "./helper";
+import { getAdultFilter, getMatureFilter, Metadata } from "./helper";
 
 export class Parser {
     /**
@@ -59,32 +59,28 @@ export class Parser {
      */
     getRating(tags: string[]): ContentRating {
         let rating: ContentRating = ContentRating.EVERYONE;
+        const adult_pref =
+            ((Application.getState("adult_pref") as string[]) || []).length > 0
+                ? (Application.getState("adult_pref") as string[])
+                : getAdultFilter().map(({ id }) => id);
+        const mature_pref =
+            ((Application.getState("mature_pref") as string[]) || []).length > 0
+                ? (Application.getState("mature_pref") as string[])
+                : getMatureFilter().map(({ id }) => id);
+        console.log("AdultTags: " + adult_pref.join(","));
+        console.log("MatureTags: " + mature_pref.join(","));
         for (const tag of tags) {
             if (
-                [
-                    "ADULTI",
-                    "HENTAI",
-                    "LOLICON",
-                    "SHOTACON",
-                    "YAOI",
-                    "YURI",
-                    "DOUJINSHI",
-                ].includes(tag.toUpperCase())
+                adult_pref
+                    .map((item) => item.toUpperCase())
+                    .includes(tag.toUpperCase())
             ) {
                 rating = ContentRating.ADULT;
                 break;
             } else if (
-                [
-                    "MATURO",
-                    "ECCHI",
-                    "SMUT",
-                    "HAREM",
-                    "GENDER BENDER",
-                    "SHOUJO AI",
-                    "SHOUNEN AI",
-                    "HORROR",
-                    "TRAGICO",
-                ].includes(tag.toUpperCase())
+                mature_pref
+                    .map((item) => item.toUpperCase())
+                    .includes(tag.toUpperCase())
             ) {
                 rating = ContentRating.MATURE;
                 break;
@@ -212,7 +208,7 @@ export class Parser {
                 sourceManga: sourceManga,
                 volume: volumeNum,
                 version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
-                langCode: "it",
+                langCode: "🇮🇹",
                 chapNum: chapNum,
                 title: name,
                 publishDate: this.getDate(date),
