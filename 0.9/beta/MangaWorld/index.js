@@ -2921,24 +2921,24 @@ var source = (() => {
       init_buffer();
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.ContentRating = exports.SourceIntents = void 0;
-      var SourceIntents;
-      (function(SourceIntents2) {
-        SourceIntents2[SourceIntents2["MANGA_CHAPTERS"] = 1] = "MANGA_CHAPTERS";
-        SourceIntents2[SourceIntents2["MANGA_TRACKING"] = 2] = "MANGA_TRACKING";
-        SourceIntents2[SourceIntents2["MANGA_PROGRESS"] = 2] = "MANGA_PROGRESS";
-        SourceIntents2[SourceIntents2["HOMEPAGE_SECTIONS"] = 4] = "HOMEPAGE_SECTIONS";
-        SourceIntents2[SourceIntents2["DISCOVER_SECIONS"] = 4] = "DISCOVER_SECIONS";
-        SourceIntents2[SourceIntents2["COLLECTION_MANAGEMENT"] = 8] = "COLLECTION_MANAGEMENT";
-        SourceIntents2[SourceIntents2["CLOUDFLARE_BYPASS_REQUIRED"] = 16] = "CLOUDFLARE_BYPASS_REQUIRED";
-        SourceIntents2[SourceIntents2["SETTINGS_UI"] = 32] = "SETTINGS_UI";
-        SourceIntents2[SourceIntents2["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
-      })(SourceIntents || (exports.SourceIntents = SourceIntents = {}));
-      var ContentRating2;
-      (function(ContentRating3) {
-        ContentRating3["EVERYONE"] = "SAFE";
-        ContentRating3["MATURE"] = "MATURE";
-        ContentRating3["ADULT"] = "ADULT";
-      })(ContentRating2 || (exports.ContentRating = ContentRating2 = {}));
+      var SourceIntents2;
+      (function(SourceIntents3) {
+        SourceIntents3[SourceIntents3["MANGA_CHAPTERS"] = 1] = "MANGA_CHAPTERS";
+        SourceIntents3[SourceIntents3["MANGA_TRACKING"] = 2] = "MANGA_TRACKING";
+        SourceIntents3[SourceIntents3["MANGA_PROGRESS"] = 2] = "MANGA_PROGRESS";
+        SourceIntents3[SourceIntents3["HOMEPAGE_SECTIONS"] = 4] = "HOMEPAGE_SECTIONS";
+        SourceIntents3[SourceIntents3["DISCOVER_SECIONS"] = 4] = "DISCOVER_SECIONS";
+        SourceIntents3[SourceIntents3["COLLECTION_MANAGEMENT"] = 8] = "COLLECTION_MANAGEMENT";
+        SourceIntents3[SourceIntents3["CLOUDFLARE_BYPASS_REQUIRED"] = 16] = "CLOUDFLARE_BYPASS_REQUIRED";
+        SourceIntents3[SourceIntents3["SETTINGS_UI"] = 32] = "SETTINGS_UI";
+        SourceIntents3[SourceIntents3["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
+      })(SourceIntents2 || (exports.SourceIntents = SourceIntents2 = {}));
+      var ContentRating4;
+      (function(ContentRating5) {
+        ContentRating5["EVERYONE"] = "SAFE";
+        ContentRating5["MATURE"] = "MATURE";
+        ContentRating5["ADULT"] = "ADULT";
+      })(ContentRating4 || (exports.ContentRating = ContentRating4 = {}));
     }
   });
 
@@ -3048,7 +3048,7 @@ var source = (() => {
     MangaWorldExtension: () => MangaWorldExtension
   });
   init_buffer();
-  var import_types5 = __toESM(require_lib(), 1);
+  var import_types6 = __toESM(require_lib(), 1);
 
   // src/commons/Functions.ts
   init_buffer();
@@ -16897,6 +16897,30 @@ var source = (() => {
 
   // src/commons/helper.ts
   init_buffer();
+  function getMatureFilter() {
+    return [
+      { value: "Ecchi", id: "ecchi" },
+      { value: "Gender Bender", id: "gender-bender" },
+      { value: "Harem", id: "harem" },
+      { value: "Horror", id: "horror" },
+      { value: "Josei", id: "josei" },
+      { value: "Maturo", id: "maturo" },
+      { value: "Smut", id: "smut" },
+      { value: "Tragico", id: "tragico" },
+      { value: "Yaoi", id: "yaoi" },
+      { value: "Yuri", id: "yuri" }
+    ];
+  }
+  function getAdultFilter() {
+    return [
+      { value: "Adulti", id: "adulti" },
+      { value: "Doujinshi", id: "doujinshi" },
+      { value: "Drammatico", id: "drammatico" },
+      { value: "Hentai", id: "hentai" },
+      { value: "Lolicon", id: "lolicon" },
+      { value: "Shotacon", id: "shotacon" }
+    ];
+  }
   function getMangaTypeFilter() {
     return [
       { value: "Manga", id: "manga" },
@@ -17053,29 +17077,15 @@ var source = (() => {
      */
     getRating(tags) {
       let rating = import_types2.ContentRating.EVERYONE;
+      const adult_pref = (Application.getState("adult_pref") ?? []).length > 0 ? Application.getState("adult_pref") : getAdultFilter().map(({ id }) => id);
+      const mature_pref = (Application.getState("mature_pref") ?? []).length > 0 ? Application.getState("mature_pref") : getMatureFilter().map(({ id }) => id);
+      console.log("AdultTags: " + adult_pref.join(","));
+      console.log("MatureTags: " + mature_pref.join(","));
       for (const tag of tags) {
-        if ([
-          "ADULTI",
-          "HENTAI",
-          "LOLICON",
-          "SHOTACON",
-          "YAOI",
-          "YURI",
-          "DOUJINSHI"
-        ].includes(tag.toUpperCase())) {
+        if (adult_pref.map((item) => item.toUpperCase()).includes(tag.toUpperCase())) {
           rating = import_types2.ContentRating.ADULT;
           break;
-        } else if ([
-          "MATURO",
-          "ECCHI",
-          "SMUT",
-          "HAREM",
-          "GENDER BENDER",
-          "SHOUJO AI",
-          "SHOUNEN AI",
-          "HORROR",
-          "TRAGICO"
-        ].includes(tag.toUpperCase())) {
+        } else if (mature_pref.map((item) => item.toUpperCase()).includes(tag.toUpperCase())) {
           rating = import_types2.ContentRating.MATURE;
           break;
         }
@@ -17183,7 +17193,7 @@ var source = (() => {
           sourceManga,
           volume: volumeNum,
           version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
-          langCode: "it",
+          langCode: "\u{1F1EE}\u{1F1F9}",
           chapNum,
           title: name,
           publishDate: this.getDate(date)
@@ -17614,7 +17624,7 @@ var source = (() => {
         ])[0],
         title: "Ordine"
       });
-      const def_value = Application.getState("def_type")[0];
+      const def_value = (Application.getState("def_type") ?? [])[0];
       filters2.push({
         type: "multiselect",
         options: getMangaTypeFilter(),
@@ -17702,13 +17712,27 @@ var source = (() => {
   init_buffer();
   var import_types4 = __toESM(require_lib(), 1);
   var SettingsForm = class extends import_types4.Form {
+    rating = void 0;
+    constructor(contentRating) {
+      super();
+      this.rating = contentRating;
+      console.log(this.rating);
+    }
     getSections() {
       return [
         (0, import_types4.Section)("playground", [
           (0, import_types4.NavigationRow)("playground", {
             title: "Contenuti",
             subtitle: "Impostazioni Contenuti",
-            form: new SourceUIPlaygroundForm()
+            form: new FilterSettings()
+          })
+        ]),
+        (0, import_types4.Section)("content_rating", [
+          (0, import_types4.NavigationRow)("content_rating", {
+            title: "Rating",
+            subtitle: "Rating Contenuti",
+            isHidden: this.rating === import_types4.ContentRating.ADULT,
+            form: new CustomContentRating()
           })
         ])
       ];
@@ -17731,10 +17755,7 @@ var source = (() => {
       this.form.reloadForm();
     }
   };
-  var SourceUIPlaygroundForm = class extends import_types4.Form {
-    inputValue = new State3(this, "");
-    rowsVisible = new State3(this, false);
-    items = [];
+  var FilterSettings = class extends import_types4.Form {
     genres = getGenreFilter().map(({ value, ...rest }) => ({
       title: value,
       ...rest
@@ -17886,10 +17907,119 @@ var source = (() => {
       this.getDefTypeStatus()
     );
   };
+  var CustomContentRating = class extends import_types4.Form {
+    genres = getGenreFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    getSections() {
+      return [
+        (0, import_types4.Section)(
+          {
+            id: "content_settings",
+            footer: "Modifica i generi ritenuti per adulti o maturi. Se uno stesso tag \xE8 in entrambi i gruppi, viene preso il livello pi\xF9 restrittivoIl genere 'per tutti' \xE8 per esclusione (il tag non \xE8 in nessuno dei due gruppi)"
+          },
+          [
+            (0, import_types4.SelectRow)("adult_tags", {
+              title: "Generi Adulti",
+              subtitle: "Modifica i generi per Adulti",
+              value: this.AdultTagsStatusState.value.length > 0 ? this.AdultTagsStatusState.value : getAdultFilter().map(({ id }) => id),
+              options: this.genres,
+              minItemCount: 1,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleAdultTagsStatusChange"
+              )
+            }),
+            (0, import_types4.SelectRow)("mature_tags", {
+              title: "Generi Maturi",
+              subtitle: "Modifica i generi Maturi",
+              value: this.MatureTagsStatusState.value.length > 0 ? this.MatureTagsStatusState.value : getMatureFilter().map(({ id }) => id),
+              options: this.genres,
+              minItemCount: 1,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleMatureTagsStatusChange"
+              )
+            })
+          ]
+        )
+      ];
+    }
+    /////// adult_tags
+    getAdultTagsStatus() {
+      return Application.getState("adult_tags") ?? [];
+    }
+    setAdultTagsStatus(status) {
+      Application.setState(status, "adult_tags");
+    }
+    async handleAdultTagsStatusChange(value) {
+      console.log("handleAdultTagsStatusChange " + value.join(", "));
+      await this.AdultTagsStatusState.updateValue(value);
+      this.setAdultTagsStatus(value);
+      this.reloadForm();
+    }
+    AdultTagsStatusState = new State3(
+      this,
+      this.getAdultTagsStatus()
+    );
+    /////// mature_tags
+    getMatureTagsStatus() {
+      return Application.getState("mature_tags") ?? [];
+    }
+    setMatureTagsStatus(status) {
+      Application.setState(status, "mature_tags");
+    }
+    async handleMatureTagsStatusChange(value) {
+      console.log("handleMatureTagsStatusChange " + value.join(", "));
+      await this.MatureTagsStatusState.updateValue(value);
+      this.setMatureTagsStatus(value);
+      this.reloadForm();
+    }
+    MatureTagsStatusState = new State3(
+      this,
+      this.getMatureTagsStatus()
+    );
+  };
+
+  // src/MangaWorld/pbconfig.ts
+  init_buffer();
+  var import_types5 = __toESM(require_lib(), 1);
+  var pbconfig_default = {
+    version: "1.0 - beta 4",
+    name: "MangaWorld",
+    description: "Extension that pulls manga from MangaWorld (0.9).",
+    icon: "MangaWorldIcon.png",
+    language: "it",
+    contentRating: import_types5.ContentRating.EVERYONE,
+    capabilities: [
+      import_types5.SourceIntents.COLLECTION_MANAGEMENT,
+      import_types5.SourceIntents.MANGA_CHAPTERS,
+      import_types5.SourceIntents.DISCOVER_SECIONS,
+      import_types5.SourceIntents.MANGA_SEARCH,
+      import_types5.SourceIntents.SETTINGS_UI
+    ],
+    badges: [
+      {
+        label: "Italian",
+        textColor: "#187480",
+        //c2ecd8
+        backgroundColor: "#c2ecd8"
+      }
+    ],
+    developers: [
+      {
+        name: "Catta1997",
+        website: "https://github.com/Catta1997"
+      }
+    ]
+  };
 
   // src/MangaWorld/main.ts
   var MW_DOMAIN = "https://www.mangaworld.nz";
-  var MainInterceptor = class extends import_types5.PaperbackInterceptor {
+  var MainInterceptor = class extends import_types6.PaperbackInterceptor {
     async interceptRequest(request) {
       return request;
     }
@@ -17901,7 +18031,7 @@ var source = (() => {
   };
   var MangaWorldExtension = class {
     // Implementation of the main rate limiter
-    mainRateLimiter = new import_types5.BasicRateLimiter("main", {
+    mainRateLimiter = new import_types6.BasicRateLimiter("main", {
       numberOfRequests: 15,
       bufferInterval: 10,
       ignoreImages: true
@@ -17918,7 +18048,7 @@ var source = (() => {
     }
     // Implements the settings form, check SettingsForm.ts for more info
     async getSettingsForm() {
-      return new SettingsForm();
+      return new SettingsForm(pbconfig_default.contentRating);
     }
     async getSearchFilters() {
       return this.functions.getFilterList();
