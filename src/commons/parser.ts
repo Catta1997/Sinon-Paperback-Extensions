@@ -14,6 +14,11 @@ import { CheerioAPI } from "cheerio";
 import { getAdultFilter, getMatureFilter, Metadata } from "./helper";
 
 export class Parser {
+    rating = ContentRating.EVERYONE;
+    constructor(rating: ContentRating) {
+        this.rating = rating;
+    }
+
     /**
      * controllo Tag Blacklistati da impostaioni
      * @param tags : string[] - tags
@@ -58,14 +63,14 @@ export class Parser {
      * @return {ContentRating} - ContentRating
      */
     getRating(tags: string[]): ContentRating {
-        let rating: ContentRating = ContentRating.EVERYONE;
+        let rating: ContentRating = this.rating;
         const adult_pref =
-            ((Application.getState("adult_pref") as string[]) ?? []).length > 0
-                ? (Application.getState("adult_pref") as string[])
+            ((Application.getState("adult_tags") as string[]) ?? []).length > 0
+                ? (Application.getState("adult_tags") as string[])
                 : getAdultFilter().map(({ id }) => id);
         const mature_pref =
-            ((Application.getState("mature_pref") as string[]) ?? []).length > 0
-                ? (Application.getState("mature_pref") as string[])
+            ((Application.getState("mature_tags") as string[]) ?? []).length > 0
+                ? (Application.getState("mature_tags") as string[])
                 : getMatureFilter().map(({ id }) => id);
         console.log("AdultTags: " + adult_pref.join(","));
         console.log("MatureTags: " + mature_pref.join(","));
@@ -352,7 +357,10 @@ export class Parser {
             trending.push({
                 metadata: metadata,
                 type: "featuredCarouselItem",
-                contentRating: undefined,
+                contentRating:
+                    this.rating === ContentRating.ADULT
+                        ? ContentRating.ADULT
+                        : undefined,
                 supertitle: chapNum,
                 imageUrl: image,
                 mangaId: id,
@@ -386,7 +394,10 @@ export class Parser {
                 hot.push({
                     metadata: metadata,
                     type: "prominentCarouselItem",
-                    contentRating: undefined,
+                    contentRating:
+                        this.rating === ContentRating.ADULT
+                            ? ContentRating.ADULT
+                            : undefined,
                     imageUrl: image,
                     mangaId: id,
                     title: title,
@@ -494,7 +505,10 @@ export class Parser {
                     publishDate: this.getDate(addedDate),
                     metadata: metadata,
                     type: "chapterUpdatesCarouselItem",
-                    contentRating: undefined,
+                    contentRating:
+                        this.rating === ContentRating.ADULT
+                            ? ContentRating.ADULT
+                            : undefined,
                     imageUrl: image,
                     mangaId: id,
                     title: title,

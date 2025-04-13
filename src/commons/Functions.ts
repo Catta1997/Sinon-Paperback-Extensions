@@ -1,6 +1,7 @@
 import {
     Chapter,
     ChapterDetails,
+    ContentRating,
     DiscoverSection,
     DiscoverSectionItem,
     DiscoverSectionType,
@@ -24,10 +25,13 @@ import { Parser } from "./parser";
 
 export class Functions {
     baseUrl = "";
-    constructor(url: string) {
+    rating: ContentRating = ContentRating.EVERYONE;
+
+    constructor(url: string, contentRating: ContentRating) {
         this.baseUrl = url;
+        this.rating = contentRating;
     }
-    private parser = new Parser();
+    private parser = new Parser(this.rating);
     numberPage: number = 0;
     async getDiscoverSectionItems(
         section: DiscoverSection,
@@ -64,7 +68,10 @@ export class Functions {
                 },
                 name: filter.value,
                 metadata: metadata,
-                contentRating: undefined,
+                contentRating:
+                    this.rating === ContentRating.ADULT
+                        ? ContentRating.ADULT
+                        : undefined,
             });
         });
 
@@ -77,7 +84,10 @@ export class Functions {
                 },
                 name: filter.value,
                 metadata: metadata,
-                contentRating: undefined,
+                contentRating:
+                    this.rating === ContentRating.ADULT
+                        ? ContentRating.ADULT
+                        : undefined,
             });
         });
 

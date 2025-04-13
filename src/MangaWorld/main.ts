@@ -61,7 +61,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
     });
     baseUrl = MW_DOMAIN;
     RETRIES = 10;
-    private functions = new Functions(MW_DOMAIN);
+    private functions = new Functions(MW_DOMAIN, pbconfig.contentRating);
 
     // Implementation of the main interceptor
     mainInterceptor = new MainInterceptor("main");
