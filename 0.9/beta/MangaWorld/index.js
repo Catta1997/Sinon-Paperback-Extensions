@@ -2933,12 +2933,12 @@ var source = (() => {
         SourceIntents3[SourceIntents3["SETTINGS_UI"] = 32] = "SETTINGS_UI";
         SourceIntents3[SourceIntents3["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
       })(SourceIntents2 || (exports.SourceIntents = SourceIntents2 = {}));
-      var ContentRating4;
-      (function(ContentRating5) {
-        ContentRating5["EVERYONE"] = "SAFE";
-        ContentRating5["MATURE"] = "MATURE";
-        ContentRating5["ADULT"] = "ADULT";
-      })(ContentRating4 || (exports.ContentRating = ContentRating4 = {}));
+      var ContentRating5;
+      (function(ContentRating6) {
+        ContentRating6["EVERYONE"] = "SAFE";
+        ContentRating6["MATURE"] = "MATURE";
+        ContentRating6["ADULT"] = "ADULT";
+      })(ContentRating5 || (exports.ContentRating = ContentRating5 = {}));
     }
   });
 
@@ -17039,6 +17039,10 @@ var source = (() => {
   init_buffer();
   var import_types2 = __toESM(require_lib(), 1);
   var Parser3 = class {
+    rating = import_types2.ContentRating.EVERYONE;
+    constructor(rating) {
+      this.rating = rating;
+    }
     /**
      * controllo Tag Blacklistati da impostaioni
      * @param tags : string[] - tags
@@ -17076,9 +17080,9 @@ var source = (() => {
      * @return {ContentRating} - ContentRating
      */
     getRating(tags) {
-      let rating = import_types2.ContentRating.EVERYONE;
-      const adult_pref = (Application.getState("adult_pref") ?? []).length > 0 ? Application.getState("adult_pref") : getAdultFilter().map(({ id }) => id);
-      const mature_pref = (Application.getState("mature_pref") ?? []).length > 0 ? Application.getState("mature_pref") : getMatureFilter().map(({ id }) => id);
+      let rating = this.rating;
+      const adult_pref = (Application.getState("adult_tags") ?? []).length > 0 ? Application.getState("adult_tags") : getAdultFilter().map(({ id }) => id);
+      const mature_pref = (Application.getState("mature_tags") ?? []).length > 0 ? Application.getState("mature_tags") : getMatureFilter().map(({ id }) => id);
       console.log("AdultTags: " + adult_pref.join(","));
       console.log("MatureTags: " + mature_pref.join(","));
       for (const tag of tags) {
@@ -17301,7 +17305,7 @@ var source = (() => {
         trending.push({
           metadata,
           type: "featuredCarouselItem",
-          contentRating: void 0,
+          contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
           supertitle: chapNum,
           imageUrl: image,
           mangaId: id,
@@ -17329,7 +17333,7 @@ var source = (() => {
           hot.push({
             metadata,
             type: "prominentCarouselItem",
-            contentRating: void 0,
+            contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
             imageUrl: image,
             mangaId: id,
             title
@@ -17406,7 +17410,7 @@ var source = (() => {
             publishDate: this.getDate(addedDate),
             metadata,
             type: "chapterUpdatesCarouselItem",
-            contentRating: void 0,
+            contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
             imageUrl: image,
             mangaId: id,
             title,
@@ -17461,10 +17465,12 @@ var source = (() => {
   // src/commons/Functions.ts
   var Functions = class {
     baseUrl = "";
-    constructor(url) {
+    rating = import_types3.ContentRating.EVERYONE;
+    constructor(url, contentRating) {
       this.baseUrl = url;
+      this.rating = contentRating;
     }
-    parser = new Parser3();
+    parser = new Parser3(this.rating);
     numberPage = 0;
     async getDiscoverSectionItems(section, metadata) {
       const data2 = (await Application.scheduleRequest({
@@ -17496,7 +17502,7 @@ var source = (() => {
           },
           name: filter4.value,
           metadata,
-          contentRating: void 0
+          contentRating: this.rating === import_types3.ContentRating.ADULT ? import_types3.ContentRating.ADULT : void 0
         });
       });
       getMangaTypeFilter().forEach((filter4) => {
@@ -17508,7 +17514,7 @@ var source = (() => {
           },
           name: filter4.value,
           metadata,
-          contentRating: void 0
+          contentRating: this.rating === import_types3.ContentRating.ADULT ? import_types3.ContentRating.ADULT : void 0
         });
       });
       switch (section.id) {
@@ -17988,7 +17994,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.0 - beta 4",
+    version: "1.0 - beta 5",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "MangaWorldIcon.png",
@@ -18038,7 +18044,7 @@ var source = (() => {
     });
     baseUrl = MW_DOMAIN;
     RETRIES = 10;
-    functions = new Functions(MW_DOMAIN);
+    functions = new Functions(MW_DOMAIN, pbconfig_default.contentRating);
     // Implementation of the main interceptor
     mainInterceptor = new MainInterceptor("main");
     // Method from the Extension interface which we implement, initializes the rate limiter, interceptor, discover sections and search filters
