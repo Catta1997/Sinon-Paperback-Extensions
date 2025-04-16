@@ -17361,7 +17361,7 @@ var source = (() => {
       for (const item of parse6) {
         if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
           latest.push({
-            metadata: { page: page + 1 },
+            metadata: { page },
             subtitle: item.authors,
             type: "simpleCarouselItem",
             contentRating: this.getRating(item.tags),
@@ -17542,7 +17542,7 @@ var source = (() => {
         chapter.chapterId
       );
     }
-    async getDiscoverSections() {
+    getDiscoverSections() {
       return [
         {
           id: "popular_section",
@@ -17583,14 +17583,14 @@ var source = (() => {
     }
     async getChapters(sourceManga) {
       console.log("Get Chapters of MangaID " + sourceManga.mangaId);
-      const [_, buffer] = await Application.scheduleRequest({
+      const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
         method: "GET"
-      });
-      const $2 = load(Application.arrayBufferToUTF8String(buffer));
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
       return this.parser.parseChapters($2, sourceManga);
     }
-    async getFilterList() {
+    getFilterList() {
       const filters2 = [];
       filters2.push({
         type: "dropdown",
@@ -17758,7 +17758,7 @@ var source = (() => {
         (0, import_types4.Section)(
           {
             id: "update_settings",
-            footer: "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. Tieni presente che i generi nascosti restano nascosti anche se esplicitamente cercati nella ricerca"
+            footer: "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. Tieni presente che i generi nascosti verranno rimossi anche dai filtri di ricerca"
           },
           [
             (0, import_types4.SelectRow)("hide_tags", {
@@ -17974,7 +17974,6 @@ var source = (() => {
     language: "it",
     contentRating: import_types5.ContentRating.EVERYONE,
     capabilities: [
-      import_types5.SourceIntents.COLLECTION_MANAGEMENT,
       import_types5.SourceIntents.MANGA_CHAPTERS,
       import_types5.SourceIntents.DISCOVER_SECIONS,
       import_types5.SourceIntents.MANGA_SEARCH,
