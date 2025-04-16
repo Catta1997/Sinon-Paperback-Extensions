@@ -16923,8 +16923,9 @@ var source = (() => {
         method: "GET"
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
-      const image = $2(".left-column img").attr("data-lazy-src");
-      const title = $2(".left-column img").attr("alt");
+      const elem = $2(".left-column img");
+      const image = elem.attr("data-lazy-src");
+      const title = elem.attr("alt");
       const elems = $2(".wp-block-list li").toArray();
       const trama = $2(elems[0]).text();
       const altTitle = $2(elems[1]).text().split("Alternate Name(s):")[1].replace(" ", "").split(",");

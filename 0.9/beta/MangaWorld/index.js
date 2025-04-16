@@ -3050,7 +3050,7 @@ var source = (() => {
   init_buffer();
   var import_types6 = __toESM(require_lib(), 1);
 
-  // src/commons/Functions.ts
+  // src/commons/functions.ts
   init_buffer();
   var import_types3 = __toESM(require_lib(), 1);
 
@@ -16897,6 +16897,26 @@ var source = (() => {
 
   // src/commons/helper.ts
   init_buffer();
+  function blacklistedTags(tags) {
+    const Bl_tags = Application.getState("hide_tags") ?? [];
+    console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+    for (const tag of tags) {
+      if (Bl_tags.includes(tag.toLowerCase())) {
+        console.log("Detected :" + tag + " manga rimosso dalla lista");
+        return true;
+      }
+    }
+    return false;
+  }
+  function blacklistedType(type) {
+    const Bl_tags = Application.getState("hide_type") ?? [];
+    console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
+    if (Bl_tags.includes(type.toLowerCase())) {
+      console.log("Detected :" + type + " manga rimosso dalla lista");
+      return true;
+    }
+    return false;
+  }
   function getMatureFilter() {
     return [
       { value: "Ecchi", id: "ecchi" },
@@ -17042,38 +17062,6 @@ var source = (() => {
     rating = import_types2.ContentRating.EVERYONE;
     constructor(rating) {
       this.rating = rating;
-    }
-    /**
-     * controllo Tag Blacklistati da impostaioni
-     * @param tags : string[] - tags
-     * @type {tags:string[]} => boolean
-     * @return {boolean} - true: da nascondere
-     */
-    blacklistedTags(tags) {
-      const Bl_tags = Application.getState("hide_tags") ?? [];
-      console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
-      for (const tag of tags) {
-        if (Bl_tags.includes(tag.toLowerCase())) {
-          console.log("Detected :" + tag + " manga rimosso dalla lista");
-          return true;
-        }
-      }
-      return false;
-    }
-    /**
-     * controllo Tipi Manga Blacklistati da impostaioni
-     * @type {tags:string[]} => boolean
-     * @return {boolean} - true: da nascondere
-     * @param type
-     */
-    blacklistedType(type) {
-      const Bl_tags = Application.getState("hide_type") ?? [];
-      console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
-      if (Bl_tags.includes(type.toLowerCase())) {
-        console.log("Detected :" + type + " manga rimosso dalla lista");
-        return true;
-      }
-      return false;
     }
     /**
      * Ottieni Rating dati tags
@@ -17282,7 +17270,7 @@ var source = (() => {
       const results = [];
       const parse6 = this.parsePage($2);
       for (const item of parse6) {
-        if (!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
+        if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
           results.push({
             imageUrl: item.image,
             title: item.title,
@@ -17371,7 +17359,7 @@ var source = (() => {
       page++;
       const parse6 = this.parsePage($2);
       for (const item of parse6) {
-        if (!this.blacklistedTags(item.tags) && !this.blacklistedType(item.type)) {
+        if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
           latest.push({
             metadata: { page: page + 1 },
             subtitle: item.authors,
@@ -17417,7 +17405,7 @@ var source = (() => {
         const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
         console.log("Ultime Aggiunte");
         console.log("Parsed: Manga " + title);
-        if (!this.blacklistedType(mangaType)) {
+        if (!blacklistedType(mangaType)) {
           latest.push({
             chapterId,
             metadata,
@@ -17463,7 +17451,7 @@ var source = (() => {
     }
   };
 
-  // src/commons/Functions.ts
+  // src/commons/functions.ts
   var Functions = class {
     baseUrl = "";
     rating = import_types3.ContentRating.EVERYONE;
@@ -17616,7 +17604,9 @@ var source = (() => {
       const def_value = (Application.getState("def_type") ?? [])[0];
       filters2.push({
         type: "multiselect",
-        options: getMangaTypeFilter(),
+        options: getMangaTypeFilter().filter(
+          (option) => !blacklistedType(option.value)
+        ),
         id: "types",
         allowExclusion: false,
         title: "Tipo",
@@ -17626,7 +17616,9 @@ var source = (() => {
       });
       filters2.push({
         type: "multiselect",
-        options: getGenreFilter(),
+        options: getGenreFilter().filter(
+          (option) => !blacklistedTags([option.value])
+        ),
         id: "genres",
         allowExclusion: false,
         title: "Generi",
