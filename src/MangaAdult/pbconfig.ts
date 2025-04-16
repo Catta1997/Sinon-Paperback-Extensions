@@ -8,7 +8,6 @@ export default {
     language: "it",
     contentRating: ContentRating.ADULT,
     capabilities: [
-        SourceIntents.COLLECTION_MANAGEMENT,
         SourceIntents.MANGA_CHAPTERS,
         SourceIntents.DISCOVER_SECIONS,
         SourceIntents.MANGA_SEARCH,

@@ -409,7 +409,7 @@ export class Parser {
         for (const item of parse) {
             if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
                 latest.push({
-                    metadata: { page: page + 1 },
+                    metadata: { page: page },
                     subtitle: item.authors,
                     type: "simpleCarouselItem",
                     contentRating: this.getRating(item.tags),

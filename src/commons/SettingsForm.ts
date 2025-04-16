@@ -88,7 +88,7 @@ class FilterSettings extends Form {
                     id: "update_settings",
                     footer:
                         "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. " +
-                        "Tieni presente che i generi nascosti restano nascosti anche se esplicitamente cercati nella ricerca",
+                        "Tieni presente che i generi nascosti verranno rimossi anche dai filtri di ricerca",
                 },
                 [
                     SelectRow("hide_tags", {

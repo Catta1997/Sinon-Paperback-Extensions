@@ -129,7 +129,7 @@ export class Functions {
             chapter.chapterId,
         );
     }
-    async getDiscoverSections(): Promise<DiscoverSection[]> {
+    getDiscoverSections(): DiscoverSection[] {
         return [
             {
                 id: "popular_section",
@@ -168,17 +168,20 @@ export class Functions {
             },
         ];
     }
+
     async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
         console.log("Get Chapters of MangaID " + sourceManga.mangaId);
-        const [_, buffer] = await Application.scheduleRequest({
-            url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
-            method: "GET",
-        });
-        const $ = cheerio.load(Application.arrayBufferToUTF8String(buffer));
+        const data = (
+            await Application.scheduleRequest({
+                url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
+                method: "GET",
+            })
+        )[1];
+        const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         return this.parser.parseChapters($, sourceManga);
     }
 
-    async getFilterList(): Promise<SearchFilter[]> {
+    getFilterList(): SearchFilter[] {
         const filters: SearchFilter[] = [];
         filters.push({
             type: "dropdown",
