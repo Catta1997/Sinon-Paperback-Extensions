@@ -16987,7 +16987,7 @@ var source = (() => {
         const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
         const date = $2("span.chapter-date", item).text();
         const dataVar = date.split(" ");
-        const num = Number(dataVar[0]);
+        const num = Number(dataVar[0] ?? 0);
         const oggi = /* @__PURE__ */ new Date();
         if (date.includes("year")) {
           oggi.setFullYear(oggi.getFullYear() - num);
