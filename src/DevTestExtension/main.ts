@@ -71,8 +71,9 @@ export class ScansExtension implements ContentTemplateImplementation {
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const image = $(".left-column img").attr("data-lazy-src");
-        const title = $(".left-column img").attr("alt");
+        const elem = $(".left-column img");
+        const image = elem.attr("data-lazy-src");
+        const title = elem.attr("alt");
         const elems = $(".wp-block-list li").toArray();
         const trama = $(elems[0]).text();
         const altTitle = $(elems[1])

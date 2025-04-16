@@ -11,49 +11,18 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { CheerioAPI } from "cheerio";
-import { getAdultFilter, getMatureFilter, Metadata } from "./helper";
+import {
+    blacklistedTags,
+    blacklistedType,
+    getAdultFilter,
+    getMatureFilter,
+    Metadata,
+} from "./helper";
 
 export class Parser {
     rating = ContentRating.EVERYONE;
     constructor(rating: ContentRating) {
         this.rating = rating;
-    }
-
-    /**
-     * controllo Tag Blacklistati da impostaioni
-     * @param tags : string[] - tags
-     * @type {tags:string[]} => boolean
-     * @return {boolean} - true: da nascondere
-     */
-    blacklistedTags(tags: string[]): boolean {
-        const Bl_tags =
-            (Application.getState("hide_tags") as string[] | undefined) ?? [];
-        console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
-
-        for (const tag of tags) {
-            if (Bl_tags.includes(tag.toLowerCase())) {
-                console.log("Detected :" + tag + " manga rimosso dalla lista");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * controllo Tipi Manga Blacklistati da impostaioni
-     * @type {tags:string[]} => boolean
-     * @return {boolean} - true: da nascondere
-     * @param type
-     */
-    blacklistedType(type: string): boolean {
-        const Bl_tags =
-            (Application.getState("hide_type") as string[] | undefined) ?? [];
-        console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
-        if (Bl_tags.includes(type.toLowerCase())) {
-            console.log("Detected :" + type + " manga rimosso dalla lista");
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -326,10 +295,7 @@ export class Parser {
         const results: SearchResultItem[] = [];
         const parse = this.parsePage($);
         for (const item of parse) {
-            if (
-                !this.blacklistedTags(item.tags) &&
-                !this.blacklistedType(item.type)
-            ) {
+            if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
                 results.push({
                     imageUrl: item.image,
                     title: item.title,
@@ -441,10 +407,7 @@ export class Parser {
         page++;
         const parse = this.parsePage($);
         for (const item of parse) {
-            if (
-                !this.blacklistedTags(item.tags) &&
-                !this.blacklistedType(item.type)
-            ) {
+            if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
                 latest.push({
                     metadata: { page: page + 1 },
                     subtitle: item.authors,
@@ -505,7 +468,7 @@ export class Parser {
             ).match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
             console.log("Ultime Aggiunte");
             console.log("Parsed: Manga " + title);
-            if (!this.blacklistedType(mangaType)) {
+            if (!blacklistedType(mangaType)) {
                 latest.push({
                     chapterId: chapterId,
                     metadata: metadata,

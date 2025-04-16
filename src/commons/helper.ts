@@ -4,6 +4,43 @@ export type Metadata = {
 type QueryValue = string | number | boolean | undefined | null;
 type QueryParam = QueryValue | QueryValue[] | Record<string, QueryValue>;
 
+/**
+ * controllo Tag Blacklistati da impostaioni
+ * @param tags : string[] - tags
+ * @type {tags:string[]} => boolean
+ * @return {boolean} - true: da nascondere
+ */
+export function blacklistedTags(tags: string[]): boolean {
+    const Bl_tags =
+        (Application.getState("hide_tags") as string[] | undefined) ?? [];
+    console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+
+    for (const tag of tags) {
+        if (Bl_tags.includes(tag.toLowerCase())) {
+            console.log("Detected :" + tag + " manga rimosso dalla lista");
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * controllo Tipi Manga Blacklistati da impostaioni
+ * @type {tags:string[]} => boolean
+ * @return {boolean} - true: da nascondere
+ * @param type
+ */
+export function blacklistedType(type: string): boolean {
+    const Bl_tags =
+        (Application.getState("hide_type") as string[] | undefined) ?? [];
+    console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
+    if (Bl_tags.includes(type.toLowerCase())) {
+        console.log("Detected :" + type + " manga rimosso dalla lista");
+        return true;
+    }
+    return false;
+}
+
 export function getMatureFilter() {
     return [
         { value: "Ecchi", id: "ecchi" },

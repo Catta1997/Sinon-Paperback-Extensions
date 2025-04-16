@@ -20,7 +20,7 @@ import {
     SettingsFormProviding,
     SourceManga,
 } from "@paperback/types";
-import { Functions } from "../commons/Functions";
+import { Functions } from "../commons/functions";
 import { Metadata } from "../commons/helper";
 import { SettingsForm } from "../commons/SettingsForm";
 import pbconfig from "./pbconfig";

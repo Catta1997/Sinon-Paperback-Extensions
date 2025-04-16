@@ -15,6 +15,8 @@ import * as cheerio from "cheerio";
 import { CheerioAPI } from "cheerio";
 // Template content
 import {
+    blacklistedTags,
+    blacklistedType,
     getGenreFilter,
     getMangaTypeFilter,
     getOrderFilter,
@@ -191,7 +193,9 @@ export class Functions {
             [])[0];
         filters.push({
             type: "multiselect",
-            options: getMangaTypeFilter(),
+            options: getMangaTypeFilter().filter(
+                (option) => !blacklistedType(option.value),
+            ),
             id: "types",
             allowExclusion: false,
             title: "Tipo",
@@ -201,7 +205,9 @@ export class Functions {
         });
         filters.push({
             type: "multiselect",
-            options: getGenreFilter(),
+            options: getGenreFilter().filter(
+                (option) => !blacklistedTags([option.value]),
+            ),
             id: "genres",
             allowExclusion: false,
             title: "Generi",
