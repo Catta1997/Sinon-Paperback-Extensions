@@ -191,7 +191,7 @@ export class ScansExtension implements ContentTemplateImplementation {
                 metadata: metadata,
                 type: "simpleCarouselItem",
                 imageUrl:
-                    "https://kaoruhanawarintosaku.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
+                    "https://kaoruhana.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
                 mangaId: "kaoruhanawarintosaku.com/",
                 title: "Kaoru Hana wa Rin to Saku",
             });
