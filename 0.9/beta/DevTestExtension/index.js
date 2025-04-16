@@ -17021,7 +17021,7 @@ var source = (() => {
         latest.push({
           metadata,
           type: "simpleCarouselItem",
-          imageUrl: "https://kaoruhanawarintosaku.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
+          imageUrl: "https://kaoruhana.com/wp-content/uploads/2024/04/Kaoru-Hana-wa-Rin-to-Saku.webp",
           mangaId: "kaoruhanawarintosaku.com/",
           title: "Kaoru Hana wa Rin to Saku"
         });
