@@ -28,7 +28,7 @@ export class Parser {
     blacklistedTags(tags: string[]): boolean {
         const Bl_tags =
             (Application.getState("hide_tags") as string[] | undefined) ?? [];
-        //console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+        console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
 
         for (const tag of tags) {
             if (Bl_tags.includes(tag.toLowerCase())) {
@@ -48,7 +48,7 @@ export class Parser {
     blacklistedType(type: string): boolean {
         const Bl_tags =
             (Application.getState("hide_type") as string[] | undefined) ?? [];
-        //console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
+        console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
         if (Bl_tags.includes(type.toLowerCase())) {
             console.log("Detected :" + type + " manga rimosso dalla lista");
             return true;
@@ -100,7 +100,11 @@ export class Parser {
      * @param mangaId : string - MangaID
      * @return {SourceManga} - SourceManga
      */
-    parseMangaDetails($: CheerioAPI, mangaId: string): SourceManga {
+    parseMangaDetails(
+        $: CheerioAPI,
+        mangaId: string,
+        shareURL: string,
+    ): SourceManga {
         const title: string = $(".name.bigger").text().trim() ?? "";
         const image: string =
             $(".thumb.mb-3.text-center img").attr("src") ?? "";
@@ -109,6 +113,7 @@ export class Parser {
         const artists: string[] = [];
         const authors: string[] = [];
         const titles: string[] = [];
+        console.log(shareURL);
         const data = {
             genre: [] as string[],
             state: "",
@@ -147,7 +152,6 @@ export class Parser {
                 });
             }
         }
-
         const author = authors.join(", ");
         const artist = artists.join(", ");
         const status = data.state;
@@ -174,6 +178,7 @@ export class Parser {
                 tagGroups: tagSections,
                 secondaryTitles: titles,
                 additionalInfo: { subs: subs },
+                shareUrl: shareURL,
             } as MangaInfo,
         } as SourceManga;
     }
@@ -193,7 +198,6 @@ export class Parser {
                 "null",
                 "",
             ])[1];
-            //console.log("ID " + chapterId);
             const name = $("a", item).attr("title") ?? "";
             const volN = $(item)
                 .closest(".volume-element")
@@ -201,8 +205,15 @@ export class Parser {
                 .text()
                 .split(" ")[1];
             const chapN = $(".d-inline-block", item).text().split(" ")[1];
-            //console.log("Volume " + volN);
-            //console.log("Capitolo " + volN);
+            console.log("New Chapters");
+            console.log(
+                "Parsed: Manga " +
+                    name +
+                    " Chapter: " +
+                    chapN +
+                    " Volume: " +
+                    volN,
+            );
             // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
             const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
@@ -279,7 +290,6 @@ export class Parser {
                 (($("a", item).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            //console.log("MangaID " + id);
             const authors: string[] = [];
             const tags: string[] = [];
             $("div.author", item)
@@ -295,7 +305,6 @@ export class Parser {
                 .each(function (_, e) {
                     tags.push($(e).text().trim());
                 });
-            //console.log("MangaTypeSearch " + mangaType);
             const author: string = authors.join(", ");
             items.push({
                 id: id,
@@ -350,10 +359,11 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            //console.log("MangaID " + id);
             const image = $("a img", obj).attr("src") ?? "";
             const chapNum = $("a div", obj).text() ?? "";
             const title = $(".manga-title", obj).text().trim();
+            console.log("Capitoli in tendenza");
+            console.log("Parsed: Manga " + title + " Chap: " + chapNum);
             trending.push({
                 metadata: metadata,
                 type: "featuredCarouselItem",
@@ -387,9 +397,10 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            //console.log("MangaID " + id);
             const image = $(".img-fluid", obj).attr("src") ?? "";
             const title = $(".name", obj).first().text().trim() ?? "";
+            console.log("In tendenza Mese");
+            console.log("Parsed: Manga " + title);
             if (hot.length < 10) {
                 hot.push({
                     metadata: metadata,
@@ -483,10 +494,8 @@ export class Parser {
                 (($("a", obj).attr("href") ?? "").match(
                     /[0-9]+\/[a-zA-Z0-9-]+/i,
                 ) ?? ["null"])[0] ?? "";
-            //console.log("MangaID " + id);
             const title: string = $("a", obj).attr("title") ?? "";
             const mangaType: string = $(".genre a", obj).text().trim() ?? "";
-            //console.log("MangaType " + mangaType);
             const image: string = $("a img", obj).attr("src") ?? "";
             const sub: string =
                 $(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ??
@@ -494,15 +503,11 @@ export class Parser {
             const chapterId: string = ((
                 $(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? ""
             ).match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
-            const addedDate: string = $("i.ml-auto.mt-auto", obj)
-                .first()
-                .text()
-                .trimEnd();
-            //console.log("ChapterID " + chapterId);
+            console.log("Ultime Aggiunte");
+            console.log("Parsed: Manga " + title);
             if (!this.blacklistedType(mangaType)) {
                 latest.push({
                     chapterId: chapterId,
-                    publishDate: this.getDate(addedDate),
                     metadata: metadata,
                     type: "chapterUpdatesCarouselItem",
                     contentRating:
@@ -544,20 +549,8 @@ export class Parser {
         if (parts.length < 2 || parts.length > 3) return oggi;
         const giorno = parseInt(parts[0], 10);
         const mese = mesi[parts[1]];
-        let anno: number;
-        if (isNaN(giorno) || mese === undefined) return oggi;
-        if (parts.length === 3) {
-            anno = parseInt(parts[2], 10);
-            if (isNaN(anno)) return oggi;
-        } else {
-            const dataTemp = new Date(oggi.getFullYear(), mese, giorno);
-            // Se la data futura non è ancora passata, prendiamo l'anno precedente
-            if (dataTemp > oggi) {
-                anno = oggi.getFullYear() - 1;
-            } else {
-                anno = oggi.getFullYear();
-            }
-        }
+        const anno = parseInt(parts[2], 10);
+        if (isNaN(giorno) || mese === undefined || isNaN(anno)) return oggi;
         return new Date(anno, mese, giorno);
     }
 }

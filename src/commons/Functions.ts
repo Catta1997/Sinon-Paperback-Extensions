@@ -32,7 +32,7 @@ export class Functions {
         this.rating = contentRating;
     }
     private parser = new Parser(this.rating);
-    numberPage: number = 0;
+
     async getDiscoverSectionItems(
         section: DiscoverSection,
         metadata: Metadata,
@@ -44,7 +44,6 @@ export class Functions {
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        const read: DiscoverSectionItem[] = [];
         const mangaType: DiscoverSectionItem[] = [];
         const allGenres: DiscoverSectionItem[] = [];
         getGenreFilter().forEach((filter) => {
@@ -59,22 +58,6 @@ export class Functions {
                 contentRating: this.parser.getRating([filter.value]),
             });
         });
-        getOrderFilter().forEach((filter) => {
-            read.push({
-                type: "genresCarouselItem",
-                searchQuery: {
-                    title: "",
-                    filters: [{ id: "order", value: filter.id }],
-                },
-                name: filter.value,
-                metadata: metadata,
-                contentRating:
-                    this.rating === ContentRating.ADULT
-                        ? ContentRating.ADULT
-                        : undefined,
-            });
-        });
-
         getMangaTypeFilter().forEach((filter) => {
             mangaType.push({
                 type: "genresCarouselItem",
@@ -92,42 +75,34 @@ export class Functions {
         });
 
         switch (section.id) {
-            case "mese_section":
-                console.log("mese_section loaded");
-                return this.parser.parseInTendenzaMese($, metadata);
             case "popular_section":
-                this.numberPage = 0;
-                console.log("popular_section loaded");
+                console.log("Loading popular_section loaded");
                 return this.parser.parseCapitoliInTendenza($, metadata);
+            case "mese_section":
+                console.log("Loading mese_section loaded");
+                return this.parser.parseInTendenzaMese($, metadata);
             case "updated_section":
-                console.log("updated_section loaded");
+                console.log("Loading updated_section loaded");
                 return this.parser.parseLastAddedSetcion(
                     metadata,
                     this.baseUrl,
                 );
             case "new_manga_section": {
-                console.log("new_manga_section loaded");
+                console.log("Loading new_manga_section loaded");
                 return this.parser.parseLastMangaAddedSetcion(
                     metadata,
                     this.baseUrl,
                 );
             }
-            case "read_section": {
-                console.log("read_section loaded");
-                return {
-                    items: read,
-                    metadata: metadata,
-                };
-            }
             case "genre_section": {
-                console.log("type_section loaded");
+                console.log("Loading type_section loaded");
                 return {
                     items: allGenres,
                     metadata: metadata,
                 };
             }
             case "type_section": {
-                console.log("type_section loaded");
+                console.log("Loading type_section loaded");
                 return {
                     items: mangaType,
                     metadata: metadata,
@@ -155,39 +130,44 @@ export class Functions {
     async getDiscoverSections(): Promise<DiscoverSection[]> {
         return [
             {
-                id: "mese_section",
-                title: "Manga del Mese",
-                type: DiscoverSectionType.prominentCarousel,
-            },
-            {
                 id: "popular_section",
                 title: "Capitoli In Tendenza",
                 type: DiscoverSectionType.featured,
             },
             {
+                id: "mese_section",
+                title: "Manga del Mese",
+                subtitle: "Manga più letti del mese",
+                type: DiscoverSectionType.prominentCarousel,
+            },
+            {
                 id: "updated_section",
                 title: "Aggiornati di Recente",
+                subtitle: "Ultimi Capitoli Aggiunti",
                 type: DiscoverSectionType.chapterUpdates,
             },
             {
                 id: "new_manga_section",
                 title: "Nuove Aggiunte",
+                subtitle: "Nuovi Manga",
                 type: DiscoverSectionType.simpleCarousel,
             },
             {
                 id: "type_section",
                 title: "Tipo",
+                subtitle: "Manga più letti di un tipo",
                 type: DiscoverSectionType.genres,
             },
             {
                 id: "genre_section",
                 title: "Generi",
+                subtitle: "Manga più letti di un genere",
                 type: DiscoverSectionType.genres,
             },
         ];
     }
     async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-        console.log("MangaID " + sourceManga.mangaId);
+        console.log("Get Chapters of MangaID " + sourceManga.mangaId);
         const [_, buffer] = await Application.scheduleRequest({
             url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
             method: "GET",
@@ -198,7 +178,6 @@ export class Functions {
 
     async getFilterList(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
-        console.log("Filter List");
         filters.push({
             type: "dropdown",
             options: getOrderFilter(),
@@ -256,7 +235,7 @@ export class Functions {
     }
 
     async getMangaDetails(mangaId: string): Promise<SourceManga> {
-        console.log("MangaID " + mangaId);
+        console.log("Get Details of MangaID " + mangaId);
         const data = (
             await Application.scheduleRequest({
                 url: `${this.baseUrl}/manga/${mangaId}`,
@@ -264,7 +243,11 @@ export class Functions {
             })
         )[1];
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
-        return this.parser.parseMangaDetails($, mangaId);
+        return this.parser.parseMangaDetails(
+            $,
+            mangaId,
+            `${this.baseUrl}/manga/${mangaId}`,
+        );
     }
 
     constructSearchRequestURL(
@@ -291,7 +274,7 @@ export class Functions {
             }
         } else if (types.length > 0) tipologia.push(types);
 
-        console.log("query: " + query.title);
+        console.log("Search query: " + query.title);
         const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent(
             "archive",
         );

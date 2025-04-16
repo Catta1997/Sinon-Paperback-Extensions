@@ -163,7 +163,7 @@ class FilterSettings extends Form {
         Application.setState(status, "hide_tags");
     }
     async handleHideTagsStatusChange(value: string[]): Promise<void> {
-        console.log("handleHideTagsStatusChange " + value.join(", "));
+        //console.log("handleHideTagsStatusChange " + value.join(", "));
         await this.HideTagsStatusState.updateValue(value);
         this.setHideTagsStatus(value);
         this.reloadForm();
@@ -183,7 +183,7 @@ class FilterSettings extends Form {
         Application.setState(status, "hide_type");
     }
     async handleHideTypeStatusChange(value: string[]): Promise<void> {
-        console.log("handleHideTypeStatusChange " + value.join(", "));
+        //console.log("handleHideTypeStatusChange " + value.join(", "));
         await this.HideTypeStatusState.updateValue(value);
         this.setHideTypeStatus(value);
         this.reloadForm();
@@ -203,7 +203,7 @@ class FilterSettings extends Form {
         Application.setState(status, "def_order");
     }
     async handleDefOrderStatusChange(value: string[]): Promise<void> {
-        console.log("handleDefOrderStatusChange " + value.join(", "));
+        //console.log("handleDefOrderStatusChange " + value.join(", "));
         await this.defOrderStatusState.updateValue(value);
         this.setDefOrderStatus(value);
         this.reloadForm();
@@ -222,7 +222,7 @@ class FilterSettings extends Form {
         Application.setState(status, "def_type");
     }
     async handleDefTypeStatusChange(value: string[]): Promise<void> {
-        console.log("handleDefTypeStatusChange " + value.join(", "));
+        //console.log("handleDefTypeStatusChange " + value.join(", "));
         await this.defTypeStatusState.updateValue(value);
         this.setDefTypeStatus(value);
         this.reloadForm();
@@ -297,7 +297,7 @@ class CustomContentRating extends Form {
         Application.setState(status, "adult_tags");
     }
     async handleAdultTagsStatusChange(value: string[]): Promise<void> {
-        console.log("handleAdultTagsStatusChange " + value.join(", "));
+        //console.log("handleAdultTagsStatusChange " + value.join(", "));
         await this.AdultTagsStatusState.updateValue(value);
         this.setAdultTagsStatus(value);
         this.reloadForm();
@@ -317,7 +317,7 @@ class CustomContentRating extends Form {
         Application.setState(status, "mature_tags");
     }
     async handleMatureTagsStatusChange(value: string[]): Promise<void> {
-        console.log("handleMatureTagsStatusChange " + value.join(", "));
+        //console.log("handleMatureTagsStatusChange " + value.join(", "));
         await this.MatureTagsStatusState.updateValue(value);
         this.setMatureTagsStatus(value);
         this.reloadForm();

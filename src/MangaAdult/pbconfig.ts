@@ -1,7 +1,7 @@
 import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "1.0 - beta 5",
+    version: "1.0 - beta 6",
     name: "MangaAdult",
     description: "Extension that pulls manga from MangaAdult (0.9).",
     icon: "MangaAdultIcon.png",

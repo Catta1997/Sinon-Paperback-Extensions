@@ -147,13 +147,13 @@ export class ScansExtension implements ContentTemplateImplementation {
         for (const item of arrChapters) {
             const chapterId = $("a", item).attr("href") ?? "";
             console.log("ID " + chapterId);
-            const chapN = $(item).closest(".item").attr("data-number"); //chapterId.match(/chapter-([0-9]+)\//)?.[1] ?? "";
+            const chapN = $(item).closest(".item").attr("data-number");
             console.log("Capitolo " + chapN);
             // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
             const date = $("span.chapter-date", item).text();
             const dataVar: string[] = date.split(" ");
-            const num = Number(dataVar[0]);
+            const num = Number(dataVar[0] ?? 0);
             const oggi = new Date();
             if (date.includes("year")) {
                 oggi.setFullYear(oggi.getFullYear() - num);
