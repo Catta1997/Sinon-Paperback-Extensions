@@ -17402,14 +17402,26 @@ var source = (() => {
         const mangaType = $2(".genre a", obj).text().trim() ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
         const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
-        const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
+        const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read\/([a-f0-9]+)(?:\?.*)?$/i) ?? ["null", ""])[1];
         console.log("Ultime Aggiunte");
         console.log("Parsed: Manga " + title);
+        console.log("Parsed: Ch " + chapterId);
+        const regexDinamica = new RegExp(
+          `"createdAtTWithYear":\\s*"([^"]+)"\\s*,\\s*"isNew":\\s*(true|false)\\s*,\\s*"id":\\s*"${chapterId}"`,
+          "m"
+        );
+        const match = $2.html().match(regexDinamica);
+        let data3 = /* @__PURE__ */ new Date();
+        if (match) {
+          console.log("Data trovata:" + match[1]);
+          data3 = this.getDate(match[1]);
+        }
         if (!blacklistedType(mangaType)) {
           latest.push({
             chapterId,
             metadata,
             type: "chapterUpdatesCarouselItem",
+            publishDate: data3,
             contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
             imageUrl: image,
             mangaId: id,
@@ -17967,7 +17979,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.0 - beta 6",
+    version: "1.0 - beta 7",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "MangaWorldIcon.png",

@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-04-16T18:43:41.135Z",
+  "buildTime": "2025-04-17T08:25:58.160Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.46",
     "types": "1.0.0-alpha.46"
@@ -36,7 +36,7 @@
       "id": "DevTestExtension"
     },
     {
-      "version": "1.0 - beta 6",
+      "version": "1.0 - beta 7",
       "name": "MangaAdult",
       "description": "Extension that pulls manga from MangaAdult (0.9).",
       "icon": "MangaAdultIcon.png",
@@ -69,7 +69,7 @@
       "id": "MangaAdult"
     },
     {
-      "version": "1.0 - beta 6",
+      "version": "1.0 - beta 7",
       "name": "MangaWorld",
       "description": "Extension that pulls manga from MangaWorld (0.9).",
       "icon": "MangaWorldIcon.png",
