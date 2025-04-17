@@ -465,14 +465,26 @@ export class Parser {
                 "";
             const chapterId: string = ((
                 $(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? ""
-            ).match(/read\/(.*)\?+/i) ?? ["null", ""])[1];
+            ).match(/\/read\/([a-f0-9]+)(?:\?.*)?$/i) ?? ["null", ""])[1];
             console.log("Ultime Aggiunte");
             console.log("Parsed: Manga " + title);
+            console.log("Parsed: Ch " + chapterId);
+            const regexDinamica = new RegExp(
+                `"createdAtTWithYear":\\s*"([^"]+)"\\s*,\\s*"isNew":\\s*(true|false)\\s*,\\s*"id":\\s*"${chapterId}"`,
+                "m",
+            );
+            const match = $.html().match(regexDinamica);
+            let data = new Date();
+            if (match) {
+                console.log("Data trovata:" + match[1]);
+                data = this.getDate(match[1]);
+            }
             if (!blacklistedType(mangaType)) {
                 latest.push({
                     chapterId: chapterId,
                     metadata: metadata,
                     type: "chapterUpdatesCarouselItem",
+                    publishDate: data,
                     contentRating:
                         this.rating === ContentRating.ADULT
                             ? ContentRating.ADULT
