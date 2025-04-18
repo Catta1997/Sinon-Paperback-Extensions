@@ -1855,7 +1855,7 @@ var source = (() => {
       exports.InputRow = InputRow;
       exports.ToggleRow = ToggleRow;
       exports.SelectRow = SelectRow2;
-      exports.ButtonRow = ButtonRow;
+      exports.ButtonRow = ButtonRow2;
       exports.WebViewRow = WebViewRow;
       exports.NavigationRow = NavigationRow2;
       exports.OAuthButtonRow = OAuthButtonRow;
@@ -1872,7 +1872,7 @@ var source = (() => {
       function SelectRow2(id, props) {
         return { ...props, id, type: "selectRow", isHidden: props.isHidden ?? false };
       }
-      function ButtonRow(id, props) {
+      function ButtonRow2(id, props) {
         return { ...props, id, type: "buttonRow", isHidden: props.isHidden ?? false };
       }
       function WebViewRow(id, props) {
@@ -17348,7 +17348,7 @@ var source = (() => {
      * @param url : string - Url
      * @return { items: DiscoverSectionItem[], metadata: Metadata }
      */
-    async parseLastMangaAddedSetcion(metadata, url) {
+    async parseLastMangaAddedSection(metadata, url) {
       const latest = [];
       let page = metadata?.page ?? 1;
       const data2 = (await Application.scheduleRequest({
@@ -17382,13 +17382,15 @@ var source = (() => {
      * 		metadata: Metadata | undefined
      * 	}
      */
-    async parseLastAddedSetcion(metadata, url) {
+    async parseLastAddedSection($2, metadata, url) {
       let page = metadata?.page ?? 1;
-      const data2 = (await Application.scheduleRequest({
-        url: `${url}?page=${page}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      if (page > 1) {
+        const data2 = (await Application.scheduleRequest({
+          url: `${url}?page=${page}`,
+          method: "GET"
+        }))[1];
+        $2 = load(Application.arrayBufferToUTF8String(data2));
+      }
       page++;
       const arrLatest = $2(
         ".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry"
@@ -17411,17 +17413,17 @@ var source = (() => {
           "m"
         );
         const match = $2.html().match(regexDinamica);
-        let data3 = /* @__PURE__ */ new Date();
+        let data2 = /* @__PURE__ */ new Date();
         if (match) {
           console.log("Data trovata:" + match[1]);
-          data3 = this.getDate(match[1]);
+          data2 = this.getDate(match[1]);
         }
         if (!blacklistedType(mangaType)) {
           latest.push({
             chapterId,
             metadata,
             type: "chapterUpdatesCarouselItem",
-            publishDate: data3,
+            publishDate: data2,
             contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
             imageUrl: image,
             mangaId: id,
@@ -17480,24 +17482,31 @@ var source = (() => {
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       const mangaType = [];
       const allGenres = [];
-      getGenreFilter().forEach((filter4) => {
+      getGenreFilter().filter((option) => !blacklistedTags([option.value])).forEach((filter4) => {
         allGenres.push({
           type: "genresCarouselItem",
           searchQuery: {
             title: "",
-            filters: [{ id: "genres", value: filter4.id }]
+            filters: [
+              {
+                id: "genres",
+                value: { [filter4.id]: "included" }
+              }
+            ]
           },
           name: filter4.value,
           metadata,
           contentRating: this.parser.getRating([filter4.value])
         });
       });
-      getMangaTypeFilter().forEach((filter4) => {
+      getMangaTypeFilter().filter((option) => !blacklistedType(option.value)).forEach((filter4) => {
         mangaType.push({
           type: "genresCarouselItem",
           searchQuery: {
             title: "",
-            filters: [{ id: "types", value: filter4.id }]
+            filters: [
+              { id: "types", value: { [filter4.id]: "included" } }
+            ]
           },
           name: filter4.value,
           metadata,
@@ -17505,21 +17514,25 @@ var source = (() => {
         });
       });
       switch (section.id) {
-        case "popular_section":
+        case "popular_section": {
           console.log("Loading popular_section loaded");
           return this.parser.parseCapitoliInTendenza($2, metadata);
-        case "mese_section":
+        }
+        case "mese_section": {
           console.log("Loading mese_section loaded");
           return this.parser.parseInTendenzaMese($2, metadata);
-        case "updated_section":
+        }
+        case "updated_section": {
           console.log("Loading updated_section loaded");
-          return this.parser.parseLastAddedSetcion(
+          return this.parser.parseLastAddedSection(
+            $2,
             metadata,
             this.baseUrl
           );
+        }
         case "new_manga_section": {
           console.log("Loading new_manga_section loaded");
-          return this.parser.parseLastMangaAddedSetcion(
+          return this.parser.parseLastMangaAddedSection(
             metadata,
             this.baseUrl
           );
@@ -17673,6 +17686,7 @@ var source = (() => {
       const generi = [];
       const tipologia = [];
       const getFilterValue = (id) => query.filters.find((filter4) => filter4.id == id)?.value;
+      console.log(getFilterValue("genres"));
       const genres = getFilterValue("genres") ?? "";
       const types = getFilterValue("types") ?? "";
       if (genres && typeof genres === "object") {
@@ -17770,7 +17784,7 @@ var source = (() => {
         (0, import_types4.Section)(
           {
             id: "update_settings",
-            footer: "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. Tieni presente che i generi nascosti verranno rimossi anche dai filtri di ricerca"
+            footer: "Potrebbero non venir nascosti in tutte le sezioni della home. Tieni presente che verranno rimossi anche dalla ricerca"
           },
           [
             (0, import_types4.SelectRow)("hide_tags", {
@@ -17906,6 +17920,11 @@ var source = (() => {
       ...rest
     }));
     getSections() {
+      if (!this.genres.some(
+        (g) => g.id === "Nessuno" && g.title === "Nessuno"
+      )) {
+        this.genres.unshift({ id: "Nessuno", title: "Nessuno" });
+      }
       return [
         (0, import_types4.Section)(
           {
@@ -17925,6 +17944,13 @@ var source = (() => {
                 "handleAdultTagsStatusChange"
               )
             }),
+            (0, import_types4.ButtonRow)("restore_Adult_Tags", {
+              title: "Ripristina Default",
+              onSelect: Application.Selector(
+                this,
+                "restoreAdultTags"
+              )
+            }),
             (0, import_types4.SelectRow)("mature_tags", {
               title: "Generi Maturi",
               subtitle: "Modifica i generi Maturi",
@@ -17935,6 +17961,13 @@ var source = (() => {
               onValueChange: Application.Selector(
                 this,
                 "handleMatureTagsStatusChange"
+              )
+            }),
+            (0, import_types4.ButtonRow)("restore_Mature_Tags", {
+              title: "Ripristina Default",
+              onSelect: Application.Selector(
+                this,
+                "restoreMatureTags"
               )
             })
           ]
@@ -17949,6 +17982,9 @@ var source = (() => {
       Application.setState(status, "adult_tags");
     }
     async handleAdultTagsStatusChange(value) {
+      if (value.includes("Nessuno")) {
+        value = ["Nessuno"];
+      }
       await this.AdultTagsStatusState.updateValue(value);
       this.setAdultTagsStatus(value);
       this.reloadForm();
@@ -17957,7 +17993,17 @@ var source = (() => {
       this,
       this.getAdultTagsStatus()
     );
+    async restoreAdultTags() {
+      const value = getAdultFilter().map(({ id }) => id);
+      await this.AdultTagsStatusState.updateValue(value);
+      this.setAdultTagsStatus(value);
+    }
     /////// mature_tags
+    async restoreMatureTags() {
+      const value = getMatureFilter().map(({ id }) => id);
+      await this.MatureTagsStatusState.updateValue(value);
+      this.setMatureTagsStatus(value);
+    }
     getMatureTagsStatus() {
       return Application.getState("mature_tags") ?? [];
     }
@@ -17965,6 +18011,10 @@ var source = (() => {
       Application.setState(status, "mature_tags");
     }
     async handleMatureTagsStatusChange(value) {
+      console.log("handleMatureTagsStatusChange ");
+      if (value.includes("Nessuno")) {
+        value = ["Nessuno"];
+      }
       await this.MatureTagsStatusState.updateValue(value);
       this.setMatureTagsStatus(value);
       this.reloadForm();
@@ -17979,7 +18029,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.0 - beta 7",
+    version: "1.0 - beta 8",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "MangaWorldIcon.png",
