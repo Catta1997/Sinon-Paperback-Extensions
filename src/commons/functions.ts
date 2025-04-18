@@ -48,50 +48,65 @@ export class Functions {
         const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
         const mangaType: DiscoverSectionItem[] = [];
         const allGenres: DiscoverSectionItem[] = [];
-        getGenreFilter().forEach((filter) => {
-            allGenres.push({
-                type: "genresCarouselItem",
-                searchQuery: {
-                    title: "",
-                    filters: [{ id: "genres", value: filter.id }],
-                },
-                name: filter.value,
-                metadata: metadata,
-                contentRating: this.parser.getRating([filter.value]),
+        getGenreFilter()
+            .filter((option) => !blacklistedTags([option.value]))
+            .forEach((filter) => {
+                allGenres.push({
+                    type: "genresCarouselItem",
+                    searchQuery: {
+                        title: "",
+                        filters: [
+                            {
+                                id: "genres",
+                                value: { [filter.id]: "included" },
+                            },
+                        ],
+                    },
+                    name: filter.value,
+                    metadata: metadata,
+                    contentRating: this.parser.getRating([filter.value]),
+                });
             });
-        });
-        getMangaTypeFilter().forEach((filter) => {
-            mangaType.push({
-                type: "genresCarouselItem",
-                searchQuery: {
-                    title: "",
-                    filters: [{ id: "types", value: filter.id }],
-                },
-                name: filter.value,
-                metadata: metadata,
-                contentRating:
-                    this.rating === ContentRating.ADULT
-                        ? ContentRating.ADULT
-                        : undefined,
+        getMangaTypeFilter()
+            .filter((option) => !blacklistedType(option.value))
+            .forEach((filter) => {
+                mangaType.push({
+                    type: "genresCarouselItem",
+                    searchQuery: {
+                        title: "",
+                        filters: [
+                            { id: "types", value: { [filter.id]: "included" } },
+                        ],
+                    },
+                    name: filter.value,
+                    metadata: metadata,
+                    contentRating:
+                        this.rating === ContentRating.ADULT
+                            ? ContentRating.ADULT
+                            : undefined,
+                });
             });
-        });
 
         switch (section.id) {
-            case "popular_section":
+            case "popular_section": {
                 console.log("Loading popular_section loaded");
                 return this.parser.parseCapitoliInTendenza($, metadata);
-            case "mese_section":
+            }
+            case "mese_section": {
                 console.log("Loading mese_section loaded");
                 return this.parser.parseInTendenzaMese($, metadata);
-            case "updated_section":
+            }
+            case "updated_section": {
                 console.log("Loading updated_section loaded");
-                return this.parser.parseLastAddedSetcion(
+                return this.parser.parseLastAddedSection(
+                    $,
                     metadata,
                     this.baseUrl,
                 );
+            }
             case "new_manga_section": {
                 console.log("Loading new_manga_section loaded");
-                return this.parser.parseLastMangaAddedSetcion(
+                return this.parser.parseLastMangaAddedSection(
                     metadata,
                     this.baseUrl,
                 );
@@ -267,6 +282,7 @@ export class Functions {
         const tipologia: string[] = [];
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
+        console.log(getFilterValue("genres"));
         const genres: string | Record<string, "included" | "excluded"> =
             getFilterValue("genres") ?? "";
         const types: string | Record<string, "included" | "excluded"> =

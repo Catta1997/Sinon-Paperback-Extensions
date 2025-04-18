@@ -1,4 +1,5 @@
 import {
+    ButtonRow,
     ContentRating,
     Form,
     NavigationRow,
@@ -87,8 +88,8 @@ class FilterSettings extends Form {
                 {
                     id: "update_settings",
                     footer:
-                        "Questi cambiamenti potrebbero non avvenire in tutte le sezioni. " +
-                        "Tieni presente che i generi nascosti verranno rimossi anche dai filtri di ricerca",
+                        "Potrebbero non venir nascosti in tutte le sezioni della home. " +
+                        "Tieni presente che verranno rimossi anche dalla ricerca",
                 },
                 [
                     SelectRow("hide_tags", {
@@ -239,8 +240,14 @@ class CustomContentRating extends Form {
         title: value,
         ...rest,
     }));
-
     override getSections(): Application.FormSectionElement[] {
+        if (
+            !this.genres.some(
+                (g) => g.id === "Nessuno" && g.title === "Nessuno",
+            )
+        ) {
+            this.genres.unshift({ id: "Nessuno", title: "Nessuno" });
+        }
         return [
             Section(
                 {
@@ -266,7 +273,13 @@ class CustomContentRating extends Form {
                             "handleAdultTagsStatusChange",
                         ),
                     }),
-
+                    ButtonRow("restore_Adult_Tags", {
+                        title: "Ripristina Default",
+                        onSelect: Application.Selector(
+                            this as CustomContentRating,
+                            "restoreAdultTags",
+                        ),
+                    }),
                     SelectRow("mature_tags", {
                         title: "Generi Maturi",
                         subtitle: "Modifica i generi Maturi",
@@ -280,6 +293,13 @@ class CustomContentRating extends Form {
                         onValueChange: Application.Selector(
                             this as CustomContentRating,
                             "handleMatureTagsStatusChange",
+                        ),
+                    }),
+                    ButtonRow("restore_Mature_Tags", {
+                        title: "Ripristina Default",
+                        onSelect: Application.Selector(
+                            this as CustomContentRating,
+                            "restoreMatureTags",
                         ),
                     }),
                 ],
@@ -298,6 +318,9 @@ class CustomContentRating extends Form {
     }
     async handleAdultTagsStatusChange(value: string[]): Promise<void> {
         //console.log("handleAdultTagsStatusChange " + value.join(", "));
+        if (value.includes("Nessuno")) {
+            value = ["Nessuno"];
+        }
         await this.AdultTagsStatusState.updateValue(value);
         this.setAdultTagsStatus(value);
         this.reloadForm();
@@ -307,7 +330,17 @@ class CustomContentRating extends Form {
         this.getAdultTagsStatus(),
     );
 
+    async restoreAdultTags(): Promise<void> {
+        const value = getAdultFilter().map(({ id }) => id);
+        await this.AdultTagsStatusState.updateValue(value);
+        this.setAdultTagsStatus(value);
+    }
     /////// mature_tags
+    async restoreMatureTags(): Promise<void> {
+        const value = getMatureFilter().map(({ id }) => id);
+        await this.MatureTagsStatusState.updateValue(value);
+        this.setMatureTagsStatus(value);
+    }
     getMatureTagsStatus(): string[] {
         return (
             (Application.getState("mature_tags") as string[] | undefined) ?? []
@@ -317,7 +350,10 @@ class CustomContentRating extends Form {
         Application.setState(status, "mature_tags");
     }
     async handleMatureTagsStatusChange(value: string[]): Promise<void> {
-        //console.log("handleMatureTagsStatusChange " + value.join(", "));
+        console.log("handleMatureTagsStatusChange ");
+        if (value.includes("Nessuno")) {
+            value = ["Nessuno"];
+        }
         await this.MatureTagsStatusState.updateValue(value);
         this.setMatureTagsStatus(value);
         this.reloadForm();

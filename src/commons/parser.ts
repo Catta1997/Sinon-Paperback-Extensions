@@ -286,6 +286,7 @@ export class Parser {
         }
         return items;
     }
+
     /**
      * Parsing ricerca
      * @param $ : CheerioAPI - Richiesta
@@ -390,7 +391,7 @@ export class Parser {
      * @param url : string - Url
      * @return { items: DiscoverSectionItem[], metadata: Metadata }
      */
-    async parseLastMangaAddedSetcion(
+    async parseLastMangaAddedSection(
         metadata: Metadata,
         url: string,
     ): Promise<{ items: DiscoverSectionItem[]; metadata: Metadata }> {
@@ -431,7 +432,8 @@ export class Parser {
      * 		metadata: Metadata | undefined
      * 	}
      */
-    async parseLastAddedSetcion(
+    async parseLastAddedSection(
+        $: CheerioAPI,
         metadata: Metadata,
         url: string,
     ): Promise<{
@@ -440,13 +442,15 @@ export class Parser {
     }> {
         let page = metadata?.page ?? 1;
         //	if (metadata?.page == undefined) metadata = { page: 1 }
-        const data = (
-            await Application.scheduleRequest({
-                url: `${url}?page=${page}`,
-                method: "GET",
-            })
-        )[1];
-        const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+        if (page > 1) {
+            const data = (
+                await Application.scheduleRequest({
+                    url: `${url}?page=${page}`,
+                    method: "GET",
+                })
+            )[1];
+            $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+        }
         page++;
         const arrLatest = $(
             ".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry",

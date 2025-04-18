@@ -1,7 +1,7 @@
 import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "1.0 - beta 7",
+    version: "1.0 - beta 8",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "MangaWorldIcon.png",
