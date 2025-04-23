@@ -33,14 +33,17 @@ export class Parser {
      */
     getRating(tags: string[]): ContentRating {
         let rating: ContentRating = this.rating;
-        const adult_pref =
-            ((Application.getState("adult_tags") as string[]) ?? []).length > 0
-                ? (Application.getState("adult_tags") as string[])
-                : getAdultFilter().map(({ id }) => id);
-        const mature_pref =
-            ((Application.getState("mature_tags") as string[]) ?? []).length > 0
-                ? (Application.getState("mature_tags") as string[])
-                : getMatureFilter().map(({ id }) => id);
+        const storedAdultTags = Application.getState("adult_tags") as string[];
+        const adult_pref = storedAdultTags
+            ? storedAdultTags
+            : getAdultFilter().map(({ id }) => id);
+
+        const storedMatureTags = Application.getState(
+            "mature_tags",
+        ) as string[];
+        const mature_pref = storedMatureTags
+            ? storedMatureTags
+            : getMatureFilter().map(({ id }) => id);
         console.log("AdultTags: " + adult_pref.join(","));
         console.log("MatureTags: " + mature_pref.join(","));
         for (const tag of tags) {
@@ -67,6 +70,7 @@ export class Parser {
      * Ottieni dettagli Manga
      * @param $ : CheerioAPI - Richiesta
      * @param mangaId : string - MangaID
+     * @param shareURL : string - shareURL
      * @return {SourceManga} - SourceManga
      */
     parseMangaDetails(
@@ -82,7 +86,7 @@ export class Parser {
         const artists: string[] = [];
         const authors: string[] = [];
         const titles: string[] = [];
-        console.log(shareURL);
+        //console.log(shareURL);
         const data = {
             genre: [] as string[],
             state: "",
@@ -234,7 +238,7 @@ export class Parser {
     }
 
     /**
-     * Parsing pegina
+     * Parsing pagina
      * @param $ : CheerioAPI - Richiesta
      * @return {{id:string,title:string,image:string,tags:string[], authors: string, type: string}}
      */
@@ -386,7 +390,7 @@ export class Parser {
     }
 
     /**
-     * Parsing ultimi manga agiunti
+     * Parsing ultimi manga aggiunti
      * @param metadata : Metadata - metadata
      * @param url : string - Url
      * @return { items: DiscoverSectionItem[], metadata: Metadata }
@@ -425,6 +429,7 @@ export class Parser {
 
     /**
      * Parse nuovi capitoli
+     * @param $ : CheerioAPI - pagina
      * @param metadata - manga metadata
      * @param url - url
      * @return {

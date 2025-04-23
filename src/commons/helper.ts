@@ -5,18 +5,18 @@ type QueryValue = string | number | boolean | undefined | null;
 type QueryParam = QueryValue | QueryValue[] | Record<string, QueryValue>;
 
 /**
- * controllo Tag Blacklistati da impostaioni
+ * controllo Tag Blacklistati da impostazioni
  * @param tags : string[] - tags
  * @type {tags:string[]} => boolean
  * @return {boolean} - true: da nascondere
  */
 export function blacklistedTags(tags: string[]): boolean {
-    const Bl_tags =
+    const blacklistedSettings =
         (Application.getState("hide_tags") as string[] | undefined) ?? [];
-    console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+    console.log("Blacklisted Tags Loaded: " + blacklistedSettings.join(","));
 
     for (const tag of tags) {
-        if (Bl_tags.includes(tag.toLowerCase())) {
+        if (blacklistedSettings.includes(tag.toLowerCase())) {
             console.log("Detected :" + tag + " manga rimosso dalla lista");
             return true;
         }
@@ -25,16 +25,16 @@ export function blacklistedTags(tags: string[]): boolean {
 }
 
 /**
- * controllo Tipi Manga Blacklistati da impostaioni
+ * controllo Tipi Manga Blacklistati da impostazioni
  * @type {tags:string[]} => boolean
  * @return {boolean} - true: da nascondere
  * @param type
  */
 export function blacklistedType(type: string): boolean {
-    const Bl_tags =
+    const blacklistedSettings =
         (Application.getState("hide_type") as string[] | undefined) ?? [];
-    console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
-    if (Bl_tags.includes(type.toLowerCase())) {
+    console.log("Blacklisted Type Loaded: " + blacklistedSettings.join(","));
+    if (blacklistedSettings.includes(type.toLowerCase())) {
         console.log("Detected :" + type + " manga rimosso dalla lista");
         return true;
     }
@@ -49,7 +49,7 @@ export function getMatureFilter() {
         { value: "Horror", id: "horror" },
         { value: "Josei", id: "josei" },
         { value: "Maturo", id: "maturo" },
-        { value: "Smut", id: "smut" },
+        { value: "Seinen", id: "seinen" },
         { value: "Tragico", id: "tragico" },
         { value: "Yaoi", id: "yaoi" },
         { value: "Yuri", id: "yuri" },
@@ -60,10 +60,10 @@ export function getAdultFilter() {
     return [
         { value: "Adulti", id: "adulti" },
         { value: "Doujinshi", id: "doujinshi" },
-        { value: "Drammatico", id: "drammatico" },
         { value: "Hentai", id: "hentai" },
         { value: "Lolicon", id: "lolicon" },
         { value: "Shotacon", id: "shotacon" },
+        { value: "Smut", id: "smut" },
     ];
 }
 

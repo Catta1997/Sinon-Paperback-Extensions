@@ -19,7 +19,7 @@ export class SettingsForm extends Form {
     constructor(contentRating: ContentRating) {
         super();
         this.rating = contentRating;
-        console.log(this.rating);
+        //console.log(this.rating);
     }
 
     override getSections(): Application.FormSectionElement[] {
@@ -47,10 +47,6 @@ class State<T> {
     private _value: T;
     public get value(): T {
         return this._value;
-    }
-
-    public get selector(): SelectorID<(value: T) => Promise<void>> {
-        return Application.Selector(this as State<T>, "updateValue");
     }
 
     constructor(
@@ -130,7 +126,7 @@ class FilterSettings extends Form {
                         subtitle: "Ordinamento della Ricerca",
                         value: this.defOrderStatusState.value,
                         options: this.defOrder,
-                        minItemCount: 0,
+                        minItemCount: 1,
                         maxItemCount: 1,
                         onValueChange: Application.Selector(
                             this as FilterSettings,
@@ -197,7 +193,9 @@ class FilterSettings extends Form {
     /////// def_order
     getDefOrderStatus(): string[] {
         return (
-            (Application.getState("def_order") as string[] | undefined) ?? []
+            (Application.getState("def_order") as string[] | undefined) ?? [
+                "most_read",
+            ]
         );
     }
     setDefOrderStatus(status: string[]): void {
@@ -236,6 +234,12 @@ class FilterSettings extends Form {
 }
 
 class CustomContentRating extends Form {
+    private arraysHaveSameValues(a: string[], b: string[]) {
+        return (
+            a.length === b.length &&
+            [...new Set(a)].every((val) => b.includes(val))
+        );
+    }
     genres = getGenreFilter().map(({ value, ...rest }) => ({
         title: value,
         ...rest,
@@ -261,10 +265,7 @@ class CustomContentRating extends Form {
                     SelectRow("adult_tags", {
                         title: "Generi Adulti",
                         subtitle: "Modifica i generi per Adulti",
-                        value:
-                            this.AdultTagsStatusState.value.length > 0
-                                ? this.AdultTagsStatusState.value
-                                : getAdultFilter().map(({ id }) => id),
+                        value: this.AdultTagsStatusState.value,
                         options: this.genres,
                         minItemCount: 1,
                         maxItemCount: this.genres.length,
@@ -275,6 +276,11 @@ class CustomContentRating extends Form {
                     }),
                     ButtonRow("restore_Adult_Tags", {
                         title: "Ripristina Default",
+                        // nascondo il tasto reset se i valori nel settings sono i default
+                        isHidden: this.arraysHaveSameValues(
+                            this.getAdultTagsStatus(),
+                            getAdultFilter().map(({ id }) => id),
+                        ),
                         onSelect: Application.Selector(
                             this as CustomContentRating,
                             "restoreAdultTags",
@@ -283,10 +289,7 @@ class CustomContentRating extends Form {
                     SelectRow("mature_tags", {
                         title: "Generi Maturi",
                         subtitle: "Modifica i generi Maturi",
-                        value:
-                            this.MatureTagsStatusState.value.length > 0
-                                ? this.MatureTagsStatusState.value
-                                : getMatureFilter().map(({ id }) => id),
+                        value: this.MatureTagsStatusState.value,
                         options: this.genres,
                         minItemCount: 1,
                         maxItemCount: this.genres.length,
@@ -297,6 +300,11 @@ class CustomContentRating extends Form {
                     }),
                     ButtonRow("restore_Mature_Tags", {
                         title: "Ripristina Default",
+                        // nascondo il tasto reset se i valori nel settings sono i default
+                        isHidden: this.arraysHaveSameValues(
+                            this.getMatureTagsStatus(),
+                            getMatureFilter().map(({ id }) => id),
+                        ),
                         onSelect: Application.Selector(
                             this as CustomContentRating,
                             "restoreMatureTags",
@@ -310,7 +318,8 @@ class CustomContentRating extends Form {
     /////// adult_tags
     getAdultTagsStatus(): string[] {
         return (
-            (Application.getState("adult_tags") as string[] | undefined) ?? []
+            (Application.getState("adult_tags") as string[] | undefined) ??
+            getAdultFilter().map(({ id }) => id)
         );
     }
     setAdultTagsStatus(status: string[]): void {
@@ -343,14 +352,15 @@ class CustomContentRating extends Form {
     }
     getMatureTagsStatus(): string[] {
         return (
-            (Application.getState("mature_tags") as string[] | undefined) ?? []
+            (Application.getState("mature_tags") as string[] | undefined) ??
+            getMatureFilter().map(({ id }) => id)
         );
     }
     setMatureTagsStatus(status: string[]): void {
         Application.setState(status, "mature_tags");
     }
     async handleMatureTagsStatusChange(value: string[]): Promise<void> {
-        console.log("handleMatureTagsStatusChange ");
+        //console.log("handleMatureTagsStatusChange ");
         if (value.includes("Nessuno")) {
             value = ["Nessuno"];
         }
