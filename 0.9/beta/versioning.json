@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-04-18T18:17:03.877Z",
+  "buildTime": "2025-04-23T12:02:54.613Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.46",
     "types": "1.0.0-alpha.46"
@@ -9,32 +9,6 @@
     "description": "Some Paperback Extensions"
   },
   "sources": [
-    {
-      "version": "0.1.1",
-      "name": "DevTestExtension",
-      "description": "Mangas from various sources.",
-      "icon": "DevTestExtension.png",
-      "language": "en",
-      "contentRating": "SAFE",
-      "capabilities": [
-        1,
-        4
-      ],
-      "badges": [
-        {
-          "label": "DEV",
-          "textColor": "#187480",
-          "backgroundColor": "#c2ecd8"
-        }
-      ],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "website": "https://github.com/Catta1997"
-        }
-      ],
-      "id": "DevTestExtension"
-    },
     {
       "version": "1.0 - beta 8",
       "name": "MangaAdult",

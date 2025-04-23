@@ -16898,10 +16898,10 @@ var source = (() => {
   // src/commons/helper.ts
   init_buffer();
   function blacklistedTags(tags) {
-    const Bl_tags = Application.getState("hide_tags") ?? [];
-    console.log("Blacklisted Tags Loaded: " + Bl_tags.join(","));
+    const blacklistedSettings = Application.getState("hide_tags") ?? [];
+    console.log("Blacklisted Tags Loaded: " + blacklistedSettings.join(","));
     for (const tag of tags) {
-      if (Bl_tags.includes(tag.toLowerCase())) {
+      if (blacklistedSettings.includes(tag.toLowerCase())) {
         console.log("Detected :" + tag + " manga rimosso dalla lista");
         return true;
       }
@@ -16909,9 +16909,9 @@ var source = (() => {
     return false;
   }
   function blacklistedType(type) {
-    const Bl_tags = Application.getState("hide_type") ?? [];
-    console.log("Blacklisted Type Loaded: " + Bl_tags.join(","));
-    if (Bl_tags.includes(type.toLowerCase())) {
+    const blacklistedSettings = Application.getState("hide_type") ?? [];
+    console.log("Blacklisted Type Loaded: " + blacklistedSettings.join(","));
+    if (blacklistedSettings.includes(type.toLowerCase())) {
       console.log("Detected :" + type + " manga rimosso dalla lista");
       return true;
     }
@@ -16925,7 +16925,7 @@ var source = (() => {
       { value: "Horror", id: "horror" },
       { value: "Josei", id: "josei" },
       { value: "Maturo", id: "maturo" },
-      { value: "Smut", id: "smut" },
+      { value: "Seinen", id: "seinen" },
       { value: "Tragico", id: "tragico" },
       { value: "Yaoi", id: "yaoi" },
       { value: "Yuri", id: "yuri" }
@@ -16935,10 +16935,10 @@ var source = (() => {
     return [
       { value: "Adulti", id: "adulti" },
       { value: "Doujinshi", id: "doujinshi" },
-      { value: "Drammatico", id: "drammatico" },
       { value: "Hentai", id: "hentai" },
       { value: "Lolicon", id: "lolicon" },
-      { value: "Shotacon", id: "shotacon" }
+      { value: "Shotacon", id: "shotacon" },
+      { value: "Smut", id: "smut" }
     ];
   }
   function getMangaTypeFilter() {
@@ -17071,8 +17071,12 @@ var source = (() => {
      */
     getRating(tags) {
       let rating = this.rating;
-      const adult_pref = (Application.getState("adult_tags") ?? []).length > 0 ? Application.getState("adult_tags") : getAdultFilter().map(({ id }) => id);
-      const mature_pref = (Application.getState("mature_tags") ?? []).length > 0 ? Application.getState("mature_tags") : getMatureFilter().map(({ id }) => id);
+      const storedAdultTags = Application.getState("adult_tags");
+      const adult_pref = storedAdultTags ? storedAdultTags : getAdultFilter().map(({ id }) => id);
+      const storedMatureTags = Application.getState(
+        "mature_tags"
+      );
+      const mature_pref = storedMatureTags ? storedMatureTags : getMatureFilter().map(({ id }) => id);
       console.log("AdultTags: " + adult_pref.join(","));
       console.log("MatureTags: " + mature_pref.join(","));
       for (const tag of tags) {
@@ -17090,6 +17094,7 @@ var source = (() => {
      * Ottieni dettagli Manga
      * @param $ : CheerioAPI - Richiesta
      * @param mangaId : string - MangaID
+     * @param shareURL : string - shareURL
      * @return {SourceManga} - SourceManga
      */
     parseMangaDetails($2, mangaId, shareURL) {
@@ -17100,7 +17105,6 @@ var source = (() => {
       const artists = [];
       const authors = [];
       const titles = [];
-      console.log(shareURL);
       const data2 = {
         genre: [],
         state: ""
@@ -17228,7 +17232,7 @@ var source = (() => {
       };
     }
     /**
-     * Parsing pegina
+     * Parsing pagina
      * @param $ : CheerioAPI - Richiesta
      * @return {{id:string,title:string,image:string,tags:string[], authors: string, type: string}}
      */
@@ -17343,7 +17347,7 @@ var source = (() => {
       return { items: hot, metadata };
     }
     /**
-     * Parsing ultimi manga agiunti
+     * Parsing ultimi manga aggiunti
      * @param metadata : Metadata - metadata
      * @param url : string - Url
      * @return { items: DiscoverSectionItem[], metadata: Metadata }
@@ -17375,6 +17379,7 @@ var source = (() => {
     }
     /**
      * Parse nuovi capitoli
+     * @param $ : CheerioAPI - pagina
      * @param metadata - manga metadata
      * @param url - url
      * @return {
@@ -17727,7 +17732,6 @@ var source = (() => {
     constructor(contentRating) {
       super();
       this.rating = contentRating;
-      console.log(this.rating);
     }
     getSections() {
       return [
@@ -17757,9 +17761,6 @@ var source = (() => {
     _value;
     get value() {
       return this._value;
-    }
-    get selector() {
-      return Application.Selector(this, "updateValue");
     }
     async updateValue(value) {
       this._value = value;
@@ -17824,7 +17825,7 @@ var source = (() => {
               subtitle: "Ordinamento della Ricerca",
               value: this.defOrderStatusState.value,
               options: this.defOrder,
-              minItemCount: 0,
+              minItemCount: 1,
               maxItemCount: 1,
               onValueChange: Application.Selector(
                 this,
@@ -17881,7 +17882,9 @@ var source = (() => {
     );
     /////// def_order
     getDefOrderStatus() {
-      return Application.getState("def_order") ?? [];
+      return Application.getState("def_order") ?? [
+        "most_read"
+      ];
     }
     setDefOrderStatus(status) {
       Application.setState(status, "def_order");
@@ -17915,6 +17918,9 @@ var source = (() => {
     );
   };
   var CustomContentRating = class extends import_types4.Form {
+    arraysHaveSameValues(a, b) {
+      return a.length === b.length && [...new Set(a)].every((val2) => b.includes(val2));
+    }
     genres = getGenreFilter().map(({ value, ...rest }) => ({
       title: value,
       ...rest
@@ -17935,7 +17941,7 @@ var source = (() => {
             (0, import_types4.SelectRow)("adult_tags", {
               title: "Generi Adulti",
               subtitle: "Modifica i generi per Adulti",
-              value: this.AdultTagsStatusState.value.length > 0 ? this.AdultTagsStatusState.value : getAdultFilter().map(({ id }) => id),
+              value: this.AdultTagsStatusState.value,
               options: this.genres,
               minItemCount: 1,
               maxItemCount: this.genres.length,
@@ -17946,6 +17952,11 @@ var source = (() => {
             }),
             (0, import_types4.ButtonRow)("restore_Adult_Tags", {
               title: "Ripristina Default",
+              // nascondo il tasto reset se i valori nel settings sono i default
+              isHidden: this.arraysHaveSameValues(
+                this.getAdultTagsStatus(),
+                getAdultFilter().map(({ id }) => id)
+              ),
               onSelect: Application.Selector(
                 this,
                 "restoreAdultTags"
@@ -17954,7 +17965,7 @@ var source = (() => {
             (0, import_types4.SelectRow)("mature_tags", {
               title: "Generi Maturi",
               subtitle: "Modifica i generi Maturi",
-              value: this.MatureTagsStatusState.value.length > 0 ? this.MatureTagsStatusState.value : getMatureFilter().map(({ id }) => id),
+              value: this.MatureTagsStatusState.value,
               options: this.genres,
               minItemCount: 1,
               maxItemCount: this.genres.length,
@@ -17965,6 +17976,11 @@ var source = (() => {
             }),
             (0, import_types4.ButtonRow)("restore_Mature_Tags", {
               title: "Ripristina Default",
+              // nascondo il tasto reset se i valori nel settings sono i default
+              isHidden: this.arraysHaveSameValues(
+                this.getMatureTagsStatus(),
+                getMatureFilter().map(({ id }) => id)
+              ),
               onSelect: Application.Selector(
                 this,
                 "restoreMatureTags"
@@ -17976,7 +17992,7 @@ var source = (() => {
     }
     /////// adult_tags
     getAdultTagsStatus() {
-      return Application.getState("adult_tags") ?? [];
+      return Application.getState("adult_tags") ?? getAdultFilter().map(({ id }) => id);
     }
     setAdultTagsStatus(status) {
       Application.setState(status, "adult_tags");
@@ -18005,13 +18021,12 @@ var source = (() => {
       this.setMatureTagsStatus(value);
     }
     getMatureTagsStatus() {
-      return Application.getState("mature_tags") ?? [];
+      return Application.getState("mature_tags") ?? getMatureFilter().map(({ id }) => id);
     }
     setMatureTagsStatus(status) {
       Application.setState(status, "mature_tags");
     }
     async handleMatureTagsStatusChange(value) {
-      console.log("handleMatureTagsStatusChange ");
       if (value.includes("Nessuno")) {
         value = ["Nessuno"];
       }
