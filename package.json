@@ -19,16 +19,16 @@
     },
     "devDependencies": {
         "cheerio": "^1.0.0-rc.12",
-        "@eslint/js": "^9.24.0",
+        "@eslint/js": "^9.25.1",
         "@ianvs/prettier-plugin-sort-imports": "^4.4.1",
         "@paperback/toolchain": "^1.0.0-alpha.47",
         "@paperback/types": "^1.0.0-alpha.47",
         "@types/eslint": "^9.6.1",
-        "eslint": "^9.24.0",
+        "eslint": "^9.25.1",
         "husky": "^9.1.7",
-        "nodemon": "^3.1.9",
+        "nodemon": "^3.1.10",
         "prettier": "^3.5.3",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.29.1"
+        "typescript-eslint": "^8.31.1"
     }
 }
