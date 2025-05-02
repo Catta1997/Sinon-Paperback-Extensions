@@ -18049,7 +18049,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.0 - beta 8",
+    version: "1.0 - beta 9",
     name: "MangaAdult",
     description: "Extension that pulls manga from MangaAdult (0.9).",
     icon: "MangaAdultIcon.png",
