@@ -26,9 +26,8 @@ export function blacklistedTags(tags: string[]): boolean {
 
 /**
  * controllo Tipi Manga Blacklistati da impostazioni
- * @type {tags:string[]} => boolean
- * @return {boolean} - true: da nascondere
- * @param type
+ * @param {string}  type - tag da controllare
+ * @return {boolean} da nascondere
  */
 export function blacklistedType(type: string): boolean {
     const blacklistedSettings =
@@ -40,7 +39,10 @@ export function blacklistedType(type: string): boolean {
     }
     return false;
 }
-
+/**
+ * Ottieni i generi maturi
+ * @return [{ value: string, id: string }]
+ */
 export function getMatureFilter() {
     return [
         { value: "Ecchi", id: "ecchi" },
@@ -55,7 +57,10 @@ export function getMatureFilter() {
         { value: "Yuri", id: "yuri" },
     ];
 }
-
+/**
+ * Ottieni i generi adulti
+ * @return [{ value: string, id: string }]
+ */
 export function getAdultFilter() {
     return [
         { value: "Adulti", id: "adulti" },
@@ -66,7 +71,10 @@ export function getAdultFilter() {
         { value: "Smut", id: "smut" },
     ];
 }
-
+/**
+ * Ottieni le tipologie
+ * @return [{ value: string, id: string }]
+ */
 export function getMangaTypeFilter() {
     return [
         { value: "Manga", id: "manga" },
@@ -77,7 +85,10 @@ export function getMangaTypeFilter() {
         { value: "Vietnamita", id: "vietnamese" },
     ];
 }
-
+/**
+ * Ottieni i tipi di ordinamento
+ * @return [{ value: string, id: string }]
+ */
 export function getOrderFilter() {
     return [
         { value: "Più Letto", id: "most_read" },
@@ -88,7 +99,10 @@ export function getOrderFilter() {
         { value: "Meno recente", id: "oldest" },
     ];
 }
-
+/**
+ * Ottieni i generi
+ * @return [{ value: string, id: string }]
+ */
 export function getGenreFilter() {
     return [
         { value: "Adulti", id: "adulti" },

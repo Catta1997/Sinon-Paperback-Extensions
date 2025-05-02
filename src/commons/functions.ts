@@ -9,6 +9,7 @@ import {
     SearchFilter,
     SearchQuery,
     SearchResultItem,
+    SortingOption,
     SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
@@ -19,7 +20,6 @@ import {
     blacklistedType,
     getGenreFilter,
     getMangaTypeFilter,
-    getOrderFilter,
     Metadata,
     URLBuilder,
 } from "./helper";
@@ -198,15 +198,6 @@ export class Functions {
 
     getFilterList(): SearchFilter[] {
         const filters: SearchFilter[] = [];
-        filters.push({
-            type: "dropdown",
-            options: getOrderFilter(),
-            id: "order",
-            value: ((Application.getState("def_order") as string[]) ?? [
-                "most_read",
-            ])[0],
-            title: "Ordine",
-        });
         const def_value = ((Application.getState("def_type") as string[]) ??
             [])[0];
         filters.push({
@@ -239,11 +230,12 @@ export class Functions {
     async getSearchResults(
         query: SearchQuery,
         metadata: Metadata,
+        sorting: SortingOption | undefined,
     ): Promise<PagedResults<SearchResultItem>> {
         let manga: SearchResultItem[] = [];
         let page = metadata?.page ?? 1;
         if (page == -1) return { items: [] };
-        const url = this.constructSearchRequestURL(page, query);
+        const url = this.constructSearchRequestURL(page, query, sorting);
         const data = (
             await Application.scheduleRequest({
                 url: `${url}`,
@@ -277,6 +269,7 @@ export class Functions {
     constructSearchRequestURL(
         page: number,
         query: SearchQuery = { title: "", filters: [] },
+        sorting: SortingOption | undefined,
     ): string {
         const generi: string[] = [];
         const tipologia: string[] = [];
@@ -310,8 +303,7 @@ export class Functions {
             );
         if (page.toString().length > 0)
             urlBuilder.addQueryParameter("page", page.toString());
-        if (getFilterValue("order"))
-            urlBuilder.addQueryParameter("sort", getFilterValue("order"));
+        if (sorting?.id) urlBuilder.addQueryParameter("sort", sorting?.id);
         if (generi.length > 0) urlBuilder.addQueryParameter("genre", generi);
         if (tipologia.length > 0)
             urlBuilder.addQueryParameter("type", tipologia);

@@ -121,6 +121,7 @@ class FilterSettings extends Form {
                     footer: "Cambia i filtri di default della ricerca",
                 },
                 [
+                    /*
                     SelectRow("def_order", {
                         title: "Ordine Ricerca",
                         subtitle: "Ordinamento della Ricerca",
@@ -132,7 +133,7 @@ class FilterSettings extends Form {
                             this as FilterSettings,
                             "handleDefOrderStatusChange",
                         ),
-                    }),
+                    }),*/
                     SelectRow("def_type", {
                         title: "Tipologia",
                         subtitle: "Tipologia di default",
@@ -191,6 +192,7 @@ class FilterSettings extends Form {
     );
 
     /////// def_order
+    /*
     getDefOrderStatus(): string[] {
         return (
             (Application.getState("def_order") as string[] | undefined) ?? [
@@ -212,7 +214,7 @@ class FilterSettings extends Form {
         this,
         this.getDefOrderStatus(),
     );
-
+     */
     /////// def_type
     getDefTypeStatus(): string[] {
         return (Application.getState("def_type") as string[] | undefined) ?? [];

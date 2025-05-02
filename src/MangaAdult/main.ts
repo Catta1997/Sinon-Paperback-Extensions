@@ -18,10 +18,11 @@ import {
     SearchResultItem,
     SearchResultsProviding,
     SettingsFormProviding,
+    SortingOption,
     SourceManga,
 } from "@paperback/types";
 import { Functions } from "../commons/functions";
-import { Metadata } from "../commons/helper";
+import { getOrderFilter, Metadata } from "../commons/helper";
 import { SettingsForm } from "../commons/SettingsForm";
 import pbconfig from "./pbconfig";
 
@@ -85,8 +86,9 @@ export class MangaAdultExtension implements ContentTemplateImplementation {
     async getSearchResults(
         query: SearchQuery,
         metadata: Metadata,
+        sorting: SortingOption,
     ): Promise<PagedResults<SearchResultItem>> {
-        return this.functions.getSearchResults(query, metadata);
+        return this.functions.getSearchResults(query, metadata, sorting);
     }
 
     // Populates the title details
@@ -126,6 +128,13 @@ export class MangaAdultExtension implements ContentTemplateImplementation {
         metadata: Metadata,
     ): Promise<PagedResults<DiscoverSectionItem>> {
         return this.functions.getDiscoverSectionItems(section, metadata);
+    }
+
+    async getSortingOptions(): Promise<SortingOption[]> {
+        return getOrderFilter().map(({ value, ...rest }) => ({
+            label: value,
+            ...rest,
+        }));
     }
 }
 
