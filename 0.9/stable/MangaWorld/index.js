@@ -1851,25 +1851,25 @@ var source = (() => {
       "use strict";
       init_buffer();
       Object.defineProperty(exports, "__esModule", { value: true });
-      exports.LabelRow = LabelRow2;
-      exports.InputRow = InputRow2;
-      exports.ToggleRow = ToggleRow2;
-      exports.SelectRow = SelectRow;
+      exports.LabelRow = LabelRow;
+      exports.InputRow = InputRow;
+      exports.ToggleRow = ToggleRow;
+      exports.SelectRow = SelectRow2;
       exports.ButtonRow = ButtonRow2;
       exports.WebViewRow = WebViewRow;
       exports.NavigationRow = NavigationRow2;
       exports.OAuthButtonRow = OAuthButtonRow;
       exports.DeferredItem = DeferredItem;
-      function LabelRow2(id, props) {
+      function LabelRow(id, props) {
         return { ...props, id, type: "labelRow", isHidden: props.isHidden ?? false };
       }
-      function InputRow2(id, props) {
+      function InputRow(id, props) {
         return { ...props, id, type: "inputRow", isHidden: props.isHidden ?? false };
       }
-      function ToggleRow2(id, props) {
+      function ToggleRow(id, props) {
         return { ...props, id, type: "toggleRow", isHidden: props.isHidden ?? false };
       }
-      function SelectRow(id, props) {
+      function SelectRow2(id, props) {
         return { ...props, id, type: "selectRow", isHidden: props.isHidden ?? false };
       }
       function ButtonRow2(id, props) {
@@ -2149,7 +2149,7 @@ var source = (() => {
         promise;
         currentRequestsMade = 0;
         lastReset = Date.now();
-        imageRegex = new RegExp(/\.(png|gif|jpeg|jpg|webp)(\?|$)/gi);
+        imageRegex = new RegExp(/\.(png|gif|jpeg|jpg|webp)(\?|$)/i);
         constructor(id, options) {
           super(id);
           this.options = options;
@@ -2921,24 +2921,24 @@ var source = (() => {
       init_buffer();
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.ContentRating = exports.SourceIntents = void 0;
-      var SourceIntents;
-      (function(SourceIntents2) {
-        SourceIntents2[SourceIntents2["MANGA_CHAPTERS"] = 1] = "MANGA_CHAPTERS";
-        SourceIntents2[SourceIntents2["MANGA_TRACKING"] = 2] = "MANGA_TRACKING";
-        SourceIntents2[SourceIntents2["MANGA_PROGRESS"] = 2] = "MANGA_PROGRESS";
-        SourceIntents2[SourceIntents2["HOMEPAGE_SECTIONS"] = 4] = "HOMEPAGE_SECTIONS";
-        SourceIntents2[SourceIntents2["DISCOVER_SECIONS"] = 4] = "DISCOVER_SECIONS";
-        SourceIntents2[SourceIntents2["COLLECTION_MANAGEMENT"] = 8] = "COLLECTION_MANAGEMENT";
-        SourceIntents2[SourceIntents2["CLOUDFLARE_BYPASS_REQUIRED"] = 16] = "CLOUDFLARE_BYPASS_REQUIRED";
-        SourceIntents2[SourceIntents2["SETTINGS_UI"] = 32] = "SETTINGS_UI";
-        SourceIntents2[SourceIntents2["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
-      })(SourceIntents || (exports.SourceIntents = SourceIntents = {}));
-      var ContentRating3;
-      (function(ContentRating4) {
-        ContentRating4["EVERYONE"] = "SAFE";
-        ContentRating4["MATURE"] = "MATURE";
-        ContentRating4["ADULT"] = "ADULT";
-      })(ContentRating3 || (exports.ContentRating = ContentRating3 = {}));
+      var SourceIntents2;
+      (function(SourceIntents3) {
+        SourceIntents3[SourceIntents3["MANGA_CHAPTERS"] = 1] = "MANGA_CHAPTERS";
+        SourceIntents3[SourceIntents3["MANGA_TRACKING"] = 2] = "MANGA_TRACKING";
+        SourceIntents3[SourceIntents3["MANGA_PROGRESS"] = 2] = "MANGA_PROGRESS";
+        SourceIntents3[SourceIntents3["HOMEPAGE_SECTIONS"] = 4] = "HOMEPAGE_SECTIONS";
+        SourceIntents3[SourceIntents3["DISCOVER_SECIONS"] = 4] = "DISCOVER_SECIONS";
+        SourceIntents3[SourceIntents3["COLLECTION_MANAGEMENT"] = 8] = "COLLECTION_MANAGEMENT";
+        SourceIntents3[SourceIntents3["CLOUDFLARE_BYPASS_REQUIRED"] = 16] = "CLOUDFLARE_BYPASS_REQUIRED";
+        SourceIntents3[SourceIntents3["SETTINGS_UI"] = 32] = "SETTINGS_UI";
+        SourceIntents3[SourceIntents3["MANGA_SEARCH"] = 64] = "MANGA_SEARCH";
+      })(SourceIntents2 || (exports.SourceIntents = SourceIntents2 = {}));
+      var ContentRating5;
+      (function(ContentRating6) {
+        ContentRating6["EVERYONE"] = "SAFE";
+        ContentRating6["MATURE"] = "MATURE";
+        ContentRating6["ADULT"] = "ADULT";
+      })(ContentRating5 || (exports.ContentRating = ContentRating5 = {}));
     }
   });
 
@@ -2972,6 +2972,15 @@ var source = (() => {
   // node_modules/@paperback/types/lib/TrackedMangaChapterReadAction.js
   var require_TrackedMangaChapterReadAction = __commonJS({
     "node_modules/@paperback/types/lib/TrackedMangaChapterReadAction.js"(exports) {
+      "use strict";
+      init_buffer();
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
+  // node_modules/@paperback/types/lib/SortingOption.js
+  var require_SortingOption = __commonJS({
+    "node_modules/@paperback/types/lib/SortingOption.js"(exports) {
       "use strict";
       init_buffer();
       Object.defineProperty(exports, "__esModule", { value: true });
@@ -3023,6 +3032,7 @@ var source = (() => {
       __exportStar(require_Tag(), exports);
       __exportStar(require_TagSection(), exports);
       __exportStar(require_TrackedMangaChapterReadAction(), exports);
+      __exportStar(require_SortingOption(), exports);
     }
   });
 
@@ -3048,11 +3058,11 @@ var source = (() => {
     MangaWorldExtension: () => MangaWorldExtension
   });
   init_buffer();
-  var import_types4 = __toESM(require_lib(), 1);
+  var import_types6 = __toESM(require_lib(), 1);
 
-  // src/commons/Functions.ts
+  // src/commons/functions.ts
   init_buffer();
-  var import_types2 = __toESM(require_lib(), 1);
+  var import_types3 = __toESM(require_lib(), 1);
 
   // node_modules/cheerio/dist/browser/index.js
   init_buffer();
@@ -16897,6 +16907,110 @@ var source = (() => {
 
   // src/commons/helper.ts
   init_buffer();
+  function blacklistedTags(tags) {
+    const blacklistedSettings = Application.getState("hide_tags") ?? [];
+    console.log("Blacklisted Tags Loaded: " + blacklistedSettings.join(","));
+    for (const tag of tags) {
+      if (blacklistedSettings.includes(tag.toLowerCase())) {
+        console.log("Detected :" + tag + " manga rimosso dalla lista");
+        return true;
+      }
+    }
+    return false;
+  }
+  function blacklistedType(type) {
+    const blacklistedSettings = Application.getState("hide_type") ?? [];
+    console.log("Blacklisted Type Loaded: " + blacklistedSettings.join(","));
+    if (blacklistedSettings.includes(type.toLowerCase())) {
+      console.log("Detected :" + type + " manga rimosso dalla lista");
+      return true;
+    }
+    return false;
+  }
+  function getMatureFilter() {
+    return [
+      { value: "Ecchi", id: "ecchi" },
+      { value: "Gender Bender", id: "gender-bender" },
+      { value: "Harem", id: "harem" },
+      { value: "Horror", id: "horror" },
+      { value: "Josei", id: "josei" },
+      { value: "Maturo", id: "maturo" },
+      { value: "Seinen", id: "seinen" },
+      { value: "Tragico", id: "tragico" },
+      { value: "Yaoi", id: "yaoi" },
+      { value: "Yuri", id: "yuri" }
+    ];
+  }
+  function getAdultFilter() {
+    return [
+      { value: "Adulti", id: "adulti" },
+      { value: "Doujinshi", id: "doujinshi" },
+      { value: "Hentai", id: "hentai" },
+      { value: "Lolicon", id: "lolicon" },
+      { value: "Shotacon", id: "shotacon" },
+      { value: "Smut", id: "smut" }
+    ];
+  }
+  function getMangaTypeFilter() {
+    return [
+      { value: "Manga", id: "manga" },
+      { value: "Manhua", id: "manhua" },
+      { value: "Manhwa", id: "manhwa" },
+      { value: "Oneshot", id: "oneshot" },
+      { value: "Thai", id: "thai" },
+      { value: "Vietnamita", id: "vietnamese" }
+    ];
+  }
+  function getOrderFilter() {
+    return [
+      { label: "Pi\xF9 Letto", id: "most_read" },
+      { label: "Meno Letto", id: "less_read" },
+      { label: "Alfabetico A-Z", id: "a-z" },
+      { label: "Alfabetico Z-A", id: "z-a" },
+      { label: "Pi\xF9 recente", id: "newest" },
+      { label: "Meno recente", id: "oldest" }
+    ];
+  }
+  function getGenreFilter() {
+    return [
+      { value: "Adulti", id: "adulti" },
+      { value: "Arti Marziali", id: "arti-marziali" },
+      { value: "Avventura", id: "avventura" },
+      { value: "Azione", id: "azione" },
+      { value: "Commedia", id: "commedia" },
+      { value: "Doujinshi", id: "doujinshi" },
+      { value: "Drammatico", id: "drammatico" },
+      { value: "Ecchi", id: "ecchi" },
+      { value: "Fantasy", id: "fantasy" },
+      { value: "Gender Bender", id: "gender-bender" },
+      { value: "Harem", id: "harem" },
+      { value: "Hentai", id: "hentai" },
+      { value: "Horror", id: "horror" },
+      { value: "Josei", id: "josei" },
+      { value: "Lolicon", id: "lolicon" },
+      { value: "Maturo", id: "maturo" },
+      { value: "Mecha", id: "mecha" },
+      { value: "Mistero", id: "mistero" },
+      { value: "Psicologico", id: "psicologico" },
+      { value: "Romantico", id: "romantico" },
+      { value: "Sci-fi", id: "sci-fi" },
+      { value: "Scolastico", id: "scolastico" },
+      { value: "Seinen", id: "seinen" },
+      { value: "Shotacon", id: "shotacon" },
+      { value: "Shoujo", id: "shoujo" },
+      { value: "Shoujo Ai", id: "shoujo-ai" },
+      { value: "Shounen", id: "shounen" },
+      { value: "Shounen Ai", id: "shounen-ai" },
+      { value: "Slice of Life", id: "slice-of-life" },
+      { value: "Smut", id: "smut" },
+      { value: "Soprannaturale", id: "soprannaturale" },
+      { value: "Sport", id: "sport" },
+      { value: "Storico", id: "storico" },
+      { value: "Tragico", id: "tragico" },
+      { value: "Yaoi", id: "yaoi" },
+      { value: "Yuri", id: "yuri" }
+    ];
+  }
   var URLBuilder = class {
     parameters = {};
     pathComponents = [];
@@ -16905,7 +17019,9 @@ var source = (() => {
       this.baseUrl = baseUrl.replace(/(^\/)?(?=.*)(\/$)?/gim, "");
     }
     addPathComponent(component) {
-      this.pathComponents.push(component.replace(/(^\/)?(?=.*)(\/$)?/gim, ""));
+      this.pathComponents.push(
+        component.replace(/(^\/)?(?=.*)(\/$)?/gim, "")
+      );
       return this;
     }
     addQueryParameter(key, value) {
@@ -16924,14 +17040,22 @@ var source = (() => {
         const queryString = entries.flatMap(([key, value]) => {
           if (value == null && !includeUndefinedParameters) return [];
           if (Array.isArray(value)) {
-            return value.filter((v) => v != null || includeUndefinedParameters).map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`);
+            return value.filter(
+              (v) => v != null || includeUndefinedParameters
+            ).map(
+              (v) => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`
+            );
           }
           if (typeof value === "object" && value !== null) {
-            return Object.entries(value).filter(([, v]) => v != null || includeUndefinedParameters).map(
+            return Object.entries(value).filter(
+              ([, v]) => v != null || includeUndefinedParameters
+            ).map(
               ([subKey, v]) => `${encodeURIComponent(key)}[${encodeURIComponent(subKey)}]=${encodeURIComponent(String(v))}`
             );
           }
-          return [`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`];
+          return [
+            `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+          ];
         }).join("&");
         if (queryString) {
           finalUrl += "?" + queryString;
@@ -16943,26 +17067,50 @@ var source = (() => {
 
   // src/commons/parser.ts
   init_buffer();
-  var import_lib = __toESM(require_lib(), 1);
+  var import_types2 = __toESM(require_lib(), 1);
   var Parser3 = class {
+    rating = import_types2.ContentRating.EVERYONE;
+    constructor(rating) {
+      this.rating = rating;
+    }
+    /**
+     * Ottieni Rating dati tags
+     * @param {string[]} tags - tags
+     * @return {ContentRating} - ContentRating
+     */
     getRating(tags) {
-      let rating = import_lib.ContentRating.EVERYONE;
+      let rating = this.rating;
+      const storedAdultTags = Application.getState("adult_tags");
+      const adult_pref = storedAdultTags ? storedAdultTags : getAdultFilter().map(({ id }) => id);
+      const storedMatureTags = Application.getState(
+        "mature_tags"
+      );
+      const mature_pref = storedMatureTags ? storedMatureTags : getMatureFilter().map(({ id }) => id);
+      console.log("AdultTags: " + adult_pref.join(","));
+      console.log("MatureTags: " + mature_pref.join(","));
       for (const tag of tags) {
-        if (["ADULTI", "SMUT", "HENTAI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.ADULT;
+        if (adult_pref.map((item) => item.toUpperCase()).includes(tag.toUpperCase())) {
+          rating = import_types2.ContentRating.ADULT;
           break;
-        }
-        if (["MATURO", "DOUJINSHI", "HORROR", "TRAGICO", "ECCHI"].includes(tag.toUpperCase())) {
-          rating = import_lib.ContentRating.MATURE;
+        } else if (mature_pref.map((item) => item.toUpperCase()).includes(tag.toUpperCase())) {
+          rating = import_types2.ContentRating.MATURE;
           break;
         }
       }
       return rating;
     }
-    parseMangaDetails($2, mangaId) {
+    /**
+     * Ottieni dettagli Manga
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {string} mangaId - MangaID
+     * @param {string} shareURL - shareURL
+     * @return {SourceManga} - SourceManga
+     */
+    parseMangaDetails($2, mangaId, shareURL) {
       const title = $2(".name.bigger").text().trim() ?? "";
       const image = $2(".thumb.mb-3.text-center img").attr("src") ?? "";
       const desc = $2("#noidungm").text().trim() ?? "";
+      let subs = "";
       const artists = [];
       const authors = [];
       const titles = [];
@@ -16972,6 +17120,9 @@ var source = (() => {
       };
       for (const obj of $2(".meta-data.row.px-1 .col-12").toArray()) {
         const text3 = $2(obj).text().trim();
+        if (text3.includes("Fansub")) {
+          subs = $2(obj).find("a").first().text().trim();
+        }
         if (text3.includes("Stato")) {
           const stateLink = $2(obj).find("a").first();
           if (stateLink.length) data2.state = stateLink.text().trim();
@@ -17002,7 +17153,9 @@ var source = (() => {
       for (const tag of data2.genre) {
         arrayTags.push({ title: tag, id: tag.replaceAll(" ", "-") });
       }
-      const rating = this.getRating(arrayTags.map((tag) => tag.title));
+      const rating = this.getRating(
+        arrayTags.map((tag) => tag.title)
+      );
       const tagSections = [
         { id: "genres", title: "genres", tags: arrayTags }
       ];
@@ -17017,34 +17170,61 @@ var source = (() => {
           status,
           author,
           tagGroups: tagSections,
-          secondaryTitles: titles
+          secondaryTitles: titles,
+          additionalInfo: { subs },
+          shareUrl: shareURL
         }
       };
     }
+    /**
+     * Ottieni Lista Capitoli
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {SourceManga} sourceManga - Manga
+     * @return {Chapter[]} - Capitoli
+     */
     parseChapters($2, sourceManga) {
       const chapters = [];
       const arrChapters = $2(".chapter").toArray().reverse();
       for (const item of arrChapters) {
         const href = $2("a", item).attr("href") ?? "";
-        const regex = /\/manga\/\d+\/([^/]+\/read\/[a-zA-Z0-9]+)/;
-        const match = href.match(regex);
-        const extractedPart = match ? match[1] : "";
-        const id = extractedPart.replace("/read/", "_read_");
+        const chapterId = (href.match(/read\/([^/]+)+/i) ?? [
+          "null",
+          ""
+        ])[1];
         const name = $2("a", item).attr("title") ?? "";
-        const chapNum = Number($2(".d-inline-block", item).text().split(" ")[1]);
-        const chapter = isNaN(chapNum) ? 1 : chapNum;
+        const volN = $2(item).closest(".volume-element").find(".volume-name").text().split(" ")[1];
+        const chapN = $2(".d-inline-block", item).text().split(" ")[1];
+        console.log("New Chapters");
+        console.log(
+          "Parsed: Manga " + name + " Chapter: " + chapN + " Volume: " + volN
+        );
+        const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
+        const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
         const date = $2("i.text-right.text-muted.chap-date", item).text();
         chapters.push({
-          chapterId: id,
+          chapterId,
           sourceManga,
-          langCode: "it",
-          chapNum: chapter,
+          volume: volumeNum,
+          version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
+          langCode: "\u{1F1EE}\u{1F1F9}",
+          chapNum,
           title: name,
           publishDate: this.getDate(date)
         });
       }
       return chapters;
     }
+    /**
+     * Parsing dettagli capitolo
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {string} mangaId - ID manga
+     * @param {string} id - ID capitolo
+     * @return {{
+     *   id: string
+     *   mangaId: string
+     *   pages: string[]
+     * }} - Dettagli
+     */
     parseChapterDetails($2, mangaId, id) {
       const pages = [];
       for (const item of $2(
@@ -17060,42 +17240,83 @@ var source = (() => {
         pages
       };
     }
-    parseSearchResults($2) {
-      const results = [];
-      const tags = [];
+    /**
+     * Parsing pagina
+     * @param {CheerioAPI} $ - Richiesta
+     * @return {[{id:string,title:string,image:string,tags:string[], authors: string, type: string}]}
+     */
+    parsePage($2) {
+      const items = [];
       for (const item of $2(".comics-grid .entry").toArray()) {
-        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? [
-          "null"
-        ])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
+        const id = (($2("a", item).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9-]+/i
+        ) ?? ["null"])[0] ?? "";
+        const authors = [];
+        const tags = [];
+        $2("div.author", item).find("a").each(function(_, e) {
+          authors.push($2(e).text().trim());
+        });
         const title = $2("a", item).attr("title") ?? "";
         const image = $2("a img", item).attr("src") ?? "";
+        const mangaType = $2("div.genre", item).find("a").text().trim();
         $2("div.genres", item).find("a").each(function(_, e) {
           tags.push($2(e).text().trim());
         });
-        results.push({
-          imageUrl: image,
+        const author = authors.join(", ");
+        items.push({
+          id,
           title,
-          mangaId: id,
-          contentRating: this.getRating(tags)
+          image,
+          tags,
+          authors: author,
+          type: mangaType
         });
+      }
+      return items;
+    }
+    /**
+     * Parsing ricerca
+     * @param {CheerioAPI} $ - Richiesta
+     * @return {SearchResultItem[]} items
+     */
+    parseSearchResults($2) {
+      const results = [];
+      const parse6 = this.parsePage($2);
+      for (const item of parse6) {
+        if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
+          results.push({
+            imageUrl: item.image,
+            title: item.title,
+            subtitle: item.authors,
+            mangaId: item.id,
+            contentRating: this.getRating(item.tags)
+          });
+        }
       }
       return results;
     }
-    numberPage = 0;
+    /**
+     * Parsing capitoli in tendenza
+     * @param {Metadata} metadata - metadata
+     * @param {CheerioAPI} $ - Richiesta
+     * @return { items: DiscoverSectionItem[] }
+     */
     parseCapitoliInTendenza($2, metadata) {
       const trending = [];
       const arrTrending = $2(".entry.vertical").toArray();
       for (const obj of arrTrending) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
+        const id = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9-]+/i
+        ) ?? ["null"])[0] ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
         const chapNum = $2("a div", obj).text() ?? "";
         const title = $2(".manga-title", obj).text().trim();
+        console.log("Capitoli in tendenza");
+        console.log("Parsed: Manga " + title + " Chap: " + chapNum);
         trending.push({
           metadata,
           type: "featuredCarouselItem",
-          contentRating: void 0,
+          contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
           supertitle: chapNum,
           imageUrl: image,
           mangaId: id,
@@ -17104,43 +17325,43 @@ var source = (() => {
       }
       return { items: trending };
     }
+    /**
+     * Parsing in tendenza nel mese
+     * @param {Metadata} metadata - metadata
+     * @param {CheerioAPI} $ - Richiesta
+     * @return [ { items: DiscoverSectionItem[], metadata: Metadata }, { items: DiscoverSectionItem[], metadata: Metadata } ]
+     */
     parseInTendenzaMese($2, metadata) {
       const arrHotTitle = $2(".col-12 .top-wrapper .entry").toArray();
       const hot = [];
-      const newTitle = [];
       for (const obj of arrHotTitle) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
+        const id = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9-]+/i
+        ) ?? ["null"])[0] ?? "";
         const image = $2(".img-fluid", obj).attr("src") ?? "";
         const title = $2(".name", obj).first().text().trim() ?? "";
+        console.log("In tendenza Mese");
+        console.log("Parsed: Manga " + title);
         if (hot.length < 10) {
           hot.push({
             metadata,
             type: "prominentCarouselItem",
-            contentRating: void 0,
-            imageUrl: image,
-            mangaId: id,
-            title
-          });
-        } else if (newTitle.length < 5) {
-          newTitle.push({
-            metadata,
-            type: "simpleCarouselItem",
-            contentRating: void 0,
+            contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
             imageUrl: image,
             mangaId: id,
             title
           });
         }
       }
-      return [
-        { items: hot, metadata },
-        { items: newTitle, metadata }
-      ];
+      return { items: hot, metadata };
     }
-    //parse ultime aggiunte
-    async parseLastAddedSetcion2(metadata, url) {
-      console.log("ParseLastAddedSetcion2");
+    /**
+     * Parsing ultimi manga aggiunti
+     * @param {Metadata} metadata - metadata
+     * @param {string} url - Url
+     * @return {{ items: DiscoverSectionItem[], metadata: Metadata }}
+     */
+    async parseLastMangaAddedSection(metadata, url) {
       const latest = [];
       let page = metadata?.page ?? 1;
       const data2 = (await Application.scheduleRequest({
@@ -17149,231 +17370,196 @@ var source = (() => {
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
       page++;
-      for (const item of $2(".comics-grid .entry").toArray()) {
-        const tmp = (($2("a", item).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? [
-          "null"
-        ])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
-        const title = $2("a", item).attr("title") ?? "";
-        const image = $2("a img", item).attr("src") ?? "";
-        latest.push({
-          metadata: { page: page + 1 },
-          type: "simpleCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title
-        });
+      const parse6 = this.parsePage($2);
+      for (const item of parse6) {
+        if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
+          latest.push({
+            metadata: { page },
+            subtitle: item.authors,
+            type: "simpleCarouselItem",
+            contentRating: this.getRating(item.tags),
+            imageUrl: item.image,
+            mangaId: item.id,
+            title: item.title
+          });
+        }
       }
-      console.log(page);
-      console.log(latest.length);
       return { items: latest, metadata: { page } };
     }
-    //parse nuovi capitoli
-    async parseLastAddedSetcion(metadata, url) {
+    /**
+     * Parse nuovi capitoli
+     * @param {CheerioAPI} $ - pagina
+     * @param {Metadata} metadata - manga metadata
+     * @param {string} url - url
+     * @return {{
+     * 		items: DiscoverSectionItem[],
+     * 		metadata: Metadata | undefined
+     * 	}}
+     */
+    async parseLastAddedSection($2, metadata, url) {
       let page = metadata?.page ?? 1;
-      const data2 = (await Application.scheduleRequest({
-        url: `${url}?page=${page}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
+      if (page > 1) {
+        const data2 = (await Application.scheduleRequest({
+          url: `${url}?page=${page}`,
+          method: "GET"
+        }))[1];
+        $2 = load(Application.arrayBufferToUTF8String(data2));
+      }
       page++;
-      const arrLatest = $2(".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry").toArray();
+      const arrLatest = $2(
+        ".col-sm-12.col-md-8.col-xl-9 .comics-grid .entry"
+      ).toArray();
       const latest = [];
       for (const obj of arrLatest) {
-        const tmp = (($2("a", obj).attr("href") ?? "").match(/[0-9]+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
-        const id = tmp.split("/")[0] ?? "";
+        const id = (($2("a", obj).attr("href") ?? "").match(
+          /[0-9]+\/[a-zA-Z0-9-]+/i
+        ) ?? ["null"])[0] ?? "";
         const title = $2("a", obj).attr("title") ?? "";
+        const mangaType = $2(".genre a", obj).text().trim() ?? "";
         const image = $2("a img", obj).attr("src") ?? "";
         const sub = $2(".d-flex.flex-wrap.flex-row a", obj).first().attr("title") ?? "";
-        const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read+\/[a-zA-Z0-9-]+/i) ?? ["null"])[0] ?? "";
-        const addedDate = $2("i.ml-auto.mt-auto", obj).first().text().trimEnd();
-        latest.push({
-          chapterId: chapterId.replace("/read/", "_read_"),
-          //todo
-          publishDate: this.getDate(addedDate),
-          metadata,
-          type: "chapterUpdatesCarouselItem",
-          contentRating: void 0,
-          imageUrl: image,
-          mangaId: id,
-          title,
-          subtitle: sub
-        });
+        const chapterId = (($2(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? "").match(/\/read\/([a-f0-9]+)(?:\?.*)?$/i) ?? ["null", ""])[1];
+        console.log("Ultime Aggiunte");
+        console.log("Parsed: Manga " + title);
+        console.log("Parsed: Ch " + chapterId);
+        const regexDinamica = new RegExp(
+          `"createdAtTWithYear":\\s*"([^"]+)"\\s*,\\s*"isNew":\\s*(true|false)\\s*,\\s*"id":\\s*"${chapterId}"`,
+          "m"
+        );
+        const match = $2.html().match(regexDinamica);
+        let data2 = /* @__PURE__ */ new Date();
+        if (match) {
+          console.log("Data trovata:" + match[1]);
+          data2 = this.getDate(match[1]);
+        }
+        if (!blacklistedType(mangaType)) {
+          latest.push({
+            chapterId,
+            metadata,
+            type: "chapterUpdatesCarouselItem",
+            publishDate: data2,
+            contentRating: this.rating === import_types2.ContentRating.ADULT ? import_types2.ContentRating.ADULT : void 0,
+            imageUrl: image,
+            mangaId: id,
+            title,
+            subtitle: sub
+          });
+        }
       }
       return { items: latest, metadata: { page } };
     }
-    async parseGenresFilters(url) {
-      console.log("ParseFilterGenres");
-      const genres = [];
-      const data2 = (await Application.scheduleRequest({
-        url: `${url}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      let first_label = "";
-      let i = 0;
-      for (const item of $2(".dropdown-menu.dropdown-multicol .dropdown-item").toArray()) {
-        const id = $2(item).attr("href")?.replace(`${url}/archive?genre=`, "") ?? "";
-        const label = $2(item).text().trim();
-        if (i == 0) first_label = label;
-        if (label == first_label && i > 0) break;
-        genres.push({ value: label, id: id.toLowerCase() });
-        i++;
-      }
-      return genres;
-    }
+    /**
+     * Trasforma una stringa in data
+     * @param {string} dataString - data in formato stringa
+     * @return {Date} - stringa in formato data
+     */
     getDate(dataString) {
       const mesi = {
-        "Gennaio": 0,
-        "Febbraio": 1,
-        "Marzo": 2,
-        "Aprile": 3,
-        "Maggio": 4,
-        "Giugno": 5,
-        "Luglio": 6,
-        "Agosto": 7,
-        "Settembre": 8,
-        "Ottobre": 9,
-        "Novembre": 10,
-        "Dicembre": 11
+        gennaio: 0,
+        febbraio: 1,
+        marzo: 2,
+        aprile: 3,
+        maggio: 4,
+        giugno: 5,
+        luglio: 6,
+        agosto: 7,
+        settembre: 8,
+        ottobre: 9,
+        novembre: 10,
+        dicembre: 11
       };
       const oggi = /* @__PURE__ */ new Date();
-      const parts = dataString.split(" ");
-      if (parts.length === 2) {
-        parts.push(oggi.getFullYear().toString());
-      }
-      if (parts.length > 3) return new Date(oggi.getFullYear(), oggi.getMonth(), oggi.getDay());
-      const mese = parseInt(parts[0], 10);
-      const giorno = mesi[parts[1]];
+      const parts = dataString.trim().toLowerCase().split(" ");
+      if (parts.length < 2 || parts.length > 3) return oggi;
+      const giorno = parseInt(parts[0], 10);
+      const mese = mesi[parts[1]];
       const anno = parseInt(parts[2], 10);
-      if (isNaN(giorno) || isNaN(anno) || mese === void 0) return oggi;
-      return new Date(anno, giorno, mese);
-    }
-    async parseTypeFilters(url) {
-      console.log("ParseFilterType");
-      const types = [];
-      const data2 = (await Application.scheduleRequest({
-        url: `${url}`,
-        method: "GET"
-      }))[1];
-      const $2 = load(Application.arrayBufferToUTF8String(data2));
-      let first_label = "";
-      let i = 0;
-      for (const item of $2('.dropdown-menu[aria-labelledby="typesDropdown"] .dropdown-item').toArray()) {
-        const label = $2(item).text().trim();
-        if (i == 0) first_label = label;
-        if (label == first_label && i > 0) break;
-        types.push({ value: label, id: label.replaceAll(" ", "-") });
-        i++;
-      }
-      return types;
+      if (isNaN(giorno) || mese === void 0 || isNaN(anno)) return oggi;
+      return new Date(anno, mese, giorno);
     }
   };
 
-  // src/commons/Functions.ts
+  // src/commons/functions.ts
   var Functions = class {
     baseUrl = "";
-    sinceDate;
-    constructor(url) {
+    rating = import_types3.ContentRating.EVERYONE;
+    constructor(url, contentRating) {
       this.baseUrl = url;
+      this.rating = contentRating;
     }
-    parser = new Parser3();
-    numberPage = 0;
+    parser = new Parser3(this.rating);
     async getDiscoverSectionItems(section, metadata) {
       const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}`,
         method: "GET"
       }))[1];
-      console.log("getDiscoverSectionItems");
-      console.log("getDiscoverSectionItems");
       const $2 = load(Application.arrayBufferToUTF8String(data2));
-      const mangas = this.parser.parseInTendenzaMese($2, metadata);
-      const genres = await this.parser.parseGenresFilters(this.baseUrl);
-      const read = [];
       const mangaType = [];
       const allGenres = [];
-      genres.forEach((filter4) => {
-        allGenres.push(
-          {
-            type: "genresCarouselItem",
-            searchQuery: {
-              title: "",
-              filters: [
-                { id: "genres", value: filter4.id }
-              ]
-            },
-            name: filter4.value,
-            metadata,
-            contentRating: this.parser.getRating([filter4.value])
-          }
-        );
+      getGenreFilter().filter((option) => !blacklistedTags([option.value])).forEach((filter4) => {
+        allGenres.push({
+          type: "genresCarouselItem",
+          searchQuery: {
+            title: "",
+            filters: [
+              {
+                id: "genres",
+                value: { [filter4.id]: "included" }
+              }
+            ]
+          },
+          name: filter4.value,
+          metadata,
+          contentRating: this.parser.getRating([filter4.value])
+        });
       });
-      this.getOrderFilter().forEach((filter4) => {
-        read.push(
-          {
-            type: "genresCarouselItem",
-            searchQuery: {
-              title: "",
-              filters: [
-                { id: "order", value: filter4.id }
-              ]
-            },
-            name: filter4.value,
-            metadata,
-            contentRating: import_types2.ContentRating.EVERYONE
-          }
-        );
+      getMangaTypeFilter().filter((option) => !blacklistedType(option.value)).forEach((filter4) => {
+        mangaType.push({
+          type: "genresCarouselItem",
+          searchQuery: {
+            title: "",
+            filters: [
+              { id: "types", value: { [filter4.id]: "included" } }
+            ]
+          },
+          name: filter4.value,
+          metadata,
+          contentRating: this.rating === import_types3.ContentRating.ADULT ? import_types3.ContentRating.ADULT : void 0
+        });
       });
-      this.getMangaTypeFilter().forEach((filter4) => {
-        mangaType.push(
-          {
-            type: "genresCarouselItem",
-            searchQuery: {
-              title: "",
-              filters: [
-                { id: "types", value: filter4.id }
-              ]
-            },
-            name: filter4.value,
-            metadata,
-            contentRating: import_types2.ContentRating.EVERYONE
-          }
-        );
-      });
-      console.log(read);
-      console.log(mangaType);
       switch (section.id) {
-        case "mese_section":
-          console.log("mese_section");
-          return mangas[0];
-        case "popular_section":
-          this.numberPage = 0;
-          console.log("popular_section");
+        case "popular_section": {
+          console.log("Loading popular_section loaded");
           return this.parser.parseCapitoliInTendenza($2, metadata);
-        case "updated_section":
-          console.log("updated_section");
-          return this.parser.parseLastAddedSetcion(metadata, this.baseUrl);
-        case "new_manga_section": {
-          console.log("new_manga_section");
-          return this.parser.parseLastAddedSetcion2(metadata, this.baseUrl);
         }
-        case "read_section": {
-          console.log("read_section");
-          return {
-            items: read,
-            metadata
-          };
+        case "mese_section": {
+          console.log("Loading mese_section loaded");
+          return this.parser.parseInTendenzaMese($2, metadata);
+        }
+        case "updated_section": {
+          console.log("Loading updated_section loaded");
+          return this.parser.parseLastAddedSection(
+            $2,
+            metadata,
+            this.baseUrl
+          );
+        }
+        case "new_manga_section": {
+          console.log("Loading new_manga_section loaded");
+          return this.parser.parseLastMangaAddedSection(
+            metadata,
+            this.baseUrl
+          );
         }
         case "genre_section": {
-          console.log("type_section");
+          console.log("Loading type_section loaded");
           return {
             items: allGenres,
             metadata
           };
         }
         case "type_section": {
-          console.log("type_section");
+          console.log("Loading type_section loaded");
           return {
             items: mangaType,
             metadata
@@ -17383,118 +17569,86 @@ var source = (() => {
           return { items: [], metadata };
       }
     }
-    getMangaTypeFilter() {
-      return [
-        { value: "Manga", id: "manga" },
-        { value: "Manhua", id: "manhua" },
-        { value: "Manhwa", id: "manhwa" },
-        { value: "Oneshot", id: "oneshot" },
-        { value: "Thai", id: "thai" },
-        { value: "Vietnamita", id: "vietnamese" }
-      ];
-    }
-    getOrderFilter() {
-      return [
-        { value: "Pi\xF9 Letto", id: "most_read" },
-        { value: "Meno Letto", id: "less_read" },
-        { value: "Alfabetico A-Z", id: "a-z" },
-        { value: "Alfabetico Z-A", id: "z-a" },
-        { value: "Pi\xF9 recente", id: "newest" },
-        { value: "Meno recente", id: "oldest" }
-      ];
-    }
     async getChapterDetails(chapter) {
-      console.log(chapter);
-      chapter.chapterId = chapter.chapterId.replace("_read_", "/read/");
       const data2 = (await Application.scheduleRequest({
-        url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/${chapter.chapterId}/?style=list`,
+        url: `${this.baseUrl}/manga/${chapter.sourceManga.mangaId}/read/${chapter.chapterId}/?style=list`,
         method: "GET"
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
-      chapter.chapterId = chapter.chapterId.replace("/read/", "_read_");
       return this.parser.parseChapterDetails(
         $2,
         chapter.sourceManga.mangaId,
         chapter.chapterId
       );
     }
-    async getDiscoverSections() {
+    getDiscoverSections() {
       return [
-        {
-          id: "mese_section",
-          title: "Manga del Mese",
-          type: import_types2.DiscoverSectionType.prominentCarousel
-        },
         {
           id: "popular_section",
           title: "Capitoli In Tendenza",
-          type: import_types2.DiscoverSectionType.featured
+          type: import_types3.DiscoverSectionType.featured
+        },
+        {
+          id: "mese_section",
+          title: "Manga del Mese",
+          subtitle: "Manga pi\xF9 letti del mese",
+          type: import_types3.DiscoverSectionType.prominentCarousel
         },
         {
           id: "updated_section",
           title: "Aggiornati di Recente",
-          type: import_types2.DiscoverSectionType.chapterUpdates
+          subtitle: "Ultimi Capitoli Aggiunti",
+          type: import_types3.DiscoverSectionType.chapterUpdates
         },
         {
           id: "new_manga_section",
           title: "Nuove Aggiunte",
-          type: import_types2.DiscoverSectionType.simpleCarousel
+          subtitle: "Nuovi Manga",
+          type: import_types3.DiscoverSectionType.simpleCarousel
         },
         {
           id: "type_section",
           title: "Tipo",
-          type: import_types2.DiscoverSectionType.genres
+          subtitle: "Manga pi\xF9 letti di un tipo",
+          type: import_types3.DiscoverSectionType.genres
         },
         {
           id: "genre_section",
           title: "Generi",
-          type: import_types2.DiscoverSectionType.genres
+          subtitle: "Manga pi\xF9 letti di un genere",
+          type: import_types3.DiscoverSectionType.genres
         }
-        /*,
-        {
-            id: "read_section",
-            title: "Ordinamento",
-            type: DiscoverSectionType.genres
-        }
-        */
       ];
     }
-    async getChapters(sourceManga, sinceDate) {
-      this.sinceDate = sinceDate;
-      console.log(sourceManga);
-      console.log(sourceManga.mangaId);
-      const [_, buffer] = await Application.scheduleRequest({
+    async getChapters(sourceManga) {
+      console.log("Get Chapters of MangaID " + sourceManga.mangaId);
+      const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}/manga/${sourceManga.mangaId}`,
         method: "GET"
-      });
-      const $2 = load(Application.arrayBufferToUTF8String(buffer));
+      }))[1];
+      const $2 = load(Application.arrayBufferToUTF8String(data2));
       return this.parser.parseChapters($2, sourceManga);
     }
-    async getFilterList() {
+    getFilterList() {
       const filters2 = [];
-      console.log("getSearchFilter");
-      const genres = await this.parser.parseGenresFilters(this.baseUrl);
-      const types = await this.parser.parseTypeFilters(this.baseUrl);
-      filters2.push({
-        type: "dropdown",
-        options: this.getOrderFilter(),
-        id: "order",
-        value: "most_read",
-        title: "Ordine"
-      });
+      const def_value = (Application.getState("def_type") ?? [])[0];
       filters2.push({
         type: "multiselect",
-        options: this.getMangaTypeFilter(),
+        options: getMangaTypeFilter().filter(
+          (option) => !blacklistedType(option.value)
+        ),
         id: "types",
         allowExclusion: false,
         title: "Tipo",
-        value: {},
+        value: def_value ? { [def_value]: "included" } : {},
         allowEmptySelection: true,
         maximum: 1
       });
       filters2.push({
         type: "multiselect",
-        options: genres,
+        options: getGenreFilter().filter(
+          (option) => !blacklistedTags([option.value])
+        ),
         id: "genres",
         allowExclusion: false,
         title: "Generi",
@@ -17502,84 +17656,97 @@ var source = (() => {
         allowEmptySelection: true,
         maximum: 5
       });
-      console.log(filters2);
       return filters2;
     }
-    async getSearchResults(query, metadata) {
+    async getSearchResults(query, metadata, sorting) {
       let manga = [];
       let page = metadata?.page ?? 1;
       if (page == -1) return { items: [] };
-      if (query.title.length > 0) {
-        const url = this.constructSearchRequest(page, query);
-        const data2 = (await Application.scheduleRequest({
-          url: `${url}`,
-          method: "GET"
-        }))[1];
-        const $2 = load(
-          Application.arrayBufferToUTF8String(data2)
-        );
-        manga = this.parser.parseSearchResults($2);
-      } else {
-        const url = this.constructSearchRequest(page, {
-          title: "",
-          filters: query.filters
-        });
-        const data2 = (await Application.scheduleRequest({
-          url: `${url}`,
-          method: "GET"
-        }))[1];
-        const $2 = load(
-          Application.arrayBufferToUTF8String(data2)
-        );
-        manga = this.parser.parseSearchResults($2);
-      }
+      const url = this.constructSearchRequestURL(page, query, sorting);
+      const data2 = (await Application.scheduleRequest({
+        url: `${url}`,
+        method: "GET"
+      }))[1];
+      const $2 = load(
+        Application.arrayBufferToUTF8String(data2)
+      );
+      manga = this.parser.parseSearchResults($2);
       page++;
-      const nextMetadata = manga.length < 16 ? void 0 : { page: page + 1 };
-      return { items: manga, metadata: nextMetadata };
+      return { items: manga, metadata: { page } };
     }
     async getMangaDetails(mangaId) {
-      console.log(mangaId);
+      console.log("Get Details of MangaID " + mangaId);
       const data2 = (await Application.scheduleRequest({
         url: `${this.baseUrl}/manga/${mangaId}`,
         method: "GET"
       }))[1];
       const $2 = load(Application.arrayBufferToUTF8String(data2));
-      return this.parser.parseMangaDetails($2, mangaId);
+      return this.parser.parseMangaDetails(
+        $2,
+        mangaId,
+        `${this.baseUrl}/manga/${mangaId}`
+      );
     }
-    constructSearchRequest(page, query = { title: "", filters: [] }) {
+    constructSearchRequestURL(page, query = { title: "", filters: [] }, sorting) {
       const generi = [];
       const tipologia = [];
       const getFilterValue = (id) => query.filters.find((filter4) => filter4.id == id)?.value;
-      console.log(getFilterValue("order"));
+      console.log(getFilterValue("genres"));
       const genres = getFilterValue("genres") ?? "";
       const types = getFilterValue("types") ?? "";
       if (genres && typeof genres === "object") {
         for (const tag of Object.entries(genres)) {
-          generi.push(tag[0]);
+          if (tag[0].length > 0) generi.push(tag[0]);
         }
-      } else
-        generi.push(genres);
+      } else if (genres.length > 0) generi.push(genres);
       if (types && typeof types === "object") {
         for (const tag of Object.entries(types)) {
-          tipologia.push(tag[0]);
+          if (tag[0].length > 0) tipologia.push(tag[0]);
         }
-      } else
-        tipologia.push(types);
-      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent("archive").addQueryParameter("keyword", encodeURIComponent(query.title ?? "")).addQueryParameter("page", page.toString()).addQueryParameter("sort", getFilterValue("order")).addQueryParameter("genre", generi).addQueryParameter("type", tipologia);
+      } else if (types.length > 0) tipologia.push(types);
+      console.log("Search query: " + query.title);
+      const urlBuilder = new URLBuilder(this.baseUrl).addPathComponent(
+        "archive"
+      );
+      if (query.title.toString().length > 0)
+        urlBuilder.addQueryParameter(
+          "keyword",
+          query.title.toString() ?? ""
+        );
+      if (page.toString().length > 0)
+        urlBuilder.addQueryParameter("page", page.toString());
+      if (sorting?.id) urlBuilder.addQueryParameter("sort", sorting?.id);
+      if (generi.length > 0) urlBuilder.addQueryParameter("genre", generi);
+      if (tipologia.length > 0)
+        urlBuilder.addQueryParameter("type", tipologia);
       return urlBuilder.buildUrl();
     }
   };
 
   // src/commons/SettingsForm.ts
   init_buffer();
-  var import_types3 = __toESM(require_lib(), 1);
-  var SettingsForm = class extends import_types3.Form {
+  var import_types4 = __toESM(require_lib(), 1);
+  var SettingsForm = class extends import_types4.Form {
+    rating = void 0;
+    constructor(contentRating) {
+      super();
+      this.rating = contentRating;
+    }
     getSections() {
       return [
-        (0, import_types3.Section)("playground", [
-          (0, import_types3.NavigationRow)("playground", {
-            title: "SourceUI Playground",
-            form: new SourceUIPlaygroundForm()
+        (0, import_types4.Section)("playground", [
+          (0, import_types4.NavigationRow)("playground", {
+            title: "Contenuti",
+            subtitle: "Impostazioni Contenuti",
+            form: new FilterSettings()
+          })
+        ]),
+        (0, import_types4.Section)("content_rating", [
+          (0, import_types4.NavigationRow)("content_rating", {
+            title: "Rating",
+            subtitle: "Rating Contenuti",
+            isHidden: this.rating === import_types4.ContentRating.ADULT,
+            form: new CustomContentRating()
           })
         ])
       ];
@@ -17594,66 +17761,327 @@ var source = (() => {
     get value() {
       return this._value;
     }
-    get selector() {
-      return Application.Selector(this, "updateValue");
-    }
     async updateValue(value) {
       this._value = value;
       this.form.reloadForm();
     }
   };
-  var SourceUIPlaygroundForm = class extends import_types3.Form {
-    inputValue = new State3(this, "");
-    rowsVisible = new State3(this, false);
-    items = [];
+  var FilterSettings = class extends import_types4.Form {
+    genres = getGenreFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    mangaTypes = getMangaTypeFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    /*
+    defOrder = getOrderFilter().map(({ value, ...rest }) => ({
+        title: value,
+        ...rest,
+    }));
+    */
     getSections() {
       return [
-        (0, import_types3.Section)("hideStuff", [
-          (0, import_types3.ToggleRow)("toggle", {
-            title: "Toggles can hide rows",
-            value: this.rowsVisible.value,
-            onValueChange: this.rowsVisible.selector
-          })
-        ]),
-        ...(() => this.rowsVisible.value ? [
-          (0, import_types3.Section)("hiddenSection", [
-            (0, import_types3.InputRow)("input", {
-              title: "Dynamic Input",
-              value: this.inputValue.value,
-              onValueChange: this.inputValue.selector
-            }),
-            (0, import_types3.LabelRow)("boundLabel", {
-              title: "Bound label to input",
-              subtitle: "This label updates with the input",
-              value: this.inputValue.value
-            })
-          ]),
-          (0, import_types3.Section)("items", [
-            ...this.items.map(
-              (item) => (0, import_types3.LabelRow)(item, {
-                title: item
-              })
-            ),
-            (0, import_types3.ButtonRow)("addNewItem", {
-              title: "Add New Item",
-              onSelect: Application.Selector(
+        (0, import_types4.Section)(
+          {
+            id: "update_settings",
+            footer: "Potrebbero non venir nascosti in tutte le sezioni della home. Tieni presente che verranno rimossi anche dalla ricerca"
+          },
+          [
+            (0, import_types4.SelectRow)("hide_tags", {
+              title: "Nascondi Generi",
+              subtitle: "Nascondi alcuni Generi",
+              value: this.HideTagsStatusState.value,
+              options: this.genres,
+              minItemCount: 0,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
                 this,
-                "addNewItem"
+                "handleHideTagsStatusChange"
+              )
+            }),
+            (0, import_types4.SelectRow)("hide_type", {
+              title: "Nascondi Tipologia",
+              subtitle: "Nascondi alcune Tipologie",
+              value: this.HideTypeStatusState.value,
+              options: this.mangaTypes,
+              minItemCount: 0,
+              maxItemCount: this.mangaTypes.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleHideTypeStatusChange"
               )
             })
-          ])
-        ] : [])()
+          ]
+        ),
+        (0, import_types4.Section)(
+          {
+            id: "default_settings",
+            footer: "Cambia i filtri di default della ricerca"
+          },
+          [
+            /*
+            SelectRow("def_order", {
+                title: "Ordine Ricerca",
+                subtitle: "Ordinamento della Ricerca",
+                value: this.defOrderStatusState.value,
+                options: this.defOrder,
+                minItemCount: 1,
+                maxItemCount: 1,
+                onValueChange: Application.Selector(
+                    this as FilterSettings,
+                    "handleDefOrderStatusChange",
+                ),
+            }),*/
+            (0, import_types4.SelectRow)("def_type", {
+              title: "Tipologia",
+              subtitle: "Tipologia di default",
+              value: this.defTypeStatusState.value,
+              options: this.mangaTypes,
+              minItemCount: 0,
+              maxItemCount: 1,
+              onValueChange: Application.Selector(
+                this,
+                "handleDefTypeStatusChange"
+              )
+            })
+          ]
+        )
       ];
     }
-    async addNewItem() {
-      this.items.push("Item " + (this.items.length + 1));
+    /////// hide_tags
+    getHideTagsStatus() {
+      return Application.getState("hide_tags") ?? [];
+    }
+    setHideTagsStatus(status) {
+      Application.setState(status, "hide_tags");
+    }
+    async handleHideTagsStatusChange(value) {
+      await this.HideTagsStatusState.updateValue(value);
+      this.setHideTagsStatus(value);
       this.reloadForm();
     }
+    HideTagsStatusState = new State3(
+      this,
+      this.getHideTagsStatus()
+    );
+    /////// hide_type
+    getHideTypeStatus() {
+      return Application.getState("hide_type") ?? [];
+    }
+    setHideTypeStatus(status) {
+      Application.setState(status, "hide_type");
+    }
+    async handleHideTypeStatusChange(value) {
+      await this.HideTypeStatusState.updateValue(value);
+      this.setHideTypeStatus(value);
+      this.reloadForm();
+    }
+    HideTypeStatusState = new State3(
+      this,
+      this.getHideTypeStatus()
+    );
+    /////// def_order
+    /*
+    getDefOrderStatus(): string[] {
+        return (
+            (Application.getState("def_order") as string[] | undefined) ?? [
+                "most_read",
+            ]
+        );
+    }
+    setDefOrderStatus(status: string[]): void {
+        Application.setState(status, "def_order");
+    }
+    async handleDefOrderStatusChange(value: string[]): Promise<void> {
+        //console.log("handleDefOrderStatusChange " + value.join(", "));
+        await this.defOrderStatusState.updateValue(value);
+        this.setDefOrderStatus(value);
+        this.reloadForm();
+        Application.invalidateSearchFilters();
+    }
+    private defOrderStatusState = new State<string[]>(
+        this,
+        this.getDefOrderStatus(),
+    );
+     */
+    /////// def_type
+    getDefTypeStatus() {
+      return Application.getState("def_type") ?? [];
+    }
+    setDefTypeStatus(status) {
+      Application.setState(status, "def_type");
+    }
+    async handleDefTypeStatusChange(value) {
+      await this.defTypeStatusState.updateValue(value);
+      this.setDefTypeStatus(value);
+      this.reloadForm();
+      Application.invalidateSearchFilters();
+    }
+    defTypeStatusState = new State3(
+      this,
+      this.getDefTypeStatus()
+    );
+  };
+  var CustomContentRating = class extends import_types4.Form {
+    arraysHaveSameValues(a, b) {
+      return a.length === b.length && [...new Set(a)].every((val2) => b.includes(val2));
+    }
+    genres = getGenreFilter().map(({ value, ...rest }) => ({
+      title: value,
+      ...rest
+    }));
+    getSections() {
+      if (!this.genres.some(
+        (g) => g.id === "Nessuno" && g.title === "Nessuno"
+      )) {
+        this.genres.unshift({ id: "Nessuno", title: "Nessuno" });
+      }
+      return [
+        (0, import_types4.Section)(
+          {
+            id: "content_settings",
+            footer: "Modifica i generi ritenuti per adulti o maturi. Se uno stesso tag \xE8 in entrambi i gruppi, viene preso il livello pi\xF9 restrittivoIl genere 'per tutti' \xE8 per esclusione (il tag non \xE8 in nessuno dei due gruppi)"
+          },
+          [
+            (0, import_types4.SelectRow)("adult_tags", {
+              title: "Generi Adulti",
+              subtitle: "Modifica i generi per Adulti",
+              value: this.AdultTagsStatusState.value,
+              options: this.genres,
+              minItemCount: 1,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleAdultTagsStatusChange"
+              )
+            }),
+            (0, import_types4.ButtonRow)("restore_Adult_Tags", {
+              title: "Ripristina Default",
+              // nascondo il tasto reset se i valori nel settings sono i default
+              isHidden: this.arraysHaveSameValues(
+                this.getAdultTagsStatus(),
+                getAdultFilter().map(({ id }) => id)
+              ),
+              onSelect: Application.Selector(
+                this,
+                "restoreAdultTags"
+              )
+            }),
+            (0, import_types4.SelectRow)("mature_tags", {
+              title: "Generi Maturi",
+              subtitle: "Modifica i generi Maturi",
+              value: this.MatureTagsStatusState.value,
+              options: this.genres,
+              minItemCount: 1,
+              maxItemCount: this.genres.length,
+              onValueChange: Application.Selector(
+                this,
+                "handleMatureTagsStatusChange"
+              )
+            }),
+            (0, import_types4.ButtonRow)("restore_Mature_Tags", {
+              title: "Ripristina Default",
+              // nascondo il tasto reset se i valori nel settings sono i default
+              isHidden: this.arraysHaveSameValues(
+                this.getMatureTagsStatus(),
+                getMatureFilter().map(({ id }) => id)
+              ),
+              onSelect: Application.Selector(
+                this,
+                "restoreMatureTags"
+              )
+            })
+          ]
+        )
+      ];
+    }
+    /////// adult_tags
+    getAdultTagsStatus() {
+      return Application.getState("adult_tags") ?? getAdultFilter().map(({ id }) => id);
+    }
+    setAdultTagsStatus(status) {
+      Application.setState(status, "adult_tags");
+    }
+    async handleAdultTagsStatusChange(value) {
+      if (value.includes("Nessuno")) {
+        value = ["Nessuno"];
+      }
+      await this.AdultTagsStatusState.updateValue(value);
+      this.setAdultTagsStatus(value);
+      this.reloadForm();
+    }
+    AdultTagsStatusState = new State3(
+      this,
+      this.getAdultTagsStatus()
+    );
+    async restoreAdultTags() {
+      const value = getAdultFilter().map(({ id }) => id);
+      await this.AdultTagsStatusState.updateValue(value);
+      this.setAdultTagsStatus(value);
+    }
+    /////// mature_tags
+    async restoreMatureTags() {
+      const value = getMatureFilter().map(({ id }) => id);
+      await this.MatureTagsStatusState.updateValue(value);
+      this.setMatureTagsStatus(value);
+    }
+    getMatureTagsStatus() {
+      return Application.getState("mature_tags") ?? getMatureFilter().map(({ id }) => id);
+    }
+    setMatureTagsStatus(status) {
+      Application.setState(status, "mature_tags");
+    }
+    async handleMatureTagsStatusChange(value) {
+      if (value.includes("Nessuno")) {
+        value = ["Nessuno"];
+      }
+      await this.MatureTagsStatusState.updateValue(value);
+      this.setMatureTagsStatus(value);
+      this.reloadForm();
+    }
+    MatureTagsStatusState = new State3(
+      this,
+      this.getMatureTagsStatus()
+    );
+  };
+
+  // src/MangaWorld/pbconfig.ts
+  init_buffer();
+  var import_types5 = __toESM(require_lib(), 1);
+  var pbconfig_default = {
+    version: "1.1",
+    name: "MangaWorld",
+    description: "Extension that pulls manga from MangaWorld (0.9).",
+    icon: "MangaWorldIcon.png",
+    language: "it",
+    contentRating: import_types5.ContentRating.EVERYONE,
+    capabilities: [
+      import_types5.SourceIntents.MANGA_CHAPTERS,
+      import_types5.SourceIntents.DISCOVER_SECIONS,
+      import_types5.SourceIntents.MANGA_SEARCH,
+      import_types5.SourceIntents.SETTINGS_UI
+    ],
+    badges: [
+      {
+        label: "Italian",
+        textColor: "#187480",
+        //c2ecd8
+        backgroundColor: "#c2ecd8"
+      }
+    ],
+    developers: [
+      {
+        name: "Catta1997",
+        website: "https://github.com/Catta1997"
+      }
+    ]
   };
 
   // src/MangaWorld/main.ts
   var MW_DOMAIN = "https://www.mangaworld.nz";
-  var MainInterceptor = class extends import_types4.PaperbackInterceptor {
+  var MainInterceptor = class extends import_types6.PaperbackInterceptor {
     async interceptRequest(request) {
       return request;
     }
@@ -17665,15 +18093,14 @@ var source = (() => {
   };
   var MangaWorldExtension = class {
     // Implementation of the main rate limiter
-    mainRateLimiter = new import_types4.BasicRateLimiter("main", {
+    mainRateLimiter = new import_types6.BasicRateLimiter("main", {
       numberOfRequests: 15,
       bufferInterval: 10,
       ignoreImages: true
     });
     baseUrl = MW_DOMAIN;
     RETRIES = 10;
-    parser = new Parser3();
-    functions = new Functions(MW_DOMAIN);
+    functions = new Functions(MW_DOMAIN, pbconfig_default.contentRating);
     // Implementation of the main interceptor
     mainInterceptor = new MainInterceptor("main");
     // Method from the Extension interface which we implement, initializes the rate limiter, interceptor, discover sections and search filters
@@ -17683,14 +18110,14 @@ var source = (() => {
     }
     // Implements the settings form, check SettingsForm.ts for more info
     async getSettingsForm() {
-      return new SettingsForm();
+      return new SettingsForm(pbconfig_default.contentRating);
     }
     async getSearchFilters() {
       return this.functions.getFilterList();
     }
     // Populates search
-    async getSearchResults(query, metadata) {
-      return this.functions.getSearchResults(query, metadata);
+    async getSearchResults(query, metadata, sorting) {
+      return this.functions.getSearchResults(query, metadata, sorting);
     }
     // Populates the title details
     async getMangaDetails(mangaId) {
@@ -17698,8 +18125,8 @@ var source = (() => {
       return this.functions.getMangaDetails(mangaId);
     }
     // Populates the chapter list
-    async getChapters(sourceManga, sinceDate) {
-      return this.functions.getChapters(sourceManga, sinceDate);
+    async getChapters(sourceManga) {
+      return this.functions.getChapters(sourceManga);
     }
     // Populates a chapter with images
     async getChapterDetails(chapter) {
@@ -17721,6 +18148,9 @@ var source = (() => {
     }
     async getDiscoverSectionItems(section, metadata) {
       return this.functions.getDiscoverSectionItems(section, metadata);
+    }
+    async getSortingOptions() {
+      return getOrderFilter();
     }
   };
   var MangaWorld = new MangaWorldExtension();

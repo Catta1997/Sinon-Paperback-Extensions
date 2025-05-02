@@ -1,8 +1,8 @@
 {
-  "buildTime": "2025-04-07T15:26:45.944Z",
+  "buildTime": "2025-05-02T12:17:40.870Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.46",
-    "types": "1.0.0-alpha.46"
+    "toolchain": "1.0.0-alpha.50",
+    "types": "1.0.0-alpha.50"
   },
   "repository": {
     "name": "Sinon's Extensions (0.9)",
@@ -10,17 +10,17 @@
   },
   "sources": [
     {
-      "version": "0.9",
+      "version": "1.1",
       "name": "MangaAdult",
       "description": "Extension that pulls manga from MangaAdult (0.9).",
-      "icon": "icon.png",
+      "icon": "MangaAdultIcon.png",
       "language": "it",
       "contentRating": "ADULT",
       "capabilities": [
-        8,
         1,
         4,
-        64
+        64,
+        32
       ],
       "badges": [
         {
@@ -43,17 +43,17 @@
       "id": "MangaAdult"
     },
     {
-      "version": "0.9",
+      "version": "1.1",
       "name": "MangaWorld",
       "description": "Extension that pulls manga from MangaWorld (0.9).",
-      "icon": "icon.png",
+      "icon": "MangaWorldIcon.png",
       "language": "it",
       "contentRating": "SAFE",
       "capabilities": [
-        8,
         1,
         4,
-        64
+        64,
+        32
       ],
       "badges": [
         {
