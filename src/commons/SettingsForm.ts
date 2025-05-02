@@ -11,7 +11,6 @@ import {
     getGenreFilter,
     getMangaTypeFilter,
     getMatureFilter,
-    getOrderFilter,
 } from "./helper";
 
 export class SettingsForm extends Form {
@@ -73,11 +72,12 @@ class FilterSettings extends Form {
         ...rest,
     }));
 
+    /*
     defOrder = getOrderFilter().map(({ value, ...rest }) => ({
         title: value,
         ...rest,
     }));
-
+    */
     override getSections(): Application.FormSectionElement[] {
         return [
             Section(

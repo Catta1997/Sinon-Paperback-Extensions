@@ -91,12 +91,12 @@ export function getMangaTypeFilter() {
  */
 export function getOrderFilter() {
     return [
-        { value: "Più Letto", id: "most_read" },
-        { value: "Meno Letto", id: "less_read" },
-        { value: "Alfabetico A-Z", id: "a-z" },
-        { value: "Alfabetico Z-A", id: "z-a" },
-        { value: "Più recente", id: "newest" },
-        { value: "Meno recente", id: "oldest" },
+        { label: "Più Letto", id: "most_read" },
+        { label: "Meno Letto", id: "less_read" },
+        { label: "Alfabetico A-Z", id: "a-z" },
+        { label: "Alfabetico Z-A", id: "z-a" },
+        { label: "Più recente", id: "newest" },
+        { label: "Meno recente", id: "oldest" },
     ];
 }
 /**

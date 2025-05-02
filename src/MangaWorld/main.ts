@@ -131,10 +131,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
     }
 
     async getSortingOptions(): Promise<SortingOption[]> {
-        return getOrderFilter().map(({ value, ...rest }) => ({
-            label: value,
-            ...rest,
-        }));
+        return getOrderFilter();
     }
 }
 
