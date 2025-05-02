@@ -198,7 +198,7 @@ export class Parser {
                 version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
                 langCode: "🇮🇹",
                 chapNum: chapNum,
-                title: name,
+                //  title: name,
                 publishDate: this.getDate(date),
             });
         }
