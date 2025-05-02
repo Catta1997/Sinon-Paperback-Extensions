@@ -17208,7 +17208,7 @@ var source = (() => {
           version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
           langCode: "\u{1F1EE}\u{1F1F9}",
           chapNum,
-          title: name,
+          //  title: name,
           publishDate: this.getDate(date)
         });
       }
