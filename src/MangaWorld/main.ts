@@ -1,65 +1,59 @@
 import {
-	BasicRateLimiter,
-	Chapter,
-	ChapterDetails,
-	ChapterProviding,
-	DiscoverSection,
-	DiscoverSectionItem,
-	DiscoverSectionProviding,
-	Extension,
-	Form,
-	MangaProviding,
-	PagedResults,
-	PaperbackInterceptor,
-	Request,
-	Response,
-	SearchFilter,
-	SearchQuery,
-	SearchResultItem,
-	SearchResultsProviding,
-	SettingsFormProviding,
-	SourceManga
+    BasicRateLimiter,
+    Chapter,
+    ChapterDetails,
+    ChapterProviding,
+    DiscoverSection,
+    DiscoverSectionItem,
+    DiscoverSectionProviding,
+    Extension,
+    Form,
+    MangaProviding,
+    PagedResults,
+    PaperbackInterceptor,
+    Request,
+    Response,
+    SearchFilter,
+    SearchQuery,
+    SearchResultItem,
+    SearchResultsProviding,
+    SettingsFormProviding,
+    SortingOption,
+    SourceManga,
 } from "@paperback/types";
-import { Functions } from "../commons/Functions";
-import { Metadata } from "../commons/helper";
-import { Parser } from "../commons/parser";
+import { Functions } from "../commons/functions";
+import { getOrderFilter, Metadata } from "../commons/helper";
 import { SettingsForm } from "../commons/SettingsForm";
-
+import pbconfig from "./pbconfig";
 
 const MW_DOMAIN = "https://www.mangaworld.nz";
 // Should match the capabilities which you defined in pbconfig.ts
 type ContentTemplateImplementation = SettingsFormProviding &
-	Extension &
-	DiscoverSectionProviding &
-	SearchResultsProviding &
-	MangaProviding &
-	ChapterProviding;
+    Extension &
+    DiscoverSectionProviding &
+    SearchResultsProviding &
+    MangaProviding &
+    ChapterProviding;
 // Intercepts all the requests and responses and allows you to make changes to them
 class MainInterceptor extends PaperbackInterceptor {
-	override async interceptRequest(request: Request): Promise<Request> {
-		return request;
-	}
+    override async interceptRequest(request: Request): Promise<Request> {
+        return request;
+    }
 
-	override async interceptResponse(
-		request: Request,
-		response: Response,
-		data: ArrayBuffer,
-	): Promise<ArrayBuffer> {
-		void request;
-		void response;
+    override async interceptResponse(
+        request: Request,
+        response: Response,
+        data: ArrayBuffer,
+    ): Promise<ArrayBuffer> {
+        void request;
+        void response;
 
-		return data;
-	}
+        return data;
+    }
 }
 
 // Main extension class
-export class MangaWorldExtension
-    implements
-        ContentTemplateImplementation,
-        SearchResultsProviding,
-        MangaProviding,
-        ChapterProviding
-{
+export class MangaWorldExtension implements ContentTemplateImplementation {
     // Implementation of the main rate limiter
     mainRateLimiter = new BasicRateLimiter("main", {
         numberOfRequests: 15,
@@ -68,8 +62,7 @@ export class MangaWorldExtension
     });
     baseUrl = MW_DOMAIN;
     RETRIES = 10;
-    parser = new Parser();
-    functions = new Functions(MW_DOMAIN);
+    private functions = new Functions(MW_DOMAIN, pbconfig.contentRating);
 
     // Implementation of the main interceptor
     mainInterceptor = new MainInterceptor("main");
@@ -82,7 +75,7 @@ export class MangaWorldExtension
 
     // Implements the settings form, check SettingsForm.ts for more info
     async getSettingsForm(): Promise<Form> {
-        return new SettingsForm();
+        return new SettingsForm(pbconfig.contentRating);
     }
 
     async getSearchFilters(): Promise<SearchFilter[]> {
@@ -93,8 +86,9 @@ export class MangaWorldExtension
     async getSearchResults(
         query: SearchQuery,
         metadata: Metadata,
+        sorting: SortingOption,
     ): Promise<PagedResults<SearchResultItem>> {
-        return this.functions.getSearchResults(query, metadata);
+        return this.functions.getSearchResults(query, metadata, sorting);
     }
 
     // Populates the title details
@@ -104,11 +98,8 @@ export class MangaWorldExtension
     }
 
     // Populates the chapter list
-    async getChapters(
-        sourceManga: SourceManga,
-        sinceDate?: Date,
-    ): Promise<Chapter[]> {
-        return this.functions.getChapters(sourceManga, sinceDate);
+    async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
+        return this.functions.getChapters(sourceManga);
     }
 
     // Populates a chapter with images
@@ -137,6 +128,10 @@ export class MangaWorldExtension
         metadata: Metadata,
     ): Promise<PagedResults<DiscoverSectionItem>> {
         return this.functions.getDiscoverSectionItems(section, metadata);
+    }
+
+    async getSortingOptions(): Promise<SortingOption[]> {
+        return getOrderFilter();
     }
 }
 
