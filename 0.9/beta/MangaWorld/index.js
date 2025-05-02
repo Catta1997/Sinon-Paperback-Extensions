@@ -16963,12 +16963,12 @@ var source = (() => {
   }
   function getOrderFilter() {
     return [
-      { value: "Pi\xF9 Letto", id: "most_read" },
-      { value: "Meno Letto", id: "less_read" },
-      { value: "Alfabetico A-Z", id: "a-z" },
-      { value: "Alfabetico Z-A", id: "z-a" },
-      { value: "Pi\xF9 recente", id: "newest" },
-      { value: "Meno recente", id: "oldest" }
+      { label: "Pi\xF9 Letto", id: "most_read" },
+      { label: "Meno Letto", id: "less_read" },
+      { label: "Alfabetico A-Z", id: "a-z" },
+      { label: "Alfabetico Z-A", id: "z-a" },
+      { label: "Pi\xF9 recente", id: "newest" },
+      { label: "Meno recente", id: "oldest" }
     ];
   }
   function getGenreFilter() {
@@ -17775,10 +17775,12 @@ var source = (() => {
       title: value,
       ...rest
     }));
+    /*
     defOrder = getOrderFilter().map(({ value, ...rest }) => ({
-      title: value,
-      ...rest
+        title: value,
+        ...rest,
     }));
+    */
     getSections() {
       return [
         (0, import_types4.Section)(
@@ -18049,7 +18051,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.0 - beta 9",
+    version: "1.1",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld (0.9).",
     icon: "MangaWorldIcon.png",
@@ -18148,10 +18150,7 @@ var source = (() => {
       return this.functions.getDiscoverSectionItems(section, metadata);
     }
     async getSortingOptions() {
-      return getOrderFilter().map(({ value, ...rest }) => ({
-        label: value,
-        ...rest
-      }));
+      return getOrderFilter();
     }
   };
   var MangaWorld = new MangaWorldExtension();
