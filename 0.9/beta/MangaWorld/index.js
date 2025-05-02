@@ -2149,7 +2149,7 @@ var source = (() => {
         promise;
         currentRequestsMade = 0;
         lastReset = Date.now();
-        imageRegex = new RegExp(/\.(png|gif|jpeg|jpg|webp)(\?|$)/gi);
+        imageRegex = new RegExp(/\.(png|gif|jpeg|jpg|webp)(\?|$)/i);
         constructor(id, options) {
           super(id);
           this.options = options;
@@ -2978,6 +2978,15 @@ var source = (() => {
     }
   });
 
+  // node_modules/@paperback/types/lib/SortingOption.js
+  var require_SortingOption = __commonJS({
+    "node_modules/@paperback/types/lib/SortingOption.js"(exports) {
+      "use strict";
+      init_buffer();
+      Object.defineProperty(exports, "__esModule", { value: true });
+    }
+  });
+
   // node_modules/@paperback/types/lib/index.js
   var require_lib = __commonJS({
     "node_modules/@paperback/types/lib/index.js"(exports) {
@@ -3023,6 +3032,7 @@ var source = (() => {
       __exportStar(require_Tag(), exports);
       __exportStar(require_TagSection(), exports);
       __exportStar(require_TrackedMangaChapterReadAction(), exports);
+      __exportStar(require_SortingOption(), exports);
     }
   });
 
@@ -17065,8 +17075,7 @@ var source = (() => {
     }
     /**
      * Ottieni Rating dati tags
-     * @param tags : string[] - tags
-     * @type {tags:string[]} => ContentRating
+     * @param {string[]} tags - tags
      * @return {ContentRating} - ContentRating
      */
     getRating(tags) {
@@ -17092,9 +17101,9 @@ var source = (() => {
     }
     /**
      * Ottieni dettagli Manga
-     * @param $ : CheerioAPI - Richiesta
-     * @param mangaId : string - MangaID
-     * @param shareURL : string - shareURL
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {string} mangaId - MangaID
+     * @param {string} shareURL - shareURL
      * @return {SourceManga} - SourceManga
      */
     parseMangaDetails($2, mangaId, shareURL) {
@@ -17169,8 +17178,8 @@ var source = (() => {
     }
     /**
      * Ottieni Lista Capitoli
-     * @param $ : CheerioAPI - Richiesta
-     * @param sourceManga : SourceManga - Manga
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {SourceManga} sourceManga - Manga
      * @return {Chapter[]} - Capitoli
      */
     parseChapters($2, sourceManga) {
@@ -17207,9 +17216,9 @@ var source = (() => {
     }
     /**
      * Parsing dettagli capitolo
-     * @param $ : CheerioAPI - Richiesta
-     * @param mangaId : string - ID manga
-     * @param id : string - ID capitolo
+     * @param {CheerioAPI} $ - Richiesta
+     * @param {string} mangaId - ID manga
+     * @param {string} id - ID capitolo
      * @return {{
      *   id: string
      *   mangaId: string
@@ -17233,8 +17242,8 @@ var source = (() => {
     }
     /**
      * Parsing pagina
-     * @param $ : CheerioAPI - Richiesta
-     * @return {{id:string,title:string,image:string,tags:string[], authors: string, type: string}}
+     * @param {CheerioAPI} $ - Richiesta
+     * @return {[{id:string,title:string,image:string,tags:string[], authors: string, type: string}]}
      */
     parsePage($2) {
       const items = [];
@@ -17267,8 +17276,8 @@ var source = (() => {
     }
     /**
      * Parsing ricerca
-     * @param $ : CheerioAPI - Richiesta
-     * @return items: SearchResultItem[]
+     * @param {CheerioAPI} $ - Richiesta
+     * @return {SearchResultItem[]} items
      */
     parseSearchResults($2) {
       const results = [];
@@ -17288,8 +17297,8 @@ var source = (() => {
     }
     /**
      * Parsing capitoli in tendenza
-     * @param metadata : Metadata - metadata
-     * @param $ : CheerioAPI - Richiesta
+     * @param {Metadata} metadata - metadata
+     * @param {CheerioAPI} $ - Richiesta
      * @return { items: DiscoverSectionItem[] }
      */
     parseCapitoliInTendenza($2, metadata) {
@@ -17318,8 +17327,8 @@ var source = (() => {
     }
     /**
      * Parsing in tendenza nel mese
-     * @param metadata : Metadata - metadata
-     * @param $ : CheerioAPI - Richiesta
+     * @param {Metadata} metadata - metadata
+     * @param {CheerioAPI} $ - Richiesta
      * @return [ { items: DiscoverSectionItem[], metadata: Metadata }, { items: DiscoverSectionItem[], metadata: Metadata } ]
      */
     parseInTendenzaMese($2, metadata) {
@@ -17348,9 +17357,9 @@ var source = (() => {
     }
     /**
      * Parsing ultimi manga aggiunti
-     * @param metadata : Metadata - metadata
-     * @param url : string - Url
-     * @return { items: DiscoverSectionItem[], metadata: Metadata }
+     * @param {Metadata} metadata - metadata
+     * @param {string} url - Url
+     * @return {{ items: DiscoverSectionItem[], metadata: Metadata }}
      */
     async parseLastMangaAddedSection(metadata, url) {
       const latest = [];
@@ -17379,13 +17388,13 @@ var source = (() => {
     }
     /**
      * Parse nuovi capitoli
-     * @param $ : CheerioAPI - pagina
-     * @param metadata - manga metadata
-     * @param url - url
-     * @return {
+     * @param {CheerioAPI} $ - pagina
+     * @param {Metadata} metadata - manga metadata
+     * @param {string} url - url
+     * @return {{
      * 		items: DiscoverSectionItem[],
      * 		metadata: Metadata | undefined
-     * 	}
+     * 	}}
      */
     async parseLastAddedSection($2, metadata, url) {
       let page = metadata?.page ?? 1;
@@ -17441,8 +17450,8 @@ var source = (() => {
     }
     /**
      * Trasforma una stringa in data
-     * @param dataString - data in formato stringa
-     * @return Date - stringa in formato data
+     * @param {string} dataString - data in formato stringa
+     * @return {Date} - stringa in formato data
      */
     getDate(dataString) {
       const mesi = {
@@ -17622,15 +17631,6 @@ var source = (() => {
     }
     getFilterList() {
       const filters2 = [];
-      filters2.push({
-        type: "dropdown",
-        options: getOrderFilter(),
-        id: "order",
-        value: (Application.getState("def_order") ?? [
-          "most_read"
-        ])[0],
-        title: "Ordine"
-      });
       const def_value = (Application.getState("def_type") ?? [])[0];
       filters2.push({
         type: "multiselect",
@@ -17658,11 +17658,11 @@ var source = (() => {
       });
       return filters2;
     }
-    async getSearchResults(query, metadata) {
+    async getSearchResults(query, metadata, sorting) {
       let manga = [];
       let page = metadata?.page ?? 1;
       if (page == -1) return { items: [] };
-      const url = this.constructSearchRequestURL(page, query);
+      const url = this.constructSearchRequestURL(page, query, sorting);
       const data2 = (await Application.scheduleRequest({
         url: `${url}`,
         method: "GET"
@@ -17687,7 +17687,7 @@ var source = (() => {
         `${this.baseUrl}/manga/${mangaId}`
       );
     }
-    constructSearchRequestURL(page, query = { title: "", filters: [] }) {
+    constructSearchRequestURL(page, query = { title: "", filters: [] }, sorting) {
       const generi = [];
       const tipologia = [];
       const getFilterValue = (id) => query.filters.find((filter4) => filter4.id == id)?.value;
@@ -17715,8 +17715,7 @@ var source = (() => {
         );
       if (page.toString().length > 0)
         urlBuilder.addQueryParameter("page", page.toString());
-      if (getFilterValue("order"))
-        urlBuilder.addQueryParameter("sort", getFilterValue("order"));
+      if (sorting?.id) urlBuilder.addQueryParameter("sort", sorting?.id);
       if (generi.length > 0) urlBuilder.addQueryParameter("genre", generi);
       if (tipologia.length > 0)
         urlBuilder.addQueryParameter("type", tipologia);
@@ -17820,18 +17819,19 @@ var source = (() => {
             footer: "Cambia i filtri di default della ricerca"
           },
           [
-            (0, import_types4.SelectRow)("def_order", {
-              title: "Ordine Ricerca",
-              subtitle: "Ordinamento della Ricerca",
-              value: this.defOrderStatusState.value,
-              options: this.defOrder,
-              minItemCount: 1,
-              maxItemCount: 1,
-              onValueChange: Application.Selector(
-                this,
-                "handleDefOrderStatusChange"
-              )
-            }),
+            /*
+            SelectRow("def_order", {
+                title: "Ordine Ricerca",
+                subtitle: "Ordinamento della Ricerca",
+                value: this.defOrderStatusState.value,
+                options: this.defOrder,
+                minItemCount: 1,
+                maxItemCount: 1,
+                onValueChange: Application.Selector(
+                    this as FilterSettings,
+                    "handleDefOrderStatusChange",
+                ),
+            }),*/
             (0, import_types4.SelectRow)("def_type", {
               title: "Tipologia",
               subtitle: "Tipologia di default",
@@ -17881,24 +17881,29 @@ var source = (() => {
       this.getHideTypeStatus()
     );
     /////// def_order
-    getDefOrderStatus() {
-      return Application.getState("def_order") ?? [
-        "most_read"
-      ];
+    /*
+    getDefOrderStatus(): string[] {
+        return (
+            (Application.getState("def_order") as string[] | undefined) ?? [
+                "most_read",
+            ]
+        );
     }
-    setDefOrderStatus(status) {
-      Application.setState(status, "def_order");
+    setDefOrderStatus(status: string[]): void {
+        Application.setState(status, "def_order");
     }
-    async handleDefOrderStatusChange(value) {
-      await this.defOrderStatusState.updateValue(value);
-      this.setDefOrderStatus(value);
-      this.reloadForm();
-      Application.invalidateSearchFilters();
+    async handleDefOrderStatusChange(value: string[]): Promise<void> {
+        //console.log("handleDefOrderStatusChange " + value.join(", "));
+        await this.defOrderStatusState.updateValue(value);
+        this.setDefOrderStatus(value);
+        this.reloadForm();
+        Application.invalidateSearchFilters();
     }
-    defOrderStatusState = new State3(
-      this,
-      this.getDefOrderStatus()
+    private defOrderStatusState = new State<string[]>(
+        this,
+        this.getDefOrderStatus(),
     );
+     */
     /////// def_type
     getDefTypeStatus() {
       return Application.getState("def_type") ?? [];
@@ -18109,8 +18114,8 @@ var source = (() => {
       return this.functions.getFilterList();
     }
     // Populates search
-    async getSearchResults(query, metadata) {
-      return this.functions.getSearchResults(query, metadata);
+    async getSearchResults(query, metadata, sorting) {
+      return this.functions.getSearchResults(query, metadata, sorting);
     }
     // Populates the title details
     async getMangaDetails(mangaId) {
@@ -18141,6 +18146,12 @@ var source = (() => {
     }
     async getDiscoverSectionItems(section, metadata) {
       return this.functions.getDiscoverSectionItems(section, metadata);
+    }
+    async getSortingOptions() {
+      return getOrderFilter().map(({ value, ...rest }) => ({
+        label: value,
+        ...rest
+      }));
     }
   };
   var MangaWorld = new MangaWorldExtension();

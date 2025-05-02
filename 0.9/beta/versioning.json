@@ -1,8 +1,8 @@
 {
-  "buildTime": "2025-04-23T12:02:54.613Z",
+  "buildTime": "2025-05-02T08:46:20.280Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.46",
-    "types": "1.0.0-alpha.46"
+    "toolchain": "1.0.0-alpha.50",
+    "types": "1.0.0-alpha.50"
   },
   "repository": {
     "name": "Sinon's Extensions (0.9)",
