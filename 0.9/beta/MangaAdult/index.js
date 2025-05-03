@@ -17199,7 +17199,7 @@ var source = (() => {
           "Parsed: Manga " + name + " Chapter: " + chapN + " Volume: " + volN
         );
         const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
-        const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
+        const volumeNum = isNaN(Number(volN)) ? void 0 : Number(volN);
         const date = $2("i.text-right.text-muted.chap-date", item).text();
         chapters.push({
           chapterId,
@@ -17470,10 +17470,11 @@ var source = (() => {
       };
       const oggi = /* @__PURE__ */ new Date();
       const parts = dataString.trim().toLowerCase().split(" ");
-      if (parts.length < 2 || parts.length > 3) return oggi;
-      const giorno = parseInt(parts[0], 10);
-      const mese = mesi[parts[1]];
-      const anno = parseInt(parts[2], 10);
+      if (parts.length !== 3) return oggi;
+      const [giornoStr, meseStr, annoStr] = parts;
+      const giorno = parseInt(giornoStr, 10);
+      const mese = mesi[meseStr];
+      const anno = parseInt(annoStr, 10);
       if (isNaN(giorno) || mese === void 0 || isNaN(anno)) return oggi;
       return new Date(anno, mese, giorno);
     }
