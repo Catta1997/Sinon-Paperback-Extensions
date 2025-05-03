@@ -188,7 +188,7 @@ export class Parser {
             );
             // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
-            const volumeNum = isNaN(Number(volN)) ? 1 : Number(volN);
+            const volumeNum = isNaN(Number(volN)) ? undefined : Number(volN);
 
             const date = $("i.text-right.text-muted.chap-date", item).text();
             chapters.push({
@@ -529,10 +529,11 @@ export class Parser {
         };
         const oggi = new Date();
         const parts = dataString.trim().toLowerCase().split(" ");
-        if (parts.length < 2 || parts.length > 3) return oggi;
-        const giorno = parseInt(parts[0], 10);
-        const mese = mesi[parts[1]];
-        const anno = parseInt(parts[2], 10);
+        if (parts.length !== 3) return oggi;
+        const [giornoStr, meseStr, annoStr] = parts;
+        const giorno = parseInt(giornoStr, 10);
+        const mese = mesi[meseStr];
+        const anno = parseInt(annoStr, 10);
         if (isNaN(giorno) || mese === undefined || isNaN(anno)) return oggi;
         return new Date(anno, mese, giorno);
     }
