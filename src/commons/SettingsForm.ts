@@ -2,6 +2,7 @@ import {
     ButtonRow,
     ContentRating,
     Form,
+    FormSectionElement,
     NavigationRow,
     Section,
     SelectRow,
@@ -21,7 +22,7 @@ export class SettingsForm extends Form {
         //console.log(this.rating);
     }
 
-    override getSections(): Application.FormSectionElement[] {
+    override getSections(): FormSectionElement[] {
         return [
             Section("playground", [
                 NavigationRow("playground", {
@@ -78,7 +79,7 @@ class FilterSettings extends Form {
         ...rest,
     }));
     */
-    override getSections(): Application.FormSectionElement[] {
+    override getSections(): FormSectionElement[] {
         return [
             Section(
                 {
@@ -246,7 +247,7 @@ class CustomContentRating extends Form {
         title: value,
         ...rest,
     }));
-    override getSections(): Application.FormSectionElement[] {
+    override getSections(): FormSectionElement[] {
         if (
             !this.genres.some(
                 (g) => g.id === "Nessuno" && g.title === "Nessuno",
