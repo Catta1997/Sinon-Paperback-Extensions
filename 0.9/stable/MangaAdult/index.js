@@ -1853,6 +1853,7 @@ var source = (() => {
       Object.defineProperty(exports, "__esModule", { value: true });
       exports.LabelRow = LabelRow;
       exports.InputRow = InputRow;
+      exports.StepperRow = StepperRow;
       exports.ToggleRow = ToggleRow;
       exports.SelectRow = SelectRow2;
       exports.ButtonRow = ButtonRow2;
@@ -1866,6 +1867,14 @@ var source = (() => {
       function InputRow(id, props) {
         return { ...props, id, type: "inputRow", isHidden: props.isHidden ?? false };
       }
+      function StepperRow(id, props) {
+        return {
+          ...props,
+          id,
+          type: "stepperRow",
+          isHidden: props.isHidden ?? false
+        };
+      }
       function ToggleRow(id, props) {
         return { ...props, id, type: "toggleRow", isHidden: props.isHidden ?? false };
       }
@@ -1876,7 +1885,12 @@ var source = (() => {
         return { ...props, id, type: "buttonRow", isHidden: props.isHidden ?? false };
       }
       function WebViewRow(id, props) {
-        return { ...props, id, type: "webViewRow", isHidden: props.isHidden ?? false };
+        return {
+          ...props,
+          id,
+          type: "webViewRow",
+          isHidden: props.isHidden ?? false
+        };
       }
       function NavigationRow2(id, props) {
         return {
@@ -2175,11 +2189,11 @@ var source = (() => {
           }
           this.currentRequestsMade += 1;
           if (this.currentRequestsMade >= this.options.numberOfRequests) {
-            if (secondsSinceLastReset <= this.options.bufferInterval) {
-              const sleepTime = this.options.bufferInterval - secondsSinceLastReset;
+            const secondsSinceLastReset2 = (Date.now() - this.lastReset) / 1e3;
+            if (secondsSinceLastReset2 <= this.options.bufferInterval) {
+              const sleepTime = this.options.bufferInterval - secondsSinceLastReset2;
               console.log(`[BasicRateLimiter] rate limit hit, sleeping for ${sleepTime}`);
               this.promise = Application.sleep(sleepTime);
-              await this.promise;
             }
           }
         }
@@ -18052,7 +18066,7 @@ var source = (() => {
   init_buffer();
   var import_types5 = __toESM(require_lib(), 1);
   var pbconfig_default = {
-    version: "1.1",
+    version: "1.2",
     name: "MangaAdult",
     description: "Extension that pulls manga from MangaAdult (0.9).",
     icon: "MangaAdultIcon.png",
