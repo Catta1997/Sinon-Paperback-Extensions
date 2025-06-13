@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-06-13T15:42:10.130Z",
+  "buildTime": "2025-06-13T15:42:25.060Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.52",
     "types": "1.0.0-alpha.52"
@@ -9,39 +9,6 @@
     "description": "Some Paperback Extensions"
   },
   "sources": [
-    {
-      "version": "1.2",
-      "name": "MangaAdult",
-      "description": "Extension that pulls manga from MangaAdult (0.9).",
-      "icon": "MangaAdultIcon.png",
-      "language": "it",
-      "contentRating": "ADULT",
-      "capabilities": [
-        1,
-        4,
-        64,
-        32
-      ],
-      "badges": [
-        {
-          "label": "Italian",
-          "textColor": "#187480",
-          "backgroundColor": "#c2ecd8"
-        },
-        {
-          "label": "NSFW",
-          "textColor": "#ff0000",
-          "backgroundColor": "#000000"
-        }
-      ],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "website": "https://github.com/Catta1997"
-        }
-      ],
-      "id": "MangaAdult"
-    },
     {
       "version": "1.2.1 beta 2",
       "name": "MangaWorld",
