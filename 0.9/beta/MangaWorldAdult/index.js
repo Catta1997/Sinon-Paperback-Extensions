@@ -3065,11 +3065,11 @@ var source = (() => {
     }
   });
 
-  // src/MangaWorld/main.ts
+  // src/MangaWorldAdult/main.ts
   var main_exports = {};
   __export(main_exports, {
-    MangaWorld: () => MangaWorld,
-    MangaWorldExtension: () => MangaWorldExtension
+    MangaAdultExtension: () => MangaAdultExtension,
+    MangaWorldAdult: () => MangaWorldAdult
   });
   init_buffer();
   var import_types4 = __toESM(require_lib(), 1);
@@ -16915,7 +16915,7 @@ var source = (() => {
   var parse5 = getParse((content, options, isDocument2, context) => options._useHtmlParser2 ? parseDocument(content, options) : parseWithParse5(content, options, isDocument2, context));
   var load = getLoad(parse5, (dom, options) => options._useHtmlParser2 ? esm_default(dom, options) : renderWithParse5(dom));
 
-  // src/MangaWorld/helper.ts
+  // src/MangaWorldAdult/helper.ts
   init_buffer();
   async function populateFilter(baseUrl) {
     const lastFilterFetch = Number(
@@ -17105,69 +17105,10 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/parser.ts
+  // src/MangaWorldAdult/parser.ts
   init_buffer();
   var import_types2 = __toESM(require_lib(), 1);
-
-  // src/MangaWorldAdult/helper.ts
-  init_buffer();
-  var cacheMap2 = /* @__PURE__ */ new Map();
-  var requestMap2 = /* @__PURE__ */ new Map();
-  async function fetchPage2(url) {
-    const [, responseData] = await Application.scheduleRequest({
-      url,
-      method: "GET"
-    });
-    return responseData;
-  }
-  async function getPageCache2(name, url, cacheTime = 60) {
-    const cached = cacheMap2.get(name);
-    if (cached && cached.expires > Math.floor(Date.now() / 1e3)) {
-      console.log(`[CACHE] Use Cached Page "${name}"`);
-      return cached.data;
-    }
-    if (requestMap2.has(name)) {
-      console.log(`[CACHE] Awaiting Request "${name}"`);
-      return requestMap2.get(name);
-    }
-    console.log(`[CACHE] Fetching New Page "${name}"`);
-    const fetchPromise = fetchPage2(url).then((data2) => {
-      cacheMap2.set(name, {
-        expires: Math.floor(Date.now() / 1e3) + cacheTime,
-        data: data2
-      });
-      console.log(`[CACHE] New Cached "${name}"`);
-      requestMap2.delete(name);
-      return data2;
-    }).catch((error) => {
-      console.log(`[CACHE] Error on cache "${name} - ${error}"`);
-      requestMap2.delete(name);
-      throw error;
-    });
-    requestMap2.set(name, fetchPromise);
-    return fetchPromise;
-  }
-
-  // src/MangaWorld/parser.ts
   var Parser3 = class {
-    /**
-     * Get manga Rating
-     * @param {string[]} tags - tags
-     * @return {ContentRating} - ContentRating
-     */
-    getRating(tags) {
-      let rating = import_types2.ContentRating.EVERYONE;
-      for (const tag of tags) {
-        if (tag.toUpperCase() === "ADULTI") {
-          rating = import_types2.ContentRating.ADULT;
-          break;
-        } else if (tag.toUpperCase() === "MATURO") {
-          rating = import_types2.ContentRating.MATURE;
-          break;
-        }
-      }
-      return rating;
-    }
     /**
      * Get Manga Detail
      * @param {cheerio.CheerioAPI} $ - Request
@@ -17222,7 +17163,6 @@ var source = (() => {
       for (const tag of data2.genre) {
         arrayTags.push({ title: tag, id: tag.replaceAll(" ", "-") });
       }
-      const rating = this.getRating(arrayTags.map((tag) => tag.title));
       const tagSections = [
         { id: "genres", title: "genres", tags: arrayTags }
       ];
@@ -17233,7 +17173,7 @@ var source = (() => {
           thumbnailUrl: image,
           synopsis: desc,
           primaryTitle: title,
-          contentRating: rating ?? import_types2.ContentRating.EVERYONE,
+          contentRating: import_types2.ContentRating.ADULT,
           status,
           author,
           tagGroups: tagSections,
@@ -17351,7 +17291,7 @@ var source = (() => {
             title: item.title,
             subtitle: item.authors,
             mangaId: item.id,
-            contentRating: this.getRating(item.tags)
+            contentRating: import_types2.ContentRating.ADULT
           });
         }
       }
@@ -17376,7 +17316,7 @@ var source = (() => {
         trending.push({
           metadata,
           type: "featuredCarouselItem",
-          contentRating: import_types2.ContentRating.EVERYONE,
+          contentRating: import_types2.ContentRating.ADULT,
           supertitle: chapNum,
           imageUrl: image,
           mangaId: id,
@@ -17404,7 +17344,7 @@ var source = (() => {
           hot.push({
             metadata,
             type: "prominentCarouselItem",
-            contentRating: import_types2.ContentRating.EVERYONE,
+            contentRating: import_types2.ContentRating.ADULT,
             imageUrl: image,
             mangaId: id,
             title
@@ -17422,23 +17362,14 @@ var source = (() => {
     async parseLastMangaAddedSection(metadata, url) {
       const latest = [];
       let page = metadata?.page ?? 1;
-      let $2 = load(``);
-      if (page > 1) {
-        const data2 = (await Application.scheduleRequest({
-          url: `${url}/archive?sort=newest&page=${page}`,
-          method: "GET"
-        }))[1];
-        $2 = load(Application.arrayBufferToUTF8String(data2));
-      } else {
-        $2 = load(
-          Application.arrayBufferToUTF8String(
-            await getPageCache2(
-              "LastMangaAddedSection",
-              `${url}/archive?sort=newest&page=${page}`
-            )
+      const $2 = load(
+        Application.arrayBufferToUTF8String(
+          await getPageCache(
+            "LastMangaAddedSection",
+            `${url}/archive?sort=newest&page=${page}`
           )
-        );
-      }
+        )
+      );
       page++;
       const parse6 = this.parsePage($2);
       for (const item of parse6) {
@@ -17447,7 +17378,7 @@ var source = (() => {
             metadata: { page },
             subtitle: item.authors,
             type: "simpleCarouselItem",
-            contentRating: this.getRating(item.tags),
+            contentRating: import_types2.ContentRating.ADULT,
             imageUrl: item.image,
             mangaId: item.id,
             title: item.title
@@ -17504,7 +17435,7 @@ var source = (() => {
             metadata,
             type: "chapterUpdatesCarouselItem",
             publishDate: data2,
-            contentRating: import_types2.ContentRating.EVERYONE,
+            contentRating: import_types2.ContentRating.ADULT,
             imageUrl: image,
             mangaId: id,
             title,
@@ -17546,7 +17477,7 @@ var source = (() => {
     }
   };
 
-  // src/MangaWorld/SettingsForm.ts
+  // src/MangaWorldAdult/SettingsForm.ts
   init_buffer();
   var import_types3 = __toESM(require_lib(), 1);
   var SettingsForm = class extends import_types3.Form {
@@ -17692,8 +17623,8 @@ var source = (() => {
     );
   };
 
-  // src/MangaWorld/main.ts
-  var MW_DOMAIN = "https://www.mangaworld.nz";
+  // src/MangaWorldAdult/main.ts
+  var MW_DOMAIN = "https://www.mangaworldadult.net";
   var MainInterceptor = class extends import_types4.PaperbackInterceptor {
     async interceptRequest(request) {
       return request;
@@ -17704,7 +17635,7 @@ var source = (() => {
       return data2;
     }
   };
-  var MangaWorldExtension = class {
+  var MangaAdultExtension = class {
     // Implementation of the main rate limiter
     mainRateLimiter = new import_types4.BasicRateLimiter("main", {
       numberOfRequests: 15,
@@ -17932,9 +17863,7 @@ var source = (() => {
               },
               name: filter4.value,
               metadata,
-              contentRating: this.parser.getRating([
-                filter4.value
-              ])
+              contentRating: import_types4.ContentRating.ADULT
             });
           });
           console.log("[HOME] Loading genre_section loaded");
@@ -17971,7 +17900,7 @@ var source = (() => {
               },
               name: filter4.value,
               metadata,
-              contentRating: import_types4.ContentRating.EVERYONE
+              contentRating: import_types4.ContentRating.ADULT
             });
           });
           console.log("[HOME] Loading type_section loaded");
@@ -18049,7 +17978,7 @@ var source = (() => {
       };
     }
   };
-  var MangaWorld = new MangaWorldExtension();
+  var MangaWorldAdult = new MangaAdultExtension();
   return __toCommonJS(main_exports);
 })();
 /*! Bundled license information:

@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-05-18T08:08:03.621Z",
+  "buildTime": "2025-06-13T15:42:10.130Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.52",
     "types": "1.0.0-alpha.52"
@@ -43,9 +43,9 @@
       "id": "MangaAdult"
     },
     {
-      "version": "1.2",
+      "version": "1.2.1 beta 2",
       "name": "MangaWorld",
-      "description": "Extension that pulls manga from MangaWorld (0.9).",
+      "description": "Extension that pulls manga from MangaWorld.",
       "icon": "MangaWorldIcon.png",
       "language": "it",
       "contentRating": "SAFE",
@@ -58,8 +58,8 @@
       "badges": [
         {
           "label": "Italian",
-          "textColor": "#187480",
-          "backgroundColor": "#c2ecd8"
+          "textColor": "#ffffff",
+          "backgroundColor": "#53c2ae"
         }
       ],
       "developers": [
@@ -69,6 +69,34 @@
         }
       ],
       "id": "MangaWorld"
+    },
+    {
+      "version": "1.2.1 beta 2",
+      "name": "MangaWorldAdult",
+      "description": "Extension that pulls manga from MangaWorldAdult.",
+      "icon": "MangaWorldAdultIcon.png",
+      "language": "it",
+      "contentRating": "ADULT",
+      "capabilities": [
+        1,
+        4,
+        64,
+        32
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#ffffff",
+          "backgroundColor": "#53c2ae"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "MangaWorldAdult"
     }
   ]
 }
