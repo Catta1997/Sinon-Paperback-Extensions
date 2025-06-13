@@ -40,7 +40,7 @@ import {
 import { Parser } from "./parser";
 import { SettingsForm } from "./SettingsForm";
 
-const MW_DOMAIN = "https://www.mangaworld.nz";
+const MW_DOMAIN = "https://www.mangaworldadult.net";
 // Should match the capabilities which you defined in pbconfig.ts
 type ContentTemplateImplementation = SettingsFormProviding &
     Extension &
@@ -67,7 +67,7 @@ class MainInterceptor extends PaperbackInterceptor {
 }
 
 // Main extension class
-export class MangaWorldExtension implements ContentTemplateImplementation {
+export class MangaAdultExtension implements ContentTemplateImplementation {
     // Implementation of the main rate limiter
     mainRateLimiter = new BasicRateLimiter("main", {
         numberOfRequests: 15,
@@ -325,9 +325,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                             },
                             name: filter.value,
                             metadata: metadata,
-                            contentRating: this.parser.getRating([
-                                filter.value,
-                            ]),
+                            contentRating: ContentRating.ADULT,
                         });
                     });
                 console.log("[HOME] Loading genre_section loaded");
@@ -368,7 +366,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                             },
                             name: filter.value,
                             metadata: metadata,
-                            contentRating: ContentRating.EVERYONE,
+                            contentRating: ContentRating.ADULT,
                         });
                     });
                 console.log("[HOME] Loading type_section loaded");
@@ -466,4 +464,4 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
     }
 }
 
-export const MangaWorld = new MangaWorldExtension();
+export const MangaWorldAdult = new MangaAdultExtension();

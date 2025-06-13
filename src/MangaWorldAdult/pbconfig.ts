@@ -2,11 +2,11 @@ import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
     version: "1.2.1 beta 2",
-    name: "MangaWorld",
-    description: "Extension that pulls manga from MangaWorld.",
-    icon: "MangaWorldIcon.png",
+    name: "MangaWorldAdult",
+    description: "Extension that pulls manga from MangaWorldAdult.",
+    icon: "MangaWorldAdultIcon.png",
     language: "it",
-    contentRating: ContentRating.EVERYONE,
+    contentRating: ContentRating.ADULT,
     capabilities: [
         SourceIntents.MANGA_CHAPTERS,
         SourceIntents.DISCOVER_SECIONS,
