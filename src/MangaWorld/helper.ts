@@ -61,9 +61,14 @@ export async function populateFilter(baseUrl: string) {
     }
 }
 
-export const cacheMap = new Map<string, { expires: number; data: ArrayBuffer }>();
-const requestMap = new Map<string, Promise<ArrayBuffer>>();
+type CacheEntry = {
+    expires: number;
+    data: ArrayBuffer;
+};
 
+export const cacheMap: Map<string, CacheEntry> = new Map();
+
+const requestMap: Map<string, Promise<ArrayBuffer>> = new Map();
 async function fetchPage(url: string): Promise<ArrayBuffer> {
     const [, responseData] = await Application.scheduleRequest({
         url,
