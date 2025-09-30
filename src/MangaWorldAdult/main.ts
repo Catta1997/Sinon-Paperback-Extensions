@@ -30,7 +30,6 @@ import {
     getMangaTypeFilter,
     getOrderFilter,
     getPageCache,
-    getRating,
     getStatusFilter,
     getYearFilter,
     Metadata,
@@ -49,7 +48,7 @@ type ContentTemplateImplementation = SettingsFormProviding &
     ChapterProviding;
 
 // Main extension class
-export class MangaWorldExtension implements ContentTemplateImplementation {
+export class MangaAdultExtension implements ContentTemplateImplementation {
     // Implementation of the main rate limiter
     mainRateLimiter = new BasicRateLimiter("main", {
         numberOfRequests: 15,
@@ -204,10 +203,11 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                 title: "Capitoli In Tendenza",
                 type: DiscoverSectionType.featured,
             },
+
             {
                 id: "mese_section",
-                title: "Tendenze del Mese",
-                subtitle: "Più letti del mese",
+                title: "Manga del Mese",
+                subtitle: "Manga più letti del mese",
                 type: DiscoverSectionType.prominentCarousel,
             },
             {
@@ -222,7 +222,6 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                 subtitle: "Ultimi Capitoli Aggiunti",
                 type: DiscoverSectionType.chapterUpdates,
             },
-
             {
                 id: "new_manga_section",
                 title: "Nuove Aggiunte",
@@ -306,7 +305,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                             },
                             name: filter.value,
                             metadata: metadata,
-                            contentRating: getRating([filter.value]),
+                            contentRating: ContentRating.ADULT,
                         });
                     });
                 console.log("[HOME] Loading genre_section");
@@ -347,7 +346,7 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
                             },
                             name: filter.value,
                             metadata: metadata,
-                            contentRating: ContentRating.EVERYONE,
+                            contentRating: ContentRating.ADULT,
                         });
                     });
                 console.log("[HOME] Loading type_section");
@@ -369,4 +368,4 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
     }
 }
 
-export const MangaWorld = new MangaWorldExtension();
+export const MangaWorldAdult = new MangaAdultExtension();

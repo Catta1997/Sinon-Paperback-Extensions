@@ -10,70 +10,28 @@ import {
     TagSection,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { CheerioAPI } from "cheerio";
 import {
     blacklistedTags,
     blacklistedType,
-    getAdultFilter,
-    getMatureFilter,
+    excludedTags,
+    excludedTypes,
+    getRating,
     Metadata,
-} from "./helper";
+} from "./helpers";
+import { Requests } from "./requests";
 
-export class Parser {
-    rating = ContentRating.EVERYONE;
-    constructor(rating: ContentRating) {
-        this.rating = rating;
-    }
+export class Parsers {
+    private requests = new Requests();
 
     /**
-     * Ottieni Rating dati tags
-     * @param {string[]} tags - tags
-     * @return {ContentRating} - ContentRating
-     */
-    getRating(tags: string[]): ContentRating {
-        let rating: ContentRating = this.rating;
-        const storedAdultTags = Application.getState("adult_tags") as string[];
-        const adult_pref = storedAdultTags
-            ? storedAdultTags
-            : getAdultFilter().map(({ id }) => id);
-
-        const storedMatureTags = Application.getState(
-            "mature_tags",
-        ) as string[];
-        const mature_pref = storedMatureTags
-            ? storedMatureTags
-            : getMatureFilter().map(({ id }) => id);
-        console.log("AdultTags: " + adult_pref.join(","));
-        console.log("MatureTags: " + mature_pref.join(","));
-        for (const tag of tags) {
-            if (
-                adult_pref
-                    .map((item) => item.toUpperCase())
-                    .includes(tag.toUpperCase())
-            ) {
-                rating = ContentRating.ADULT;
-                break;
-            } else if (
-                mature_pref
-                    .map((item) => item.toUpperCase())
-                    .includes(tag.toUpperCase())
-            ) {
-                rating = ContentRating.MATURE;
-                break;
-            }
-        }
-        return rating;
-    }
-
-    /**
-     * Ottieni dettagli Manga
-     * @param {CheerioAPI} $ - Richiesta
+     * Get Manga Detail
+     * @param {cheerio.CheerioAPI} $ - Request
      * @param {string} mangaId - MangaID
      * @param {string} shareURL - shareURL
      * @return {SourceManga} - SourceManga
      */
     parseMangaDetails(
-        $: CheerioAPI,
+        $: cheerio.CheerioAPI,
         mangaId: string,
         shareURL: string,
     ): SourceManga {
@@ -85,7 +43,6 @@ export class Parser {
         const artists: string[] = [];
         const authors: string[] = [];
         const titles: string[] = [];
-        //console.log(shareURL);
         const data = {
             genre: [] as string[],
             state: "",
@@ -131,9 +88,7 @@ export class Parser {
         for (const tag of data.genre) {
             arrayTags.push({ title: tag, id: tag.replaceAll(" ", "-") });
         }
-        const rating: ContentRating = this.getRating(
-            arrayTags.map((tag) => tag.title),
-        );
+        const rating = getRating(arrayTags.map((tag) => tag.title));
         const tagSections: TagSection[] = [
             { id: "genres", title: "genres", tags: arrayTags },
         ];
@@ -144,7 +99,7 @@ export class Parser {
                 thumbnailUrl: image,
                 synopsis: desc,
                 primaryTitle: title,
-                contentRating: rating,
+                contentRating: rating ?? ContentRating.EVERYONE,
                 status: status,
                 author: author,
                 tagGroups: tagSections,
@@ -156,12 +111,13 @@ export class Parser {
     }
 
     /**
-     * Ottieni Lista Capitoli
-     * @param {CheerioAPI} $ - Richiesta
+     * Get Chapter List
+     * @param {cheerio.CheerioAPI} $ - Request
      * @param {SourceManga} sourceManga - Manga
-     * @return {Chapter[]} - Capitoli
+     * @return {Chapter[]} - Chapters
      */
-    parseChapters($: CheerioAPI, sourceManga: SourceManga): Chapter[] {
+    parseChapters($: cheerio.CheerioAPI, sourceManga: SourceManga): Chapter[] {
+        console.log(sourceManga);
         const chapters: Chapter[] = [];
         const arrChapters = $(".chapter").toArray().reverse();
         for (const item of arrChapters) {
@@ -170,23 +126,13 @@ export class Parser {
                 "null",
                 "",
             ])[1];
-            const name = $("a", item).attr("title") ?? "";
+            //const name = $("a", item).attr("title") ?? "";
             const volN = $(item)
                 .closest(".volume-element")
                 .find(".volume-name")
                 .text()
                 .split(" ")[1];
             const chapN = $(".d-inline-block", item).text().split(" ")[1];
-            console.log("New Chapters");
-            console.log(
-                "Parsed: Manga " +
-                    name +
-                    " Chapter: " +
-                    chapN +
-                    " Volume: " +
-                    volN,
-            );
-            // trasformo in Number capitolo e volume
             const chapNum = isNaN(Number(chapN)) ? 1 : Number(chapN);
             const volumeNum = isNaN(Number(volN)) ? undefined : Number(volN);
 
@@ -198,7 +144,6 @@ export class Parser {
                 version: sourceManga.mangaInfo.additionalInfo?.subs ?? "",
                 langCode: "🇮🇹",
                 chapNum: chapNum,
-                //  title: name,
                 publishDate: this.getDate(date),
             });
         }
@@ -206,18 +151,18 @@ export class Parser {
     }
 
     /**
-     * Parsing dettagli capitolo
-     * @param {CheerioAPI} $ - Richiesta
+     * Parsing chapter details
+     * @param {cheerio.CheerioAPI} $ - Request
      * @param {string} mangaId - ID manga
-     * @param {string} id - ID capitolo
+     * @param {string} id - ID chapter
      * @return {{
      *   id: string
      *   mangaId: string
      *   pages: string[]
-     * }} - Dettagli
+     * }} - Details
      */
     parseChapterDetails(
-        $: CheerioAPI,
+        $: cheerio.CheerioAPI,
         mangaId: string,
         id: string,
     ): ChapterDetails {
@@ -237,11 +182,11 @@ export class Parser {
     }
 
     /**
-     * Parsing pagina
-     * @param {CheerioAPI} $ - Richiesta
+     * Page Parsing
+     * @param {cheerio.CheerioAPI} $ - Request
      * @return {[{id:string,title:string,image:string,tags:string[], authors: string, type: string}]}
      */
-    parsePage($: CheerioAPI): {
+    parsePage($: cheerio.CheerioAPI): {
         id: string;
         title: string;
         image: string;
@@ -291,21 +236,28 @@ export class Parser {
     }
 
     /**
-     * Parsing ricerca
-     * @param {CheerioAPI} $ - Richiesta
+     * Search Parsing
+     * @param {cheerio.CheerioAPI} $ - Request
+     * @param excluded
      * @return {SearchResultItem[]} items
      */
-    parseSearchResults($: CheerioAPI): SearchResultItem[] {
+    async parseSearchResults(
+        $: cheerio.CheerioAPI,
+        excluded: { generi: string[]; tipi: string[] },
+    ): Promise<SearchResultItem[]> {
         const results: SearchResultItem[] = [];
         const parse = this.parsePage($);
         for (const item of parse) {
-            if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
+            if (
+                !excludedTypes(item.type, excluded.tipi) &&
+                !excludedTags(item.tags, excluded.generi)
+            ) {
                 results.push({
                     imageUrl: item.image,
                     title: item.title,
                     subtitle: item.authors,
                     mangaId: item.id,
-                    contentRating: this.getRating(item.tags),
+                    contentRating: getRating(item.tags),
                 });
             }
         }
@@ -313,13 +265,13 @@ export class Parser {
     }
 
     /**
-     * Parsing capitoli in tendenza
+     * Parsing trending chapters
      * @param {Metadata} metadata - metadata
-     * @param {CheerioAPI} $ - Richiesta
+     * @param {cheerio.CheerioAPI} $ - Request
      * @return { items: DiscoverSectionItem[] }
      */
-    parseCapitoliInTendenza(
-        $: CheerioAPI,
+    parseTrendingChapters(
+        $: cheerio.CheerioAPI,
         metadata: Metadata,
     ): { items: DiscoverSectionItem[] } {
         const trending: DiscoverSectionItem[] = [];
@@ -332,15 +284,12 @@ export class Parser {
             const image = $("a img", obj).attr("src") ?? "";
             const chapNum = $("a div", obj).text() ?? "";
             const title = $(".manga-title", obj).text().trim();
-            console.log("Capitoli in tendenza");
-            console.log("Parsed: Manga " + title + " Chap: " + chapNum);
+            //console.log("Capitoli in tendenza");
+            //console.log("Parsed: Manga " + title + " Chap: " + chapNum);
             trending.push({
                 metadata: metadata,
                 type: "featuredCarouselItem",
-                contentRating:
-                    this.rating === ContentRating.ADULT
-                        ? ContentRating.ADULT
-                        : undefined,
+                contentRating: ContentRating.EVERYONE,
                 supertitle: chapNum,
                 imageUrl: image,
                 mangaId: id,
@@ -351,13 +300,13 @@ export class Parser {
     }
 
     /**
-     * Parsing in tendenza nel mese
+     * Parsing month trending
      * @param {Metadata} metadata - metadata
-     * @param {CheerioAPI} $ - Richiesta
+     * @param {cheerio.CheerioAPI} $ - Request
      * @return [ { items: DiscoverSectionItem[], metadata: Metadata }, { items: DiscoverSectionItem[], metadata: Metadata } ]
      */
-    parseInTendenzaMese(
-        $: CheerioAPI,
+    parseMonthTrending(
+        $: cheerio.CheerioAPI,
         metadata: Metadata,
     ): { items: DiscoverSectionItem[]; metadata: Metadata } {
         const arrHotTitle = $(".col-12 .top-wrapper .entry").toArray();
@@ -369,16 +318,13 @@ export class Parser {
                 ) ?? ["null"])[0] ?? "";
             const image = $(".img-fluid", obj).attr("src") ?? "";
             const title = $(".name", obj).first().text().trim() ?? "";
-            console.log("In tendenza Mese");
-            console.log("Parsed: Manga " + title);
+            //console.log("In tendenza Mese");
+            //console.log("Parsed: Manga " + title);
             if (hot.length < 10) {
                 hot.push({
                     metadata: metadata,
                     type: "prominentCarouselItem",
-                    contentRating:
-                        this.rating === ContentRating.ADULT
-                            ? ContentRating.ADULT
-                            : undefined,
+                    contentRating: ContentRating.EVERYONE,
                     imageUrl: image,
                     mangaId: id,
                     title: title,
@@ -389,26 +335,37 @@ export class Parser {
     }
 
     /**
-     * Parsing ultimi manga aggiunti
+     * Parsing most read
      * @param {Metadata} metadata - metadata
-     * @param {string} url - Url
+     * @return {{ items: DiscoverSectionItem[], metadata: Metadata }}
+     */
+    async parseMostReadSection(
+        metadata: Metadata,
+    ): Promise<{ items: DiscoverSectionItem[]; metadata: Metadata }> {
+        let page = metadata?.page ?? 1;
+        const $ = await this.requests.parsePopularSectionRequests(page);
+        page++;
+        const latest = await this.parseSection($, page);
+        return { items: latest, metadata: { page: page } };
+    }
+
+    /**
+     * Parsing last added
+     * @param {Metadata} metadata - metadata
      * @return {{ items: DiscoverSectionItem[], metadata: Metadata }}
      */
     async parseLastMangaAddedSection(
         metadata: Metadata,
-        url: string,
     ): Promise<{ items: DiscoverSectionItem[]; metadata: Metadata }> {
-        const latest: DiscoverSectionItem[] = [];
         let page = metadata?.page ?? 1;
-
-        const data = (
-            await Application.scheduleRequest({
-                url: `${url}/archive?sort=newest&page=${page}`,
-                method: "GET",
-            })
-        )[1];
-        const $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+        const $ = await this.requests.parseLastMangaAddedSectionRequests(page);
         page++;
+        const latest = await this.parseSection($, page);
+        return { items: latest, metadata: { page: page } };
+    }
+
+    async parseSection($: cheerio.CheerioAPI, page: number) {
+        const latest: DiscoverSectionItem[] = [];
         const parse = this.parsePage($);
         for (const item of parse) {
             if (!blacklistedTags(item.tags) && !blacklistedType(item.type)) {
@@ -416,44 +373,35 @@ export class Parser {
                     metadata: { page: page },
                     subtitle: item.authors,
                     type: "simpleCarouselItem",
-                    contentRating: this.getRating(item.tags),
+                    contentRating: getRating(item.tags),
                     imageUrl: item.image,
                     mangaId: item.id,
                     title: item.title,
                 });
             }
         }
-        return { items: latest, metadata: { page: page } };
+        return latest;
     }
 
     /**
-     * Parse nuovi capitoli
-     * @param {CheerioAPI} $ - pagina
+     * Parse new chapters
+     * @param {cheerio.CheerioAPI} $ - page
      * @param {Metadata} metadata - manga metadata
-     * @param {string} url - url
      * @return {{
      * 		items: DiscoverSectionItem[],
      * 		metadata: Metadata | undefined
      * 	}}
      */
     async parseLastAddedSection(
-        $: CheerioAPI,
+        $: cheerio.CheerioAPI,
         metadata: Metadata,
-        url: string,
     ): Promise<{
         items: DiscoverSectionItem[];
         metadata: Metadata | undefined;
     }> {
         let page = metadata?.page ?? 1;
-        //	if (metadata?.page == undefined) metadata = { page: 1 }
         if (page > 1) {
-            const data = (
-                await Application.scheduleRequest({
-                    url: `${url}?page=${page}`,
-                    method: "GET",
-                })
-            )[1];
-            $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+            $ = await this.requests.parseLastAddedSectionRequests(page);
         }
         page++;
         const arrLatest = $(
@@ -474,18 +422,18 @@ export class Parser {
             const chapterId: string = ((
                 $(".d-flex.flex-wrap.flex-row a", obj).attr("href") ?? ""
             ).match(/\/read\/([a-f0-9]+)(?:\?.*)?$/i) ?? ["null", ""])[1];
-            console.log("Ultime Aggiunte");
-            console.log("Parsed: Manga " + title);
-            console.log("Parsed: Ch " + chapterId);
+            //console.log("Ultime Aggiunte");
+            //console.log("Parsed: Manga " + title);
+            //console.log("Parsed: Ch " + chapterId);
             const regexDinamica = new RegExp(
-                `"createdAtTWithYear":\\s*"([^"]+)"\\s*,\\s*"isNew":\\s*(true|false)\\s*,\\s*"id":\\s*"${chapterId}"`,
+                `"createdAt":\\s*"([^"]+)"\\s*,\\s*"updatedAt":\\s*"[^"]*"\\s*,\\s*"slugFolder":\\s*"[^"]*"\\s*,\\s*"__v":\\s*\\d+\\s*,\\s*"createdAtT":\\s*"[^"]*"\\s*,\\s*"createdAtTWithYear":\\s*"[^"]*"\\s*,\\s*"isNew":\\s*(true|false)\\s*,\\s*"id":\\s*"${chapterId}"`,
                 "m",
             );
             const match = $.html().match(regexDinamica);
             let data = new Date();
             if (match) {
-                console.log("Data trovata:" + match[1]);
-                data = this.getDate(match[1]);
+                //console.log("Data trovata:" + match[1]);
+                data = new Date(match[1]);
             }
             if (!blacklistedType(mangaType)) {
                 latest.push({
@@ -493,10 +441,7 @@ export class Parser {
                     metadata: metadata,
                     type: "chapterUpdatesCarouselItem",
                     publishDate: data,
-                    contentRating:
-                        this.rating === ContentRating.ADULT
-                            ? ContentRating.ADULT
-                            : undefined,
+                    contentRating: ContentRating.EVERYONE,
                     imageUrl: image,
                     mangaId: id,
                     title: title,
@@ -508,9 +453,9 @@ export class Parser {
     }
 
     /**
-     * Trasforma una stringa in data
-     * @param {string} dataString - data in formato stringa
-     * @return {Date} - stringa in formato data
+     * String to date
+     * @param {string} dataString - date in string format
+     * @return {Date} - Date
      */
     getDate(dataString: string): Date {
         const mesi: { [key: string]: number } = {

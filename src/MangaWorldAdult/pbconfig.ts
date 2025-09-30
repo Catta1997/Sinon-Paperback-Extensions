@@ -1,10 +1,10 @@
 import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "1.2",
-    name: "MangaAdult",
-    description: "Extension that pulls manga from MangaAdult (0.9).",
-    icon: "MangaAdultIcon.png",
+    version: "1.2.3",
+    name: "MangaWorldAdult",
+    description: "Extension that pulls manga from MangaWorldAdult.",
+    icon: "MangaWorldAdultIcon.png",
     language: "it",
     contentRating: ContentRating.ADULT,
     capabilities: [
@@ -16,13 +16,8 @@ export default {
     badges: [
         {
             label: "Italian",
-            textColor: "#187480", //c2ecd8
-            backgroundColor: "#c2ecd8",
-        },
-        {
-            label: "NSFW",
-            textColor: "#ff0000", //c2ecd8
-            backgroundColor: "#000000",
+            textColor: "#ffffff",
+            backgroundColor: "#53c2ae",
         },
     ],
     developers: [
