@@ -139,7 +139,8 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
         sorting: SortingOption,
     ): Promise<PagedResults<SearchResultItem>> {
         const manga: SearchResultItem[] = [];
-        let page = Math.max(metadata?.page ?? 1, 1);
+        let page = metadata?.page ?? 1;
+        let total = 0;
         for (let cycle = 0; cycle < 5 && manga.length < 16; cycle++, page++) {
             const { url, excluded } = this.requests.constructSearchRequestURL(
                 page,
@@ -148,8 +149,8 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
             );
             const $ = await this.requests.getSearchResultsRequests(url);
             const pagText = $(".search-quantity").text().trim().split(" ")[0];
-            const total = pagText === "Nessun" ? 0 : Number(pagText);
-            if (Number.isNaN(total) || total <= 0) break; // No results or invalid number
+            total = pagText === "Nessun" ? 0 : Number(pagText);
+            if (!total || Number.isNaN(total)) break; // No results or invalid number
             const newPage = await this.parser.parseSearchResults($, excluded);
             manga.push(...newPage);
             console.log(
@@ -157,7 +158,9 @@ export class MangaWorldExtension implements ContentTemplateImplementation {
             );
             if (manga.length >= total) break; // all results inside the array
         }
-        return { items: manga, metadata: { page } };
+        if (manga.length == total || total == 0)
+            return { items: manga, metadata: undefined };
+        else return { items: manga, metadata: { page: page + 1 } };
     }
 
     // Populates the title details
