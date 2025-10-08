@@ -1,6 +1,7 @@
 import { SearchQuery, SortingOption } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { baseUrl, getGenreFilter, getPageCache, URLBuilder } from "./helpers";
+import { getGenreFilter, getPageCache, URLBuilder } from "./helpers";
+import { base_url } from "./MangaWorldGeneric";
 
 export class Requests {
     constructSearchRequestURL(
@@ -58,7 +59,7 @@ export class Requests {
             }
         } else if (year.length > 0) anno.push(year);
 
-        const urlBuilder = new URLBuilder(baseUrl).addPathComponent("archive");
+        const urlBuilder = new URLBuilder(base_url).addPathComponent("archive");
         if (query.title.toString().length > 0)
             urlBuilder.addQueryParameter(
                 "keyword",
@@ -80,7 +81,7 @@ export class Requests {
     async parseFilters() {
         const data = (
             await Application.scheduleRequest({
-                url: `${baseUrl}/archive`,
+                url: `${base_url}/archive`,
                 method: "GET",
             })
         )[1];
@@ -88,11 +89,11 @@ export class Requests {
     }
 
     async parseLastMangaAddedSectionRequests(page: number) {
-        let $ = cheerio.load(``);
+        let $: cheerio.CheerioAPI;
         if (page > 1) {
             const data = (
                 await Application.scheduleRequest({
-                    url: `${baseUrl}/archive?sort=newest&page=${page}`,
+                    url: `${base_url}/archive?sort=newest&page=${page}`,
                     method: "GET",
                 })
             )[1];
@@ -102,7 +103,7 @@ export class Requests {
                 Application.arrayBufferToUTF8String(
                     await getPageCache(
                         "LastMangaAddedSection",
-                        `${baseUrl}/archive?sort=newest&page=${page}`,
+                        `${base_url}/archive?sort=newest&page=${page}`,
                     ),
                 ),
             );
@@ -113,7 +114,7 @@ export class Requests {
     async parseLastAddedSectionRequests(page: number) {
         const data = (
             await Application.scheduleRequest({
-                url: `${baseUrl}?page=${page}`,
+                url: `${base_url}?page=${page}`,
                 method: "GET",
             })
         )[1];
@@ -121,11 +122,11 @@ export class Requests {
     }
 
     async parsePopularSectionRequests(page: number) {
-        let $ = cheerio.load(``);
+        let $: cheerio.CheerioAPI;
         if (page > 1) {
             const data = (
                 await Application.scheduleRequest({
-                    url: `${baseUrl}/archive?sort=most_read&page=${page}`,
+                    url: `${base_url}/archive?sort=most_read&page=${page}`,
                     method: "GET",
                 })
             )[1];
@@ -135,7 +136,7 @@ export class Requests {
                 Application.arrayBufferToUTF8String(
                     await getPageCache(
                         "PopularSection",
-                        `${baseUrl}/archive?sort=most_read&page=${page}`,
+                        `${base_url}/archive?sort=most_read&page=${page}`,
                     ),
                 ),
             );
@@ -154,10 +155,11 @@ export class Requests {
     }
 
     async fetchPage(url: string): Promise<ArrayBuffer> {
-        const [, responseData] = await Application.scheduleRequest({
-            url,
-            method: "GET",
-        });
-        return responseData;
+        return (
+            await Application.scheduleRequest({
+                url,
+                method: "GET",
+            })
+        )[1];
     }
 }

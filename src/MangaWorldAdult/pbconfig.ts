@@ -1,4 +1,4 @@
-import { ContentRating, SourceInfo, SourceIntents } from "@paperback/types";
+import { ContentRating, ExtensionInfo, SourceIntents } from "@paperback/types";
 
 export default {
     version: "1.2.4",
@@ -8,10 +8,10 @@ export default {
     language: "it",
     contentRating: ContentRating.ADULT,
     capabilities: [
-        SourceIntents.MANGA_CHAPTERS,
-        SourceIntents.DISCOVER_SECIONS,
-        SourceIntents.MANGA_SEARCH,
-        SourceIntents.SETTINGS_UI,
+        SourceIntents.CHAPTER_PROVIDING,
+        SourceIntents.DISCOVER_SECIONS_PROVIDING,
+        SourceIntents.SEARCH_RESULTS_PROVIDING,
+        SourceIntents.SETTINGS_FORM_PROVIDING,
     ],
     badges: [
         {
@@ -26,4 +26,4 @@ export default {
             website: "https://github.com/Catta1997",
         },
     ],
-} satisfies SourceInfo;
+} satisfies ExtensionInfo;

@@ -1,4 +1,6 @@
+import { ContentRating } from "@paperback/types";
 import * as cheerio from "cheerio";
+import { defaultContentRating } from "./MangaWorldGeneric";
 import { Requests } from "./requests";
 
 export type Metadata = {
@@ -15,7 +17,6 @@ type CacheItem = {
     data: ArrayBuffer;
 };
 
-export const baseUrl = `https://www.mangaworldadult.net`;
 const cacheMap = new Map<string, CacheItem>();
 const requestMap = new Map<string, Promise<ArrayBuffer>>();
 const requests = new Requests();
@@ -117,7 +118,7 @@ export const excludedTags = (tags: string[], exc: string[]): boolean => {
 
 /**
  * Check Excluded tags
- * @return true: hide tag
+ * @return true: hide
  * @param type
  * @param excluded
  */
@@ -253,6 +254,28 @@ function setYearFilter(newValue: OptionItem[]) {
  */
 export function getYearFilter() {
     return YearFilter;
+}
+
+/**
+ * Get manga Rating
+ * @param {string[]} tags - tags
+ * @return {ContentRating} - ContentRating
+ */
+const tagRatingMap: Record<string, ContentRating> = {
+    ADULTI: ContentRating.ADULT,
+    MATURO: ContentRating.MATURE,
+};
+
+export function getRating(tags: string[]): ContentRating {
+    if (defaultContentRating === ContentRating.ADULT) {
+        return ContentRating.ADULT;
+    } else {
+        for (const tag of tags) {
+            const matchedRating = tagRatingMap[tag.toUpperCase()];
+            if (matchedRating) return matchedRating;
+        }
+        return ContentRating.EVERYONE;
+    }
 }
 
 export class URLBuilder {

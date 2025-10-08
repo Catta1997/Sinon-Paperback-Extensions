@@ -1,7 +1,6 @@
 import {
     Chapter,
     ChapterDetails,
-    ContentRating,
     DiscoverSectionItem,
     MangaInfo,
     SearchResultItem,
@@ -18,6 +17,7 @@ import {
     getRating,
     Metadata,
 } from "./helpers";
+import { defaultContentRating } from "./MangaWorldGeneric";
 import { Requests } from "./requests";
 
 export class Parsers {
@@ -99,7 +99,7 @@ export class Parsers {
                 thumbnailUrl: image,
                 synopsis: desc,
                 primaryTitle: title,
-                contentRating: rating ?? ContentRating.EVERYONE,
+                contentRating: rating,
                 status: status,
                 author: author,
                 tagGroups: tagSections,
@@ -289,7 +289,7 @@ export class Parsers {
             trending.push({
                 metadata: metadata,
                 type: "featuredCarouselItem",
-                contentRating: ContentRating.EVERYONE,
+                contentRating: defaultContentRating,
                 supertitle: chapNum,
                 imageUrl: image,
                 mangaId: id,
@@ -324,7 +324,7 @@ export class Parsers {
                 hot.push({
                     metadata: metadata,
                     type: "prominentCarouselItem",
-                    contentRating: ContentRating.EVERYONE,
+                    contentRating: defaultContentRating,
                     imageUrl: image,
                     mangaId: id,
                     title: title,
@@ -441,7 +441,7 @@ export class Parsers {
                     metadata: metadata,
                     type: "chapterUpdatesCarouselItem",
                     publishDate: data,
-                    contentRating: ContentRating.EVERYONE,
+                    contentRating: defaultContentRating,
                     imageUrl: image,
                     mangaId: id,
                     title: title,
