@@ -5,7 +5,7 @@ import {
     Section,
     SelectRow,
 } from "@paperback/types";
-import { getGenreFilter, getMangaTypeFilter } from "./helpers";
+import { getGenreFilter, getMangaTypeFilter } from "./utils";
 
 export class Forms extends Form {
     override getSections(): FormSectionElement[] {
@@ -95,6 +95,27 @@ class FilterSettings extends Form {
                     }),
                 ],
             ),
+            Section(
+                {
+                    id: "home_settings",
+                    footer: "Aggiungi ricerche alla home",
+                },
+                [
+                    SelectRow("fav_tags_new", {
+                        title: "Generi Preferiti",
+                        subtitle:
+                            "Aggiungi alla home una sezione per le nuove aggiunte di questo genere",
+                        value: this.getFavTagsNewStatus(),
+                        options: this.genres,
+                        minItemCount: 0,
+                        maxItemCount: 3,
+                        onValueChange: Application.Selector(
+                            this as FilterSettings,
+                            "handleFavTagsNewStatusChange",
+                        ),
+                    }),
+                ],
+            ),
         ];
     }
 
@@ -127,5 +148,16 @@ class FilterSettings extends Form {
 
     async handleDefTypeStatusChange(value: string[]): Promise<void> {
         await this.updateValue(value, "def_type");
+    }
+
+    // fav_tags_new
+    getFavTagsNewStatus(): string[] {
+        return (
+            (Application.getState("fav_tags_new") as string[] | undefined) ?? []
+        );
+    }
+
+    async handleFavTagsNewStatusChange(value: string[]): Promise<void> {
+        await this.updateValue(value, "fav_tags_new");
     }
 }

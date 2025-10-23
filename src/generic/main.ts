@@ -22,6 +22,8 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Forms } from "./forms";
+import { MainInterceptor, Requests } from "./network";
+import { Parsers } from "./parsers";
 import {
     blacklistedTags,
     blacklistedType,
@@ -34,10 +36,7 @@ import {
     getYearFilter,
     Metadata,
     populateFilter,
-} from "./helpers";
-import { MainInterceptor } from "./interceptors";
-import { Parsers } from "./parsers";
-import { Requests } from "./requests";
+} from "./utils";
 
 export interface GenericParams {
     name: string;
@@ -71,10 +70,10 @@ export abstract class MangaWorldGeneric
         this.requestManager = params.requestManager ?? new Requests();
     }
     mainInterceptor = new MainInterceptor("main");
-    // Rate limit: Wait 2 sec after 4 requests
+    // Rate limit: Wait 1 sec after 3 requests
     mainRateLimiter = new BasicRateLimiter("main", {
         numberOfRequests: 3,
-        bufferInterval: 2,
+        bufferInterval: 1,
         ignoreImages: true,
     });
 
@@ -231,11 +230,16 @@ export abstract class MangaWorldGeneric
                 subtitle: "Ultimi Capitoli Aggiunti",
                 type: DiscoverSectionType.chapterUpdates,
             },
-
             {
                 id: "new_manga_section",
                 title: "Nuove Aggiunte",
                 subtitle: "Le nuove Aggiunte",
+                type: DiscoverSectionType.simpleCarousel,
+            },
+            {
+                id: "new_fav_type_section",
+                title: "Nuove Aggiunte dei tuoi Generi Preferiti",
+                subtitle: "Le nuove Aggiunte dei tuoi Generi Preferiti",
                 type: DiscoverSectionType.simpleCarousel,
             },
             {
@@ -283,6 +287,10 @@ export abstract class MangaWorldGeneric
                 console.log("[HOME] Loading new_manga_section");
                 return this.parser.parseLastMangaAddedSection(metadata);
             }
+            case "new_fav_type_section": {
+                console.log("[HOME] Loading new_fav_type_section");
+                return this.parser.parseLastMangaAddedTagsSection(metadata);
+            }
             case "genre_section": {
                 await populateFilter();
                 const allGenres: DiscoverSectionItem[] = [];
@@ -315,7 +323,10 @@ export abstract class MangaWorldGeneric
                             },
                             name: filter.value,
                             metadata: metadata,
-                            contentRating: getRating([filter.value]),
+                            contentRating:
+                                defaultContentRating === ContentRating.ADULT
+                                    ? ContentRating.ADULT
+                                    : getRating([filter.value]),
                         });
                     });
                 console.log("[HOME] Loading genre_section");

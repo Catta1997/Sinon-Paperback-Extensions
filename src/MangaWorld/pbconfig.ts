@@ -1,7 +1,7 @@
 import { ContentRating, ExtensionInfo, SourceIntents } from "@paperback/types";
 
 export default {
-    version: "1.2.4",
+    version: "1.2.5",
     name: "MangaWorld",
     description: "Extension that pulls manga from MangaWorld.",
     icon: "MangaWorldIcon.png",
@@ -17,7 +17,7 @@ export default {
         {
             label: "Italian",
             textColor: "#ffffff",
-            backgroundColor: "#53c2ae",
+            backgroundColor: "#9ad3c7",
         },
     ],
     developers: [

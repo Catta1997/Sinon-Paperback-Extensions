@@ -1,6 +1,7 @@
 import {
     Chapter,
     ChapterDetails,
+    ContentRating,
     DiscoverSectionItem,
     MangaInfo,
     SearchResultItem,
@@ -9,6 +10,8 @@ import {
     TagSection,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
+import { defaultContentRating } from "./main";
+import { Requests } from "./network";
 import {
     blacklistedTags,
     blacklistedType,
@@ -16,9 +19,7 @@ import {
     excludedTypes,
     getRating,
     Metadata,
-} from "./helpers";
-import { defaultContentRating } from "./MangaWorldGeneric";
-import { Requests } from "./requests";
+} from "./utils";
 
 export class Parsers {
     private requests = new Requests();
@@ -88,7 +89,10 @@ export class Parsers {
         for (const tag of data.genre) {
             arrayTags.push({ title: tag, id: tag.replaceAll(" ", "-") });
         }
-        const rating = getRating(arrayTags.map((tag) => tag.title));
+        const rating =
+            defaultContentRating === ContentRating.ADULT
+                ? ContentRating.ADULT
+                : getRating(arrayTags.map((tag) => tag.title));
         const tagSections: TagSection[] = [
             { id: "genres", title: "genres", tags: arrayTags },
         ];
@@ -257,7 +261,10 @@ export class Parsers {
                     title: item.title,
                     subtitle: item.authors,
                     mangaId: item.id,
-                    contentRating: getRating(item.tags),
+                    contentRating:
+                        defaultContentRating === ContentRating.ADULT
+                            ? ContentRating.ADULT
+                            : getRating(item.tags),
                 });
             }
         }
@@ -364,6 +371,17 @@ export class Parsers {
         return { items: latest, metadata: { page: page } };
     }
 
+    async parseLastMangaAddedTagsSection(
+        metadata: Metadata,
+    ): Promise<{ items: DiscoverSectionItem[]; metadata: Metadata }> {
+        let page = metadata?.page ?? 1;
+        const $ =
+            await this.requests.parseLastMangaAddedTagsSectionRequests(page);
+        page++;
+        const latest = await this.parseSection($, page);
+        return { items: latest, metadata: { page: page } };
+    }
+
     async parseSection($: cheerio.CheerioAPI, page: number) {
         const latest: DiscoverSectionItem[] = [];
         const parse = this.parsePage($);
@@ -373,7 +391,10 @@ export class Parsers {
                     metadata: { page: page },
                     subtitle: item.authors,
                     type: "simpleCarouselItem",
-                    contentRating: getRating(item.tags),
+                    contentRating:
+                        defaultContentRating === ContentRating.ADULT
+                            ? ContentRating.ADULT
+                            : getRating(item.tags),
                     imageUrl: item.image,
                     mangaId: item.id,
                     title: item.title,

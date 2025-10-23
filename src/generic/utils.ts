@@ -1,7 +1,6 @@
 import { ContentRating } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { defaultContentRating } from "./MangaWorldGeneric";
-import { Requests } from "./requests";
+import { Requests } from "./network";
 
 export type Metadata = {
     page?: number;
@@ -267,15 +266,11 @@ const tagRatingMap: Record<string, ContentRating> = {
 };
 
 export function getRating(tags: string[]): ContentRating {
-    if (defaultContentRating === ContentRating.ADULT) {
-        return ContentRating.ADULT;
-    } else {
-        for (const tag of tags) {
-            const matchedRating = tagRatingMap[tag.toUpperCase()];
-            if (matchedRating) return matchedRating;
-        }
-        return ContentRating.EVERYONE;
+    for (const tag of tags) {
+        const matchedRating = tagRatingMap[tag.toUpperCase()];
+        if (matchedRating) return matchedRating;
     }
+    return ContentRating.EVERYONE;
 }
 
 export class URLBuilder {

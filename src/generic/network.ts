@@ -1,7 +1,13 @@
-import { SearchQuery, SortingOption } from "@paperback/types";
+import {
+    PaperbackInterceptor,
+    Request,
+    Response,
+    SearchQuery,
+    SortingOption,
+} from "@paperback/types";
 import * as cheerio from "cheerio";
-import { getGenreFilter, getPageCache, URLBuilder } from "./helpers";
-import { base_url } from "./MangaWorldGeneric";
+import { base_url } from "./main";
+import { getGenreFilter, getPageCache, URLBuilder } from "./utils";
 
 export class Requests {
     constructSearchRequestURL(
@@ -111,6 +117,32 @@ export class Requests {
         return $;
     }
 
+    async parseLastMangaAddedTagsSectionRequests(page: number) {
+        let $: cheerio.CheerioAPI;
+        const tags = (Application.getState("fav_tags_new") as string[]).join(
+            "&genre=",
+        );
+        if (page > 1) {
+            const data = (
+                await Application.scheduleRequest({
+                    url: `${base_url}/archive?sort=newest&page=${page}&genre=${tags}`,
+                    method: "GET",
+                })
+            )[1];
+            $ = cheerio.load(Application.arrayBufferToUTF8String(data));
+        } else {
+            $ = cheerio.load(
+                Application.arrayBufferToUTF8String(
+                    await getPageCache(
+                        "LastMangaAddedTagsSection",
+                        `${base_url}/archive?sort=newest&page=${page}&genre=${tags}`,
+                    ),
+                ),
+            );
+        }
+        return $;
+    }
+
     async parseLastAddedSectionRequests(page: number) {
         const data = (
             await Application.scheduleRequest({
@@ -161,5 +193,22 @@ export class Requests {
                 method: "GET",
             })
         )[1];
+    }
+}
+
+export class MainInterceptor extends PaperbackInterceptor {
+    override async interceptRequest(request: Request): Promise<Request> {
+        return request;
+    }
+
+    override async interceptResponse(
+        request: Request,
+        response: Response,
+        data: ArrayBuffer,
+    ): Promise<ArrayBuffer> {
+        void request;
+        void response;
+
+        return data;
     }
 }
