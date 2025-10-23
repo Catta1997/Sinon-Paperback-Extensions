@@ -206,7 +206,7 @@ export abstract class MangaWorldGeneric
     }
 
     async getDiscoverSections(): Promise<DiscoverSection[]> {
-        return [
+        const discover_section = [
             {
                 id: "popular_section",
                 title: "Capitoli In Tendenza",
@@ -236,12 +236,16 @@ export abstract class MangaWorldGeneric
                 subtitle: "Le nuove Aggiunte",
                 type: DiscoverSectionType.simpleCarousel,
             },
-            {
+        ];
+        if ((Application.getState("fav_tags_new") as string[]).length > 0) {
+            discover_section.push({
                 id: "new_fav_type_section",
                 title: "Nuove Aggiunte dei tuoi Generi Preferiti",
                 subtitle: "Le nuove Aggiunte dei tuoi Generi Preferiti",
                 type: DiscoverSectionType.simpleCarousel,
-            },
+            });
+        }
+        discover_section.push(
             {
                 id: "type_section",
                 title: "Tipologia",
@@ -254,7 +258,8 @@ export abstract class MangaWorldGeneric
                 subtitle: "Più letti di un genere",
                 type: DiscoverSectionType.genres,
             },
-        ];
+        );
+        return discover_section;
     }
 
     async getDiscoverSectionItems(

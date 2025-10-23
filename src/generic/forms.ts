@@ -159,5 +159,6 @@ class FilterSettings extends Form {
 
     async handleFavTagsNewStatusChange(value: string[]): Promise<void> {
         await this.updateValue(value, "fav_tags_new");
+        Application.invalidateDiscoverSections();
     }
 }
