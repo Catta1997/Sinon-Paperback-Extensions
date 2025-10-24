@@ -237,7 +237,10 @@ export abstract class MangaWorldGeneric
                 type: DiscoverSectionType.simpleCarousel,
             },
         ];
-        if ((Application.getState("fav_tags_new") as string[]).length > 0) {
+        if (
+            ((Application.getState("fav_tags_new") as string[]) ?? []).length >
+            0
+        ) {
             discover_section.push({
                 id: "new_fav_type_section",
                 title: "Nuove Aggiunte dei tuoi Generi Preferiti",
