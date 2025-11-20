@@ -111,64 +111,7 @@ export class ComiToExtension implements ComixToImplementation {
     }
 
     async getSearchFilters(): Promise<SearchFilter[]> {
-        const filters: SearchFilter[] = [];
-        const genresHidden =
-            (Application.getState("hide_tags") as string[] | undefined) ?? [];
-        const getExcludedValueObject = Object.fromEntries(
-            filter.genres
-                .filter((option) => genresHidden.includes(option.id))
-                .map((item) => [item.id, "excluded" as const]),
-        ) as Record<string, "included" | "excluded">;
-
-        const content =
-            (Application.getState("show_only") as string[] | undefined) ?? [];
-        const getContentObject = Object.fromEntries(
-            filter.contentType
-                .filter((option) => content.includes(option.id))
-                .map((item) => [item.id, "included" as const]),
-        ) as Record<string, "included" | "excluded">;
-
-        filters.push({
-            type: "multiselect",
-            id: "genres",
-            title: "Genres",
-            options: filter.genres,
-            value: getExcludedValueObject,
-            allowExclusion: true,
-            allowEmptySelection: true,
-            maximum: filter.genres.length,
-        });
-        filters.push({
-            type: "multiselect",
-            id: "types",
-            title: "Types",
-            options: filter.contentType,
-            value: getContentObject,
-            allowExclusion: false,
-            allowEmptySelection: true,
-            maximum: filter.contentType.length,
-        });
-        filters.push({
-            type: "multiselect",
-            id: "demographic",
-            title: "Demographic",
-            options: filter.demographic,
-            value: {},
-            allowExclusion: false,
-            allowEmptySelection: true,
-            maximum: filter.demographic.length,
-        });
-        filters.push({
-            type: "multiselect",
-            id: "status",
-            title: "Status",
-            options: filter.publication_status,
-            value: {},
-            allowExclusion: false,
-            allowEmptySelection: true,
-            maximum: filter.publication_status.length,
-        });
-        return filters;
+        return filter.getFilters();
     }
 
     getSearchResults(

@@ -172,15 +172,27 @@ export class JsonParser {
         const genT = filter.genres.filter((i) =>
             term_ids.includes(Number(i.id)),
         );
-        const tagsArray: Tag[] = genT.map((genre) => ({
+        const themeT = filter.themes.filter((i) =>
+            term_ids.includes(Number(i.id)),
+        );
+        const genreArray: Tag[] = genT.map((genre) => ({
             id: genre.id,
             title: genre.value,
+        }));
+        const themeArray: Tag[] = themeT.map((theme) => ({
+            id: theme.id,
+            title: theme.value,
         }));
         const tags: TagSection[] = [
             {
                 title: "genres",
-                tags: tagsArray,
+                tags: genreArray,
                 id: "genres",
+            },
+            {
+                title: "themes",
+                tags: themeArray,
+                id: "themes",
             },
         ];
         const mangaInfo = {
@@ -219,6 +231,8 @@ export class JsonParser {
             query.filters.find((filter) => filter.id == id)?.value;
         const genres: string | Record<string, "included" | "excluded"> =
             getFilterValue("genres") ?? "";
+        const themes: string | Record<string, "included" | "excluded"> =
+            getFilterValue("themes") ?? "";
         const types: string | Record<string, "included" | "excluded"> =
             getFilterValue("types") ?? "";
         const demographic: string | Record<string, "included" | "excluded"> =
@@ -226,6 +240,7 @@ export class JsonParser {
         const status: string | Record<string, "included" | "excluded"> =
             getFilterValue("status") ?? "";
         const genresFilter: string[] = [];
+        const themesFilter: string[] = [];
         const typeFilter: string[] = [];
         const demogFilter: string[] = [];
         const stutusFilter: string[] = [];
@@ -233,6 +248,12 @@ export class JsonParser {
             for (const tag of Object.entries(genres)) {
                 if (tag[1] == "included") genresFilter.push(tag[0]);
                 if (tag[1] == "excluded") genresFilter.push("-" + tag[0]);
+            }
+        }
+        if (themes && typeof genres === "object") {
+            for (const tag of Object.entries(themes)) {
+                if (tag[1] == "included") themesFilter.push(tag[0]);
+                if (tag[1] == "excluded") themesFilter.push("-" + tag[0]);
             }
         }
         if (types && typeof types === "object") {
@@ -255,6 +276,7 @@ export class JsonParser {
             query.title,
             page,
             genresFilter,
+            themesFilter,
             typeFilter,
             demogFilter,
             stutusFilter,

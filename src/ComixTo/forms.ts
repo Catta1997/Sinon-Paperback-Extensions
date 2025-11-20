@@ -36,7 +36,7 @@ class LimitSettings extends Form {
 
     public async updateValue(value: string[], filter: string): Promise<void> {
         Application.setState(value, filter);
-        Application.invalidateSearchFilters();
+        Application.invalidateDiscoverSections();
         this.reloadForm();
     }
     override getSections(): FormSectionElement[] {
@@ -68,6 +68,10 @@ class FilterSettings extends Form {
         title: value,
         id: id,
     }));
+    themesMap = filter.themes.map(({ value, id }) => ({
+        title: value,
+        id: id,
+    }));
     typeMap = filter.contentType.map(({ value, id }) => ({
         title: value,
         id: id,
@@ -76,6 +80,7 @@ class FilterSettings extends Form {
     public async updateValue(value: string[], filter: string): Promise<void> {
         Application.setState(value, filter);
         Application.invalidateSearchFilters();
+        Application.invalidateDiscoverSections();
         this.reloadForm();
     }
     override getSections(): FormSectionElement[] {
@@ -86,8 +91,8 @@ class FilterSettings extends Form {
                     footer: "Content Settings",
                 },
                 [
-                    SelectRow("hide_tags", {
-                        title: "Hide Genre",
+                    SelectRow("hide_genres", {
+                        title: "Hide Genres",
                         subtitle: "Hide Some Genre",
                         value: filter.getHiddenGenresSettings(),
                         options: this.genresMap,
@@ -95,7 +100,19 @@ class FilterSettings extends Form {
                         maxItemCount: this.genresMap.length,
                         onValueChange: Application.Selector(
                             this as FilterSettings,
-                            "handleHideTagsStatusChange",
+                            "handleHideGenresStatusChange",
+                        ),
+                    }),
+                    SelectRow("hide_theme", {
+                        title: "Hide Themes",
+                        subtitle: "Hide Some Theme",
+                        value: filter.getHiddenThemesSettings(),
+                        options: this.themesMap,
+                        minItemCount: 0,
+                        maxItemCount: this.themesMap.length,
+                        onValueChange: Application.Selector(
+                            this as FilterSettings,
+                            "handleHideThemesStatusChange",
                         ),
                     }),
                     SelectRow("type", {
@@ -115,8 +132,12 @@ class FilterSettings extends Form {
         ];
     }
 
-    async handleHideTagsStatusChange(id: string[]): Promise<void> {
-        await this.updateValue(id, "hide_tags");
+    async handleHideGenresStatusChange(id: string[]): Promise<void> {
+        await this.updateValue(id, "hide_genres");
+    }
+
+    async handleHideThemesStatusChange(id: string[]): Promise<void> {
+        await this.updateValue(id, "hide_themes");
     }
 
     async handleShowOnlyStatusChange(id: string[]): Promise<void> {

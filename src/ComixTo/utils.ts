@@ -1,74 +1,79 @@
+import type { SearchFilter } from "@paperback/types";
+
 export class globalFilters {
     genres = [
         { id: "6", value: "Action" },
-        { id: "31", value: "Aliens" },
-        { id: "32", value: "Animals" },
-        { id: "7", value: "Adventure" },
         { id: "87264", value: "Adult" },
+        { id: "7", value: "Adventure" },
         { id: "8", value: "Boys Love" },
         { id: "9", value: "Comedy" },
-        { id: "33", value: "Cooking" },
-        { id: "34", value: "Crossdressing" },
         { id: "10", value: "Crime" },
-        { id: "35", value: "Delinquents" },
-        { id: "36", value: "Demons" },
         { id: "11", value: "Drama" },
         { id: "87265", value: "Ecchi" },
         { id: "12", value: "Fantasy" },
         { id: "13", value: "Girls Love" },
-        { id: "37", value: "Genderswap" },
-        { id: "38", value: "Ghosts" },
-        { id: "39", value: "Gyaru" },
-        { id: "40", value: "Harem" },
         { id: "87266", value: "Hentai" },
         { id: "14", value: "Historical" },
         { id: "15", value: "Horror" },
         { id: "16", value: "Isekai" },
-        { id: "41", value: "Incest" },
-        { id: "3", value: "Josei" },
-        { id: "42", value: "Loli" },
         { id: "17", value: "Magical Girls" },
-        { id: "44", value: "Magic" },
-        { id: "43", value: "Mafia" },
-        { id: "45", value: "Martial Arts" },
         { id: "87267", value: "Mature" },
         { id: "18", value: "Mecha" },
         { id: "19", value: "Medical" },
-        { id: "46", value: "Military" },
-        { id: "47", value: "Monster Girls" },
-        { id: "48", value: "Monsters" },
-        { id: "49", value: "Music" },
         { id: "20", value: "Mystery" },
-        { id: "50", value: "Ninja" },
-        { id: "51", value: "Office Workers" },
         { id: "21", value: "Philosophical" },
-        { id: "52", value: "Police" },
-        { id: "53", value: "Post-Apocalyptic" },
         { id: "22", value: "Psychological" },
-        { id: "54", value: "Reincarnation" },
-        { id: "55", value: "Reverse Harem" },
         { id: "23", value: "Romance" },
-        { id: "56", value: "Samurai" },
-        { id: "57", value: "School Life" },
         { id: "24", value: "Sci-Fi" },
-        { id: "58", value: "Shota" },
-        { id: "1", value: "Shoujo" },
-        { id: "2", value: "Shounen" },
         { id: "25", value: "Slice of Life" },
         { id: "87268", value: "Smut" },
         { id: "26", value: "Sports" },
         { id: "27", value: "Superhero" },
+        { id: "28", value: "Thriller" },
+        { id: "29", value: "Tragedy" },
+        { id: "30", value: "Wuxia" },
+        { id: "1", value: "Shoujo" },
+        { id: "2", value: "Shounen" },
+        { id: "3", value: "Josei" },
+    ];
+
+    themes = [
+        { id: "31", value: "Aliens" },
+        { id: "32", value: "Animals" },
+        { id: "33", value: "Cooking" },
+        { id: "34", value: "Crossdressing" },
+        { id: "35", value: "Delinquents" },
+        { id: "36", value: "Demons" },
+        { id: "37", value: "Genderswap" },
+        { id: "38", value: "Ghosts" },
+        { id: "39", value: "Gyaru" },
+        { id: "40", value: "Harem" },
+        { id: "41", value: "Incest" },
+        { id: "42", value: "Loli" },
+        { id: "43", value: "Mafia" },
+        { id: "44", value: "Magic" },
+        { id: "45", value: "Martial Arts" },
+        { id: "46", value: "Military" },
+        { id: "47", value: "Monster Girls" },
+        { id: "48", value: "Monsters" },
+        { id: "49", value: "Music" },
+        { id: "50", value: "Ninja" },
+        { id: "51", value: "Office Workers" },
+        { id: "52", value: "Police" },
+        { id: "53", value: "Post-Apocalyptic" },
+        { id: "54", value: "Reincarnation" },
+        { id: "55", value: "Reverse Harem" },
+        { id: "56", value: "Samurai" },
+        { id: "57", value: "School Life" },
+        { id: "58", value: "Shota" },
         { id: "59", value: "Supernatural" },
         { id: "60", value: "Survival" },
         { id: "61", value: "Time Travel" },
-        { id: "28", value: "Thriller" },
         { id: "62", value: "Traditional Games" },
-        { id: "29", value: "Tragedy" },
         { id: "63", value: "Vampires" },
         { id: "64", value: "Video Games" },
         { id: "65", value: "Villainess" },
         { id: "66", value: "Virtual Reality" },
-        { id: "30", value: "Wuxia" },
         { id: "67", value: "Zombies" },
     ];
 
@@ -80,14 +85,14 @@ export class globalFilters {
     ];
 
     order = [
-        { id: "relevance$desc", label: "Relevance" },
-        { id: "views_30d$desc", label: "Normal" },
-        { id: "title$asc", label: "Title" },
-        { id: "chapter_updated_at$desc", label: "Update" },
+        { id: "views_30d$desc", label: "Any" },
+        { id: "relevance$desc", label: "Best Match" },
+        { id: "chapter_updated_at$desc", label: "Update Date" },
+        { id: "created_at$desc", label: "Created Date" },
+        { id: "title$asc", label: "Title Ascending" },
+        { id: "year$desc", label: "Year Descending" },
         { id: "total_views$desc", label: "Total Views" },
-        { id: "followed_count$desc", label: "Followed Count" },
-        { id: "year$desc", label: "Year" },
-        { id: "created_at$desc", label: "Created" },
+        { id: "followed_count$desc", label: "Most Follows" },
     ];
 
     publication_status = [
@@ -112,9 +117,89 @@ export class globalFilters {
         { id: "365", value: "1 Year" },
     ];
 
+    getFilters() {
+        const filters: SearchFilter[] = [];
+        const genresHidden = this.getHiddenGenresSettings();
+        const getExcludedGenreObject = Object.fromEntries(
+            this.genres
+                .filter((option) => genresHidden.includes(option.id))
+                .map((item) => [item.id, "excluded" as const]),
+        ) as Record<string, "included" | "excluded">;
+        const themesHidden = this.getHiddenThemesSettings();
+        const getExcludedThemesObject = Object.fromEntries(
+            this.genres
+                .filter((option) => themesHidden.includes(option.id))
+                .map((item) => [item.id, "excluded" as const]),
+        ) as Record<string, "included" | "excluded">;
+        const showOnly = this.getShowOnlySettings();
+        const getShowOnlyObject = Object.fromEntries(
+            this.contentType
+                .filter((option) => showOnly.includes(option.id))
+                .map((item) => [item.id, "included" as const]),
+        ) as Record<string, "included" | "excluded">;
+
+        filters.push({
+            type: "multiselect",
+            id: "genres",
+            title: "Genres",
+            options: this.genres,
+            value: getExcludedGenreObject,
+            allowExclusion: true,
+            allowEmptySelection: true,
+            maximum: this.genres.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "themes",
+            title: "Themes",
+            options: this.themes,
+            value: getExcludedThemesObject,
+            allowExclusion: true,
+            allowEmptySelection: true,
+            maximum: this.themes.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "types",
+            title: "Types",
+            options: this.contentType,
+            value: getShowOnlyObject,
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: this.contentType.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "demographic",
+            title: "Demographic",
+            options: this.demographic,
+            value: {},
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: this.demographic.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "status",
+            title: "Status",
+            options: this.publication_status,
+            value: {},
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: this.publication_status.length,
+        });
+        return filters;
+    }
+
     getHiddenGenresSettings() {
         return (
-            (Application.getState("hide_tags") as string[] | undefined) ?? []
+            (Application.getState("hide_genres") as string[] | undefined) ?? []
+        );
+    }
+
+    getHiddenThemesSettings() {
+        return (
+            (Application.getState("hide_themes") as string[] | undefined) ?? []
         );
     }
 

@@ -78,6 +78,7 @@ export class ApiMaker {
     }
     private buildApiUrl(section: string, page: number): string {
         const hidden_gen = filter.getHiddenGenresSettings();
+        const hidden_them = filter.getHiddenThemesSettings();
         const show_only = filter.getShowOnlySettings();
         const limit = filter.getLimitSettings();
         const additionalInfo = ["author"];
@@ -91,6 +92,8 @@ export class ApiMaker {
                 if (show_only.length > 0)
                     url.setQueryItem("types[]", show_only);
                 if (hidden_gen.length > 0)
+                    url.setQueryItem("exclude_genres[]", hidden_gen);
+                if (hidden_them.length > 0)
                     url.setQueryItem("exclude_genres[]", hidden_gen);
                 return url.toString();
             }
@@ -199,6 +202,7 @@ export class ApiMaker {
         keyword: string,
         page: number,
         genres: string[],
+        themes: string[],
         types: string[],
         demographic: string[],
         status: string[],
@@ -206,15 +210,15 @@ export class ApiMaker {
         orderBy: string,
     ) {
         const url = new URL(BASE_API).addPathComponent("manga");
-        url.setQueryItem("keyword", keyword);
+        if (keyword.length > 0) url.setQueryItem("keyword", keyword);
         if (genres.length > 0) url.setQueryItem("genres[]", genres);
+        if (themes.length > 0) url.setQueryItem("genres[]", themes);
         if (types.length > 0) url.setQueryItem("types[]", types);
         if (demographic.length > 0)
             url.setQueryItem("demographics[]", demographic);
         if (status.length > 0) url.setQueryItem("statuses[]", status);
         url.setQueryItem("page", page.toString());
         url.setQueryItem(`order[${sortBy}]`, orderBy);
-        console.log(url.toString());
         const html = await this.getDataFromRequest(url.toString());
         try {
             return JSON.parse(html) as ApiResponseManga;
