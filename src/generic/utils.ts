@@ -1,338 +1,432 @@
-import { ContentRating } from "@paperback/types";
+import { ContentRating, type Tag } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { Requests } from "./network";
-
-export type Metadata = {
-    page?: number;
-};
-type QueryValue = string | number | boolean | undefined | null;
-type QueryParam = QueryValue | QueryValue[] | Record<string, QueryValue>;
-type OptionItem = {
-    value: string;
-    id: string;
-};
-type CacheItem = {
-    expires: number;
-    data: ArrayBuffer;
-};
+import { jsonParser, MangaWorldGeneric } from "./main";
+import type {
+    CacheItem,
+    ChapterList,
+    Genre,
+    GlobalData,
+    JSONConfig,
+    JsonData,
+    MangaPageData,
+    OptionItem,
+    Pages,
+    RawEntry,
+    SearchInfo,
+    SearchResults,
+    TrendingChaptersData,
+    WindowEntry,
+} from "./models";
 
 const cacheMap = new Map<string, CacheItem>();
 const requestMap = new Map<string, Promise<ArrayBuffer>>();
-const requests = new Requests();
-/**
- * Populate Search Filter
- */
-export async function populateFilter() {
-    const lastFilterFetch = Number(
-        Application.getState("last-filter-fetch-date") ?? 0,
-    );
-    if (lastFilterFetch + 604800 > new Date().valueOf() / 1000) {
-        console.log("[CACHE] Use Cached Filters");
-        setGenreFilter(
-            JSON.parse(
-                Application.getState(".genres") as string,
-            ) as OptionItem[],
-        );
-        setMangaTypeFilter(
-            JSON.parse(Application.getState(".type") as string) as OptionItem[],
-        );
-        setStatusFilter(
-            JSON.parse(
-                Application.getState(".status") as string,
-            ) as OptionItem[],
-        );
-        setOrderFilter(
-            JSON.parse(Application.getState(".sort") as string) as OptionItem[],
-        );
-        setYearFilter(
-            JSON.parse(Application.getState(".year") as string) as OptionItem[],
-        );
-    } else {
-        console.log("Scraping Filters");
-        const $ = await requests.parseFilters();
-        setGenreFilter(extractOptions($, ".genres"));
-        setMangaTypeFilter(extractOptions($, ".type"));
-        setStatusFilter(extractOptions($, ".status"));
-        setOrderFilter(extractOptions($, ".sort"));
-        setYearFilter(extractOptions($, ".year"));
-        console.log("[CACHE] Cache New Filters");
-        Application.setState(
-            String(new Date().valueOf() / 1000),
-            "last-filter-fetch-date",
-        );
-    }
-}
 
-export async function getPageCache(
-    name: string,
-    url: string,
-): Promise<ArrayBuffer> {
-    const cacheTime = 10; //cache seconds
-    const cached = cacheMap.get(name);
-    if (cached && cached.expires > Math.floor(Date.now() / 1000)) {
-        console.log(`[CACHE] Use Cached Page "${name}"`);
-        return cached.data;
-    }
+export class Cache {
+    async getPageCache(
+        name: string,
+        url: string,
+        source: MangaWorldGeneric,
+        cacheTime: number = 10,
+    ): Promise<ArrayBuffer> {
+        const cached = cacheMap.get(name);
+        if (cached && cached.expires > Math.floor(Date.now() / 1000)) {
+            return cached.data;
+        }
 
-    // If a request is already in progress for this name, return that promise
-    if (requestMap.has(name)) {
-        console.log(`[CACHE] Awaiting Request "${name}"`);
-        return requestMap.get(name)!;
-    }
+        // If a request is already in progress for this name, return that promise
+        if (requestMap.has(name)) {
+            return requestMap.get(name)!;
+        }
 
-    console.log(`[CACHE] Fetching New Page "${name}"`);
-
-    const fetchPromise = requests
-        .fetchPage(url)
-        .then((data) => {
-            cacheMap.set(name, {
-                expires: Math.floor(Date.now() / 1000) + cacheTime,
-                data: data,
+        const fetchPromise = source.requestManager
+            .fetchPage(url)
+            .then((data) => {
+                cacheMap.set(name, {
+                    expires: Math.floor(Date.now() / 1000) + cacheTime,
+                    data: data,
+                });
+                requestMap.delete(name);
+                return data;
+            })
+            .catch((error) => {
+                requestMap.delete(name);
+                throw error;
             });
-            console.log(`[CACHE] New Cached "${name}"`);
-            requestMap.delete(name); // cleanup
-            return data;
-        })
-        .catch((error) => {
-            console.log(`[CACHE] Error on cache "${name} - ${error}"`);
-            requestMap.delete(name); // cleanup on error
-            throw error;
+
+        requestMap.set(name, fetchPromise);
+        return fetchPromise;
+    }
+}
+
+export class Tags {
+    /**
+     * Check Excluded tags
+     * @param tags
+     * @param exc
+     * @return true: hide
+     */
+    public excludedTags = (tags: string[], exc: string[]): boolean => {
+        return tags.some((tag) => {
+            return exc.includes(tag);
         });
+    };
+    /**
+     * Check Blacklisted tags
+     * @param tags : string[] - tags
+     * @return true: hide
+     */
+    public blacklistedTags = (tags: string[]): boolean => {
+        const blacklistedSettings =
+            (Application.getState("hide_tags") as string[] | undefined) ?? [];
+        return tags.some((tag) => {
+            return blacklistedSettings.includes(tag);
+        });
+    };
+    /**
+     * Get manga Rating
+     * @param {string[]} tags - tags
+     * @return {ContentRating} - ContentRating
+     */
+    tagRatingMap: Record<string, ContentRating> = {
+        ADULTI: ContentRating.ADULT,
+        MATURO: ContentRating.MATURE,
+    };
 
-    requestMap.set(name, fetchPromise);
-    return fetchPromise;
-}
-
-/**
- * Check Excluded tags
- * @param tags
- * @param exc
- * @return true: hide
- */
-export const excludedTags = (tags: string[], exc: string[]): boolean => {
-    return tags.some((tag) => {
-        return exc.includes(tag);
-    });
-};
-
-/**
- * Check Excluded tags
- * @return true: hide
- * @param type
- * @param excluded
- */
-export const excludedTypes = (type: string, excluded: string[]): boolean => {
-    return excluded.includes(type.toLowerCase());
-};
-
-/**
- * Extract filter option {value, id}.
- * @param $ - Requests.
- * @param filterSelector - CSS selector.
- * @returns{[{value, id}]}.
- */
-function extractOptions(
-    $: cheerio.CheerioAPI,
-    filterSelector: string,
-): OptionItem[] {
-    const options = $(`${filterSelector} select.filter-select option`);
-    const result: OptionItem[] = [];
-
-    options.each((_, el) => {
-        const id = $(el).attr("data-name");
-        const label = $(el).text().trim();
-
-        if (id) {
-            result.push({ value: label, id });
+    getRating(tags: string[]): ContentRating {
+        for (const tag of tags) {
+            const matchedRating =
+                this.tagRatingMap[tag.toUpperCase()] ?? undefined;
+            if (matchedRating) return matchedRating;
         }
-    });
-    Application.setState(JSON.stringify(result), filterSelector);
-    return result;
-}
-
-let YearFilter: OptionItem[] = [];
-let GenreFilter: OptionItem[] = [];
-let MangaTypeFilter: OptionItem[] = [];
-let OrderFilter: OptionItem[] = [];
-let StatusFilter: OptionItem[] = [];
-
-/**
- * Check Blacklisted tags
- * @param tags : string[] - tags
- * @return true: hide
- */
-export const blacklistedTags = (tags: string[]): boolean => {
-    const blacklistedSettings =
-        (Application.getState("hide_tags") as string[] | undefined) ?? [];
-    return tags.some((tag) => {
-        return blacklistedSettings.includes(tag);
-    });
-};
-
-/**
- * Check Blacklisted types
- * @param {string}  type - type
- * @return true: hide
- */
-export const blacklistedType = (type: string): boolean => {
-    const blacklistedSettings =
-        (Application.getState("hide_type") as string[] | undefined) ?? [];
-    return blacklistedSettings.includes(type.toLowerCase());
-};
-
-/**
- * Set Manga Type Filter
- */
-function setMangaTypeFilter(newValue: OptionItem[]) {
-    MangaTypeFilter = newValue;
-}
-
-/**
- * Get Manga Type
- * @return [{ value: string, id: string }]
- */
-export function getMangaTypeFilter() {
-    return MangaTypeFilter;
-}
-
-/**
- * Set Ordering Filter
- */
-function setOrderFilter(newValue: OptionItem[]) {
-    OrderFilter = newValue;
-}
-
-/**
- * Get Ordering Type
- * @return [{value: string, id: string}]
- */
-export function getOrderFilter() {
-    return OrderFilter;
-}
-
-/**
- * Set Status Filter
- */
-function setStatusFilter(newValue: OptionItem[]) {
-    StatusFilter = newValue;
-}
-
-/**
- * Get Status
- * @return [{value: string, id: string}]
- */
-export function getStatusFilter() {
-    return StatusFilter;
-}
-
-/**
- * Set Genres
- */
-function setGenreFilter(newValue: OptionItem[]) {
-    GenreFilter = newValue;
-}
-
-/**
- * Get Genres
- * @return [{ value: string, id: string }]
- */
-export function getGenreFilter() {
-    return GenreFilter;
-}
-
-/**
- * Set Years
- */
-function setYearFilter(newValue: OptionItem[]) {
-    YearFilter = newValue;
-}
-
-/**
- * Get Years
- * @return [{ value: string, id: string }]
- */
-export function getYearFilter() {
-    return YearFilter;
-}
-
-/**
- * Get manga Rating
- * @param {string[]} tags - tags
- * @return {ContentRating} - ContentRating
- */
-const tagRatingMap: Record<string, ContentRating> = {
-    ADULTI: ContentRating.ADULT,
-    MATURO: ContentRating.MATURE,
-};
-
-export function getRating(tags: string[]): ContentRating {
-    for (const tag of tags) {
-        const matchedRating = tagRatingMap[tag.toUpperCase()];
-        if (matchedRating) return matchedRating;
+        return ContentRating.EVERYONE;
     }
-    return ContentRating.EVERYONE;
 }
 
-export class URLBuilder {
-    private parameters: Record<string, QueryParam> = {};
-    private pathComponents: string[] = [];
-    private readonly baseUrl: string;
+export class Type {
+    /**
+     * Check Excluded tags
+     * @return true: hide
+     * @param type
+     * @param excluded
+     */
+    public excludedTypes = (type: string, excluded: string[]): boolean => {
+        return excluded.includes(type.toLowerCase());
+    };
 
-    constructor(baseUrl: string) {
-        this.baseUrl = baseUrl.replace(/^\/|\/$/g, "");
+    /**
+     * Check Blacklisted types
+     * @param {string}  type - type
+     * @return true: hide
+     */
+    public blacklistedType = (type: string): boolean => {
+        const blacklistedSettings =
+            (Application.getState("hide_type") as string[] | undefined) ?? [];
+        return blacklistedSettings.includes(type.toLowerCase());
+    };
+}
+
+export class FilterPreferences {
+    YearFilter: OptionItem[] = [];
+    GenreFilter: OptionItem[] = [];
+    MangaTypeFilter: OptionItem[] = [];
+    OrderFilter: OptionItem[] = [];
+    StatusFilter: OptionItem[] = [];
+    /**
+     * Set Manga Type Filter
+     */
+    private setMangaTypeFilter(newValue: OptionItem[]) {
+        this.MangaTypeFilter = newValue;
     }
 
-    addPathComponent(component: string): this {
-        this.pathComponents.push(component.replace(/^\/|\/$/g, ""));
-        return this;
+    /**
+     * Get Manga Type
+     * @return [{ value: string, id: string }]
+     */
+    public getMangaTypeFilter() {
+        return this.MangaTypeFilter;
     }
 
-    addQueryParameter(key: string, value: QueryParam): this {
-        this.parameters[key] = value;
-        return this;
+    /**
+     * Set Ordering Filter
+     */
+    private setOrderFilter(newValue: OptionItem[]) {
+        this.OrderFilter = newValue;
     }
 
-    buildUrl(
-        options: {
-            addTrailingSlash?: boolean;
-            includeUndefinedParameters?: boolean;
-        } = {},
-    ): string {
-        const { addTrailingSlash = false, includeUndefinedParameters = false } =
-            options;
+    /**
+     * Get Ordering Type
+     * @return [{value: string, id: string}]
+     */
+    public getOrderFilter() {
+        return this.OrderFilter;
+    }
 
-        let url = `${this.baseUrl}/${this.pathComponents.join("/")}`;
-        if (addTrailingSlash) url += "/";
+    /**
+     * Set Status Filter
+     */
+    private setStatusFilter(newValue: OptionItem[]) {
+        this.StatusFilter = newValue;
+    }
 
-        const queryParams = Object.entries(this.parameters).flatMap(
-            ([key, value]) => {
-                if (value == null && !includeUndefinedParameters) return [];
+    /**
+     * Get Status
+     * @return [{value: string, id: string}]
+     */
+    public getStatusFilter() {
+        return this.StatusFilter;
+    }
 
-                if (Array.isArray(value)) {
-                    return value
-                        .filter((v) => v != null || includeUndefinedParameters)
-                        .map(
-                            (v) =>
-                                `${encodeURIComponent(key)}=${encodeURIComponent(String(v ?? ""))}`,
-                        );
-                }
+    /**
+     * Set Genres
+     */
+    private setGenreFilter(newValue: OptionItem[]) {
+        this.GenreFilter = newValue;
+    }
 
-                if (typeof value === "object" && value !== null) {
-                    return Object.entries(value).flatMap(([subKey, v]) =>
-                        v != null || includeUndefinedParameters
-                            ? `${encodeURIComponent(key)}[${encodeURIComponent(subKey)}]=${encodeURIComponent(String(v ?? ""))}`
-                            : [],
-                    );
-                }
+    /**
+     * Get Genres
+     * @return [{ value: string, id: string }]
+     */
+    public getGenreFilter() {
+        return this.GenreFilter;
+    }
 
-                return `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
-            },
+    /**
+     * Set Years
+     */
+    private setYearFilter(newValue: OptionItem[]) {
+        this.YearFilter = newValue;
+    }
+
+    /**
+     * Get Years
+     * @return [{ value: string, id: string }]
+     */
+    public getYearFilter() {
+        return this.YearFilter;
+    }
+    /**
+     * Populate Search Filter
+     */
+    async populateFilter(source: MangaWorldGeneric) {
+        const lastFilterFetch = Number(
+            Application.getState("last-filter-fetch-date") ?? 0,
         );
-
-        if (queryParams.length > 0) {
-            url += `?${queryParams.join("&")}`;
+        if (lastFilterFetch + 604800 > new Date().valueOf() / 1000) {
+            this.setGenreFilter(
+                JSON.parse(
+                    Application.getState(".genres") as string,
+                ) as OptionItem[],
+            );
+            this.setMangaTypeFilter(
+                JSON.parse(
+                    Application.getState(".type") as string,
+                ) as OptionItem[],
+            );
+            this.setStatusFilter(
+                JSON.parse(
+                    Application.getState(".status") as string,
+                ) as OptionItem[],
+            );
+            this.setOrderFilter(
+                JSON.parse(
+                    Application.getState(".sort") as string,
+                ) as OptionItem[],
+            );
+            this.setYearFilter(
+                JSON.parse(
+                    Application.getState(".year") as string,
+                ) as OptionItem[],
+            );
+        } else {
+            const html = await source.requestManager.parseFilters(source);
+            const windowEntry = jsonParser.getWindowEntry(html);
+            const JSONFilter = this.extractOptionJSON(windowEntry);
+            const $ = cheerio.load(html);
+            this.setMangaTypeFilter(this.extractOptions($, ".type"));
+            this.setStatusFilter(this.extractOptions($, ".status"));
+            this.setOrderFilter(this.extractOptions($, ".sort"));
+            this.setGenreFilter(JSONFilter.genres);
+            this.setYearFilter(JSONFilter.year);
+            Application.setState(
+                String(new Date().valueOf() / 1000),
+                "last-filter-fetch-date",
+            );
         }
+    }
+    mapGenresToOptionItem(genres?: Genre[] | null): OptionItem[] {
+        if (!genres) return [];
+        return genres.map((genre) => ({
+            id: genre.slug,
+            value: genre.name,
+        }));
+    }
 
-        return url;
+    mapStringToOptionItem(tags: (string | number)[]): OptionItem[] {
+        if (!tags) return [];
+        const stringTags = tags.map((v) => String(v));
+        return stringTags.map((tag) => ({
+            id: tag,
+            value: tag,
+        }));
+    }
+    /**
+     * Extract filter option {value, id}.
+     * @param $ - Requests.
+     * @param filterSelector - CSS selector.
+     * @returns{[{value, id}]}.
+     */
+    extractOptions(
+        $: cheerio.CheerioAPI,
+        filterSelector: string,
+    ): OptionItem[] {
+        const options = $(`${filterSelector} select.filter-select option`);
+        const result: OptionItem[] = [];
+
+        options.each((_, el) => {
+            const id = $(el).attr("data-name");
+            const label = $(el).text().trim();
+
+            if (id) {
+                result.push({ value: label, id });
+            }
+        });
+        Application.setState(JSON.stringify(result), filterSelector);
+        return result;
+    }
+
+    extractOptionJSON(json: WindowEntry[]): {
+        genres: OptionItem[];
+        author: OptionItem[];
+        artist: OptionItem[];
+        year: OptionItem[];
+    } {
+        const filters: {
+            genres: OptionItem[];
+            author: OptionItem[];
+            artist: OptionItem[];
+            year: OptionItem[];
+        } = {
+            genres: [],
+            author: [],
+            artist: [],
+            year: [],
+        };
+        json.forEach((item) => {
+            if (item.kind == "global") {
+                filters.genres = this.mapGenresToOptionItem(
+                    item.data.globalData.genres,
+                );
+            }
+            if (item.kind == "search") {
+                filters.artist = this.mapStringToOptionItem(item.data.artists);
+                filters.year = this.mapStringToOptionItem(item.data.years);
+                filters.author = this.mapStringToOptionItem(item.data.authors);
+            }
+        });
+        this.setGenreFilter(filters.genres);
+        this.setYearFilter(filters.year);
+        return filters;
+    }
+}
+
+export class JsonParser {
+    isMangaData(data: object): data is MangaPageData {
+        return "manga" in data;
+    }
+
+    isGlobalData(data: object): data is { globalData: GlobalData } {
+        return "globalData" in data;
+    }
+
+    isMangaChapterData(data: object): data is ChapterList {
+        return "CDN_URL" in data;
+    }
+
+    isTrendingData(data: object): data is TrendingChaptersData {
+        return "mostViewedChapters" in data;
+    }
+
+    isSearchData(data: object): data is SearchResults {
+        return "selected" in data;
+    }
+
+    isSearchInfoData(data: object): data is SearchInfo {
+        return "totalPages" in data;
+    }
+
+    convertEntries(w: (RawEntry | WindowEntry)[]): WindowEntry[] {
+        return w.map((entry): WindowEntry => {
+            if (!Array.isArray(entry)) return entry;
+
+            const [key, index, data, meta] = entry;
+            if (typeof data === "object" && data !== null) {
+                if (this.isMangaData(data))
+                    return { kind: "manga", key, index, data, meta };
+                if (this.isGlobalData(data))
+                    return { kind: "global", key, index, data, meta };
+                if (this.isTrendingData(data))
+                    return { kind: "trending", key, index, data, meta };
+                if (this.isMangaChapterData(data))
+                    return { kind: "chapter", key, index, data, meta };
+                if (this.isSearchData(data))
+                    return { kind: "search", key, index, data, meta };
+                if (this.isSearchInfoData(data))
+                    return { kind: "searchInfo", key, index, data, meta };
+            }
+            return {
+                kind: "config",
+                key,
+                index,
+                data: data as JSONConfig,
+                meta,
+            };
+        });
+    }
+
+    getWindowEntry(html: string): WindowEntry[] {
+        const regex =
+            /<script[^>]*>\s*[^<]*?\$MC\s*=\s*\(window\.\$MC\|\|\[\]\)\.concat\(([\s\S]*?)\)\s*<\/script>/i;
+
+        const match = html.match(regex);
+
+        if (!match?.[1]) {
+            throw new Error("No JSON Found");
+        }
+        const jsonText = match[1].trim();
+        const json = JSON.parse(jsonText) as JsonData;
+        return this.convertEntries(json.o.w);
+    }
+
+    mapGenresToTags(genres: Genre[]): Tag[] {
+        return genres.map((genre) => ({
+            id: genre.slug,
+            title: genre.name,
+        }));
+    }
+
+    findChapterData(page: Pages, chapterId: string) {
+        if (page.volumes.length > 0) {
+            for (const volume of page.volumes) {
+                const chapter = volume.chapters.find((c) => c.id === chapterId);
+                if (chapter) {
+                    return {
+                        chapterURL: `${volume.volume.slugFolder}-${volume.volume.id}/${chapter.slugFolder}-${chapter.id}`,
+                        mangaId: volume.volume.manga,
+                        pages: chapter.pages,
+                    };
+                }
+            }
+        } else {
+            const chapter = page.singleChapters.find((c) => c.id === chapterId);
+            if (chapter) {
+                return {
+                    chapterURL: `${chapter.slugFolder}-${chapter.id}`,
+                    mangaId: chapter.manga,
+                    pages: chapter.pages,
+                };
+            }
+        }
+        return null;
     }
 }

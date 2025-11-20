@@ -6,13 +6,10 @@ Estensioni custom per **[Paperback](https://paperback.moe/)**
 
 ## 🚀 Installazione
 
-Aggiungi la repository a Paperback:
+Add extensions to Paperback:
 
-- 🔒 **[Versione stabile][installation-webpage-stable]** – versione stabile
+- 🔒 **[Install][installation-webpage-stable]**
 
-[comment]: <> (- 🧪 **[Versione beta][installation-webpage-beta]** – versione beta, può essere instabile ma ha le ultime feature)
-
-[installation-webpage-beta]: https://catta1997.github.io/Sinon-Paperback-Extensions/0.9/beta/
 [installation-webpage-stable]: https://catta1997.github.io/Sinon-Paperback-Extensions/0.9/stable/
 
 ---
