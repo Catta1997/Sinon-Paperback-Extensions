@@ -141,13 +141,17 @@ export class JsonParser {
         } while (newPage);
         const chapterList: Chapter[] = [];
         chaptersArray.forEach((chapter) => {
+            let version = chapter.scanlation_group?.name ?? "";
+            if (chapter.volume > 0) {
+                version = chapter.scanlation_group?.name + " Volumes";
+            }
             chapterList.push({
                 chapterId: chapter.chapter_id.toString(),
                 sourceManga: manga,
                 langCode: chapter.language,
                 chapNum: chapter.number,
                 title: chapter.name,
-                version: chapter.scanlation_group?.name ?? "",
+                version: version,
                 volume: chapter.volume,
                 publishDate: new Date(chapter.updated_at * 1000),
                 creationDate: new Date(chapter.created_at * 1000),
