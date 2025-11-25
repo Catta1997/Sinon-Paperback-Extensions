@@ -31,7 +31,7 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export class Requests {
-    async getSearchResults(query: SearchQuery, metadata: RokuMetadata) {
+    async requestSearchResults(query: SearchQuery, metadata: RokuMetadata) {
         const page = metadata?.page ?? "";
         let baseURL: URL = new URL("https://rokuhentai.com/_search");
         if (query.title.length > 0) {

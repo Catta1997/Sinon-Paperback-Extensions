@@ -4,7 +4,6 @@ import {
     ContentRating,
     MangaInfo,
     PagedResults,
-    SearchFilter,
     SearchQuery,
     SearchResultItem,
     SourceManga,
@@ -22,13 +21,14 @@ export class Parser {
         metadata: RokuMetadata,
     ): Promise<PagedResults<SearchResultItem>> {
         const items: SearchResultItem[] = [];
-        const parsed = await requestMaker.getSearchResults(query, metadata);
+        const parsed = await requestMaker.requestSearchResults(query, metadata);
         parsed["manga-cards"].forEach((card) => {
             const manga = this.parseMangaCard(card);
             if (manga.title && manga.id) {
                 items.push({
                     mangaId: manga.id,
                     title: manga.title,
+                    subtitle: manga.subtitle,
                     imageUrl: manga.coverImage ?? "coverImage",
                     contentRating: ContentRating.ADULT,
                 });
@@ -36,7 +36,10 @@ export class Parser {
         });
         return {
             items: items,
-            metadata: { page: parsed.next ? parsed.next : undefined },
+            metadata:
+                parsed.next && parsed.next.length > 0
+                    ? { page: parsed.next }
+                    : undefined,
         };
     }
 
@@ -57,7 +60,7 @@ export class Parser {
         const match = text.match(/\d+/);
         const imagesCount = match ? match[0] : "0";
         const tagGroup: Tag[] = tags.map((tag) => ({
-            id: tag.replaceAll(" ", "_"),
+            id: "genre",
             title: tag,
         }));
         const mangaDetails: MangaInfo = {
@@ -102,10 +105,6 @@ export class Parser {
                 chapNum: 1,
             },
         ];
-    }
-
-    parseSearchFilters(): Promise<SearchFilter[]> {
-        return Promise.resolve([]);
     }
 
     parseMangaCard(html: string): MangaCardInfo {
