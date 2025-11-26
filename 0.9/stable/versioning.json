@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-11-26T10:28:05.829Z",
+  "buildTime": "2025-11-26T18:39:56.918Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -83,6 +83,33 @@
       "id": "MangaWorldAdult"
     },
     {
+      "name": "PhoenixScans",
+      "description": "Extension that pulls manga from PhoenixScans.",
+      "version": "1.0.0-alpha.1",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "SAFE",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#ffffff",
+          "backgroundColor": "#9ad3c7"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "PhoenixScans"
+    },
+    {
       "name": "RokuHentai",
       "description": "Extension that pulls content from RokuHentai.com",
       "version": "1.0.0-alpha.1",
@@ -98,6 +125,33 @@
         }
       ],
       "id": "RokuHentai"
+    },
+    {
+      "name": "TuttoAnimeManga",
+      "description": "Extension that pulls manga from TuttoAnimeManga.",
+      "version": "1.0.0-alpha.1",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "SAFE",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#ffffff",
+          "backgroundColor": "#9ad3c7"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "TuttoAnimeManga"
     }
   ]
 }
