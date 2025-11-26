@@ -53,7 +53,7 @@ export class Requests {
         }
         const page = metadata?.page ?? "";
         let keyword = query.title;
-        let baseURL: URL = new URL("https://rokuhentai.com/_search");
+        const baseURL: URL = new URL("https://rokuhentai.com/_search");
         if (tagFilter.length > 0) {
             tagFilter.forEach((filter) => {
                 keyword = `${keyword} tag:${filter}`;
@@ -67,11 +67,8 @@ export class Requests {
         if (keyword.length > 0) {
             baseURL.setQueryItem("q", keyword);
         }
-        if (page.length > 0) {
-            baseURL = new URL(page);
-        }
         const data = await Application.scheduleRequest({
-            url: baseURL.toString().replaceAll("%2B", "+"),
+            url: page.length > 0 ? page : baseURL.toString(),
             method: "GET",
         });
         const js = Application.arrayBufferToUTF8String(data[1]);
