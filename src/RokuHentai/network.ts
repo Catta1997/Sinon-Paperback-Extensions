@@ -70,7 +70,6 @@ export class Requests {
         if (page.length > 0) {
             baseURL = new URL(page);
         }
-        console.log(baseURL.toString().replaceAll("%2B", "+"));
         const data = await Application.scheduleRequest({
             url: baseURL.toString().replaceAll("%2B", "+"),
             method: "GET",
