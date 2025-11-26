@@ -32,16 +32,47 @@ export class MainInterceptor extends PaperbackInterceptor {
 
 export class Requests {
     async requestSearchResults(query: SearchQuery, metadata: RokuMetadata) {
+        const getFilterValue = (id: string) =>
+            query.filters.find((filter) => filter.id == id)?.value;
+        const languageFilter: string[] = [];
+        const tagFilter: string[] = [];
+
+        const language: string | Record<string, "included" | "excluded"> =
+            getFilterValue("languages") ?? "";
+        const tags: string | Record<string, "included" | "excluded"> =
+            getFilterValue("tags") ?? "";
+        if (language && typeof language === "object") {
+            for (const tag of Object.entries(language)) {
+                if (tag[1] == "included") languageFilter.push(tag[0]);
+            }
+        }
+        if (tags && typeof tags === "object") {
+            for (const tag of Object.entries(tags)) {
+                if (tag[1] == "included") tagFilter.push(tag[0]);
+            }
+        }
         const page = metadata?.page ?? "";
+        let keyword = query.title;
         let baseURL: URL = new URL("https://rokuhentai.com/_search");
-        if (query.title.length > 0) {
-            baseURL.setQueryItem("q", query.title);
+        if (tagFilter.length > 0) {
+            tagFilter.forEach((filter) => {
+                keyword = `${keyword} tag:${filter}`;
+            });
+        }
+        if (languageFilter.length > 0) {
+            languageFilter.forEach((filter) => {
+                keyword = `${keyword} language:${filter}`;
+            });
+        }
+        if (keyword.length > 0) {
+            baseURL.setQueryItem("q", keyword);
         }
         if (page.length > 0) {
             baseURL = new URL(page);
         }
+        console.log(baseURL.toString().replaceAll("%2B", "+"));
         const data = await Application.scheduleRequest({
-            url: baseURL.toString(),
+            url: baseURL.toString().replaceAll("%2B", "+"),
             method: "GET",
         });
         const js = Application.arrayBufferToUTF8String(data[1]);

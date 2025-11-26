@@ -8,10 +8,11 @@ import {
     SearchResultItem,
     SourceManga,
     Tag,
+    type SearchFilter,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
-import { MangaCardInfo, RokuMetadata } from "./utils";
+import { filter_lang, filter_tags, MangaCardInfo, RokuMetadata } from "./utils";
 
 const requestMaker = new Requests();
 
@@ -36,10 +37,7 @@ export class Parser {
         });
         return {
             items: items,
-            metadata:
-                parsed.next && parsed.next.length > 0
-                    ? { page: parsed.next }
-                    : undefined,
+            metadata: parsed.next !== null ? { page: parsed.next } : undefined,
         };
     }
 
@@ -148,5 +146,30 @@ export class Parser {
             imagesCount,
             dateString,
         };
+    }
+
+    getFilters() {
+        const filters: SearchFilter[] = [];
+        filters.push({
+            type: "multiselect",
+            id: "languages",
+            title: "Language",
+            options: filter_lang,
+            value: {},
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: filter_lang.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "tags",
+            title: "Tags",
+            options: filter_tags,
+            value: {},
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: filter_tags.length,
+        });
+        return filters;
     }
 }

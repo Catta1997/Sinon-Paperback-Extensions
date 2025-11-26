@@ -50,7 +50,7 @@ export class RokuHentaiExtension implements RokuHentaiImplementation {
     }
 
     getSearchFilters(): Promise<SearchFilter[]> {
-        return Promise.resolve([]);
+        return Promise.resolve(parser.getFilters());
     }
 
     getSearchResults(
