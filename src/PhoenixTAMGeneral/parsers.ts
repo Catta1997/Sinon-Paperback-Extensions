@@ -1,0 +1,140 @@
+import {
+    Chapter,
+    ChapterDetails,
+    ContentRating,
+    DiscoverSection,
+    DiscoverSectionItem,
+    MangaInfo,
+    PagedResults,
+    SearchQuery,
+    SearchResultItem,
+    SourceManga,
+    Tag,
+    TagSection,
+} from "@paperback/types";
+import PhoenixTAMGeneral from "./main";
+import {
+    ComicDetailResponse,
+    ComicListItem,
+    ComicsListResponse,
+} from "./utils";
+
+export class PTAMParsers {
+    async parseSearchResults(
+        query: SearchQuery,
+        source: PhoenixTAMGeneral,
+    ): Promise<PagedResults<SearchResultItem>> {
+        const jsonRequest = await source.requestManager.apiSearchResult(query);
+        const json = JSON.parse(jsonRequest) as ComicsListResponse;
+        const mangas: SearchResultItem[] = [];
+        json.comics.forEach((comic: ComicListItem) => {
+            mangas.push({
+                mangaId: comic.slug,
+                title: comic.title,
+                imageUrl: comic.thumbnail,
+                contentRating:
+                    comic.adult == 1
+                        ? ContentRating.ADULT
+                        : ContentRating.EVERYONE,
+            });
+        });
+        return {
+            items: mangas,
+        };
+    }
+
+    async parseMangaDetails(
+        mangaid: string,
+        source: PhoenixTAMGeneral,
+    ): Promise<SourceManga> {
+        const jsonRequest =
+            await source.requestManager.apiMangaDetails(mangaid);
+        const json = JSON.parse(jsonRequest) as ComicDetailResponse;
+        const comic = json.comic;
+        const tags = comic.genres;
+        const genres: Tag[] = tags.map((tag) => ({
+            id: tag.slug,
+            title: tag.name,
+        }));
+        const tagSection: TagSection[] = [
+            { id: "genres", title: "genres", tags: genres },
+        ];
+        const info: MangaInfo = {
+            thumbnailUrl: comic.thumbnail_small,
+            synopsis: comic.description ?? "",
+            primaryTitle: comic.title,
+            secondaryTitles: comic.alt_titles,
+            contentRating:
+                comic.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
+            status: comic.status ?? "",
+            artist: comic.artist ?? "",
+            author: comic.author ?? "",
+            bannerUrl: comic.thumbnail,
+            rating: comic.rating / 10,
+            tagGroups: tagSection,
+            shareUrl: `${source.base_url}/${comic.url}`,
+        };
+        return { mangaId: mangaid, mangaInfo: info };
+    }
+
+    async parsetChapters(
+        sourceManga: SourceManga,
+        source: PhoenixTAMGeneral,
+    ): Promise<Chapter[]> {
+        const chapters: Chapter[] = [];
+        const jsonRequest = await source.requestManager.apiMangaDetails(
+            sourceManga.mangaId,
+        );
+        const json = JSON.parse(jsonRequest) as ComicDetailResponse;
+        const comic = json.comic;
+        comic.chapters.forEach((chapter) => {
+            chapters.push({
+                chapterId: chapter.url,
+                sourceManga: sourceManga,
+                langCode: chapter.language,
+                chapNum: chapter.chapter ?? 0,
+                title: chapter.title ?? chapter.full_title ?? "",
+                version: chapter.teams[0]?.name ?? "",
+                volume: chapter.volume ?? 0,
+                publishDate: new Date(chapter.published_on),
+                creationDate: new Date(chapter.updated_at),
+            });
+        });
+        return chapters;
+    }
+
+    async parseSectionHome(
+        source: PhoenixTAMGeneral,
+        section: DiscoverSection,
+    ): Promise<PagedResults<DiscoverSectionItem>> {
+        const _ = section;
+        const jsonRequest = await source.requestManager.apiMangaDetails(
+            "",
+            true,
+        );
+        const json = JSON.parse(jsonRequest) as ComicsListResponse;
+        const items: DiscoverSectionItem[] = json.comics.map((manga) => ({
+            type: "simpleCarouselItem",
+            contentRating:
+                manga.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
+            imageUrl: manga.thumbnail,
+            mangaId: manga.slug,
+            title: manga.title ?? "",
+        }));
+        return { items: items };
+    }
+
+    async parseChapterDetails(
+        chapter: Chapter,
+        source: PhoenixTAMGeneral,
+    ): Promise<ChapterDetails> {
+        const pages = await source.requestManager.getChapterPages(
+            chapter.chapterId,
+        );
+        return {
+            id: chapter.chapterId,
+            mangaId: chapter.sourceManga.mangaId,
+            pages: pages,
+        };
+    }
+}

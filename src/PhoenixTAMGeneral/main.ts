@@ -1,0 +1,108 @@
+import {
+    BasicRateLimiter,
+    Chapter,
+    ChapterDetails,
+    ContentRating,
+    DiscoverSection,
+    DiscoverSectionItem,
+    DiscoverSectionType,
+    PagedResults,
+    SearchFilter,
+    SearchQuery,
+    SearchResultItem,
+    SourceManga,
+    type ChapterProviding,
+    type DiscoverSectionProviding,
+    type Extension,
+    type MangaProviding,
+    type SearchResultsProviding,
+} from "@paperback/types";
+import { APIRequests, MainInterceptor } from "./network";
+import { PTAMParsers } from "./parsers";
+
+export interface PTAMGenericParams {
+    name: string;
+    domain: string;
+    contentRating: ContentRating;
+    parser?: PTAMParsers;
+    requestManager?: APIRequests;
+}
+
+abstract class PhoenixTAMGeneral
+    implements
+        Extension,
+        SearchResultsProviding,
+        MangaProviding,
+        ChapterProviding,
+        DiscoverSectionProviding
+{
+    readonly name: string;
+    public base_url = "";
+    public defaultContentRating = ContentRating.EVERYONE;
+    parser: PTAMParsers;
+    requestManager: APIRequests;
+    mainRateLimiter: BasicRateLimiter;
+    mainInterceptor: MainInterceptor;
+
+    protected constructor(params: PTAMGenericParams) {
+        this.name = params.name;
+        this.base_url = params.domain;
+        this.defaultContentRating =
+            params.contentRating ?? ContentRating.EVERYONE;
+        this.parser = params.parser ?? new PTAMParsers();
+        this.requestManager =
+            params.requestManager ?? new APIRequests(this.base_url);
+        // Rate limit: Wait 1 sec after 5 requests
+        this.mainRateLimiter = new BasicRateLimiter("main", {
+            numberOfRequests: 1,
+            bufferInterval: 1,
+            ignoreImages: true,
+        });
+        this.mainInterceptor = new MainInterceptor("main");
+    }
+    getMangaDetails(mangaId: string): Promise<SourceManga> {
+        return this.parser.parseMangaDetails(mangaId, this);
+    }
+
+    async initialise(): Promise<void> {
+        this.mainRateLimiter.registerInterceptor();
+        this.mainInterceptor.registerInterceptor();
+    }
+
+    getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
+        return this.parser.parseChapterDetails(chapter, this);
+    }
+
+    getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
+        return this.parser.parsetChapters(sourceManga, this);
+    }
+
+    getDiscoverSectionItems(
+        section: DiscoverSection,
+    ): Promise<PagedResults<DiscoverSectionItem>> {
+        return this.parser.parseSectionHome(this, section);
+    }
+
+    async getDiscoverSections(): Promise<DiscoverSection[]> {
+        const discover_section: DiscoverSection[] = [];
+        discover_section.push({
+            id: "section",
+            title: "Tendenze",
+            subtitle: "",
+            type: DiscoverSectionType.simpleCarousel,
+        });
+        return discover_section;
+    }
+
+    getSearchFilters(): Promise<SearchFilter[]> {
+        return Promise.resolve([]);
+    }
+
+    async getSearchResults(
+        query: SearchQuery,
+    ): Promise<PagedResults<SearchResultItem>> {
+        return await this.parser.parseSearchResults(query, this);
+    }
+}
+
+export default PhoenixTAMGeneral;

@@ -1,4 +1,4 @@
-import { MangaWorldGeneric } from "../generic/main";
+import { MangaWorldGeneric } from "../MangaWorldGeneric/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://www.mangaworldadult.net";
