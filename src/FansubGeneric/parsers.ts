@@ -19,7 +19,7 @@ import {
     ComicsListResponse,
 } from "./models";
 
-export class PTAMParsers {
+export class FansubGeneralParsers {
     async parseSearchResults(
         query: SearchQuery,
         source: FansubGeneral,

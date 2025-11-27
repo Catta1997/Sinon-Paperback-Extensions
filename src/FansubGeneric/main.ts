@@ -18,7 +18,7 @@ import {
     type SearchResultsProviding,
 } from "@paperback/types";
 import { APIRequests, MainInterceptor } from "./network";
-import { PTAMParsers } from "./parsers";
+import { FansubGeneralParsers } from "./parsers";
 
 export interface FansubGenericParams {
     name: string;
@@ -37,7 +37,7 @@ abstract class FansubGeneral
     readonly name: string;
     public base_url = "";
     public defaultContentRating = ContentRating.EVERYONE;
-    parser: PTAMParsers;
+    parser: FansubGeneralParsers;
     requestManager: APIRequests;
     mainRateLimiter: BasicRateLimiter;
     mainInterceptor: MainInterceptor;
@@ -47,7 +47,7 @@ abstract class FansubGeneral
         this.base_url = params.domain;
         this.defaultContentRating =
             params.contentRating ?? ContentRating.EVERYONE;
-        this.parser = new PTAMParsers();
+        this.parser = new FansubGeneralParsers();
         this.requestManager = new APIRequests(this.base_url);
         // Rate limit: Wait 1 sec after 5 requests
         this.mainRateLimiter = new BasicRateLimiter("main", {
