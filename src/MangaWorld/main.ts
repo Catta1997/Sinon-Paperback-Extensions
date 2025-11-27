@@ -1,7 +1,7 @@
 import { MangaWorldGeneric } from "../MangaWorldGeneric/main";
 import pbconfig from "./pbconfig";
 
-const DOMAIN: string = "https://www.mangaworld.cx";
+const DOMAIN: string = "https://www.mangaworld.mx";
 
 class MangaWorldExtension extends MangaWorldGeneric {
     constructor() {
