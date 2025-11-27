@@ -60,7 +60,7 @@ export class PTAMParsers {
             { id: "genres", title: "genres", tags: genres },
         ];
         const info: MangaInfo = {
-            thumbnailUrl: comic.thumbnail_small,
+            thumbnailUrl: comic.thumbnail,
             synopsis: comic.description ?? "",
             primaryTitle: comic.title,
             secondaryTitles: comic.alt_titles,
@@ -69,10 +69,8 @@ export class PTAMParsers {
             status: comic.status ?? "",
             artist: comic.artist ?? "",
             author: comic.author ?? "",
-            bannerUrl: comic.thumbnail,
             rating: comic.rating / 10,
             tagGroups: tagSection,
-            shareUrl: `${source.base_url}/${comic.url}`,
         };
         return { mangaId: mangaid, mangaInfo: info };
     }
