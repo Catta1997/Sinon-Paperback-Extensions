@@ -220,12 +220,16 @@ export class FilterPreferences {
         const cached = lastFilterFetch + 604800 > new Date().valueOf() / 1000;
         if (cached && !force) {
             const keys = ["genres", "type", "status", "sort", "year"] as const;
-            const state = Object.fromEntries(
-                keys.map((k) => [k, Application.getState(`.${k}`) as string]),
+            const values = keys.map(
+                (k) => Application.getState(`.${k}`) as string | undefined,
             );
-            const { genres, type, status, sort, year } = state;
+            const [genres, type, status, sort, year] = values;
             if (
-                [genres, type, status, sort, year].some((v) => v === undefined)
+                genres === undefined ||
+                type === undefined ||
+                status === undefined ||
+                sort === undefined ||
+                year === undefined
             ) {
                 await this.populateFilter(source, true);
                 return;
