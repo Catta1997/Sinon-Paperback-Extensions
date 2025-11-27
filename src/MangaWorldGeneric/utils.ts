@@ -219,31 +219,22 @@ export class FilterPreferences {
         );
         const cached = lastFilterFetch + 604800 > new Date().valueOf() / 1000;
         if (cached && !force) {
-            this.setGenreFilter(
-                JSON.parse(
-                    Application.getState(".genres") as string,
-                ) as OptionItem[],
+            const keys = ["genres", "type", "status", "sort", "year"] as const;
+            const state = Object.fromEntries(
+                keys.map((k) => [k, Application.getState(`.${k}`) as string]),
             );
-            this.setMangaTypeFilter(
-                JSON.parse(
-                    Application.getState(".type") as string,
-                ) as OptionItem[],
-            );
-            this.setStatusFilter(
-                JSON.parse(
-                    Application.getState(".status") as string,
-                ) as OptionItem[],
-            );
-            this.setOrderFilter(
-                JSON.parse(
-                    Application.getState(".sort") as string,
-                ) as OptionItem[],
-            );
-            this.setYearFilter(
-                JSON.parse(
-                    Application.getState(".year") as string,
-                ) as OptionItem[],
-            );
+            const { genres, type, status, sort, year } = state;
+            if (
+                [genres, type, status, sort, year].some((v) => v === undefined)
+            ) {
+                await this.populateFilter(source, true);
+                return;
+            }
+            this.setGenreFilter(JSON.parse(genres) as OptionItem[]);
+            this.setMangaTypeFilter(JSON.parse(type) as OptionItem[]);
+            this.setStatusFilter(JSON.parse(status) as OptionItem[]);
+            this.setOrderFilter(JSON.parse(sort) as OptionItem[]);
+            this.setYearFilter(JSON.parse(year) as OptionItem[]);
         } else {
             const html = await source.requestManager.parseFilters(source);
             const windowEntry = jsonParser.getWindowEntry(html);
