@@ -17,7 +17,7 @@ import {
     ComicDetailResponse,
     ComicListItem,
     ComicsListResponse,
-} from "./utils";
+} from "./models";
 
 export class PTAMParsers {
     async parseSearchResults(

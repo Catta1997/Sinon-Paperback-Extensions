@@ -5,7 +5,7 @@ import {
     type Request,
     type Response,
 } from "@paperback/types";
-import { ReadChapterResponse } from "./utils";
+import { ReadChapterResponse } from "./models";
 
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
