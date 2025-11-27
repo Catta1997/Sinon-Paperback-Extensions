@@ -9,7 +9,10 @@ import { ReadChapterResponse } from "./models";
 
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
-        return request;
+        return {
+            url: request.url.replace("http://", "https://"),
+            method: request.method,
+        };
     }
 
     override async interceptResponse(
