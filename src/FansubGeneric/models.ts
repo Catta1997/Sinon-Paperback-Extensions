@@ -52,7 +52,6 @@ export interface ComicDetailChapter {
     chapter: number;
     language: string;
     teams: (Team | null)[];
-    updated_at: string;
     published_on: string;
     url: string;
 }

@@ -1,32 +1,14 @@
-import {
-    ContentRating,
-    SourceIntents,
-    type ExtensionInfo,
-} from "@paperback/types";
+import { ContentRating, type ExtensionInfo } from "@paperback/types";
+import { generalInfo } from "../FansubGeneric/genericInfo";
 
 export default {
     name: "LupiTeam",
     description: "Extension that pulls manga from LupiTeam.",
-    version: "1.0.0-alpha.1",
+    version: generalInfo.version,
     icon: "icon.png",
     language: "it",
     contentRating: ContentRating.EVERYONE,
-    capabilities: [
-        SourceIntents.CHAPTER_PROVIDING,
-        SourceIntents.DISCOVER_SECIONS_PROVIDING,
-        SourceIntents.SEARCH_RESULTS_PROVIDING,
-    ],
-    badges: [
-        {
-            label: "Italian 🇮🇹",
-            textColor: "#ffffff",
-            backgroundColor: "#28eac2",
-        },
-    ],
-    developers: [
-        {
-            name: "Catta1997",
-            website: "https://github.com/Catta1997",
-        },
-    ],
+    capabilities: generalInfo.capabilities,
+    badges: generalInfo.badges,
+    developers: generalInfo.developers,
 } satisfies ExtensionInfo;

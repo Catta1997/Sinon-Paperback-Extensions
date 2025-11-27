@@ -1,4 +1,4 @@
-import FansubGeneral from "../FansubGeneral/main";
+import FansubGeneral from "../FansubGeneric/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://tuttoanimemanga.net/api";
