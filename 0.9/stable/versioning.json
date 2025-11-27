@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-11-26T18:39:56.918Z",
+  "buildTime": "2025-11-27T10:26:14.424Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -25,6 +25,60 @@
         }
       ],
       "id": "ComixTo"
+    },
+    {
+      "name": "GTOTheGreatSite",
+      "description": "Extension that pulls manga from GTOTheGreatSite.",
+      "version": "1.0.0-alpha.1",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "SAFE",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#ffffff",
+          "backgroundColor": "#9ad3c7"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "GTOTheGreatSite"
+    },
+    {
+      "name": "LupiTeam",
+      "description": "Extension that pulls manga from LupiTeam.",
+      "version": "1.0.0-alpha.1",
+      "icon": "icon.png",
+      "language": "it",
+      "contentRating": "SAFE",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian",
+          "textColor": "#ffffff",
+          "backgroundColor": "#9ad3c7"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "LupiTeam"
     },
     {
       "name": "MangaWorld",
