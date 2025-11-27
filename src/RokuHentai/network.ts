@@ -56,12 +56,12 @@ export class Requests {
         const baseURL: URL = new URL("https://rokuhentai.com/_search");
         if (tagFilter.length > 0) {
             tagFilter.forEach((filter) => {
-                keyword = `${keyword} tag:${filter}`;
+                keyword = `${keyword}+tag:${filter}`;
             });
         }
         if (languageFilter.length > 0) {
             languageFilter.forEach((filter) => {
-                keyword = `${keyword} language:${filter}`;
+                keyword = `${keyword}+language:${filter}`;
             });
         }
         if (keyword.length > 0) {

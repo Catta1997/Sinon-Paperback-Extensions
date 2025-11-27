@@ -109,10 +109,6 @@ export class Parser {
         const $ = cheerio.load(html);
         const root = $(".site-manga-card");
         let id = root.attr("id") || undefined;
-        const searchPagination =
-            root.attr("data-search-pagination") || undefined;
-        const detailsUrl =
-            root.find("a.site-popunder-ad-slot").attr("href") || undefined;
         const coverStyle =
             root.find(".site-manga-card__media--japanese-b6").attr("style") ||
             "";
@@ -124,27 +120,12 @@ export class Parser {
         const subtitle =
             root.find(".site-manga-card__title--secondary").text().trim() ||
             undefined;
-        const extraInfo = root
-            .find(".mdc-typography--caption")
-            .first()
-            .text()
-            .trim();
-        let imagesCount: number | undefined;
-        let dateString: string | undefined;
-        const imagesMatch = extraInfo.match(/(\d+)\s+images/);
-        if (imagesMatch) imagesCount = parseInt(imagesMatch[1], 10);
-        const dateMatch = extraInfo.match(/\d{1,2}\s\w+\s\d{4}.*$/);
-        if (dateMatch) dateString = dateMatch[0];
         id = id?.split("site-manga-card-")[1];
         return {
             id,
-            searchPagination,
-            detailsUrl,
             coverImage,
             title,
             subtitle,
-            imagesCount,
-            dateString,
         };
     }
 
@@ -173,3 +154,9 @@ export class Parser {
         return filters;
     }
 }
+
+/*
+NIFTeam -> orribile
+Anime GDR Club -> no https,
+DigitalTeam -> meh
+ */

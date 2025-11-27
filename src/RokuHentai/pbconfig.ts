@@ -7,9 +7,8 @@ import {
 export default {
     name: "RokuHentai",
     description: "Extension that pulls content from RokuHentai.com",
-    version: "1.0.0-alpha.1",
+    version: "1.0.0-alpha.2",
     icon: "icon.png",
-    language: "en",
     contentRating: ContentRating.ADULT,
     capabilities:
         SourceIntents.SEARCH_RESULTS_PROVIDING |
