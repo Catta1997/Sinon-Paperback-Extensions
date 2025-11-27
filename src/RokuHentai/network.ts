@@ -52,23 +52,24 @@ export class Requests {
             }
         }
         const page = metadata?.page ?? "";
-        let keyword = query.title;
+        const keyword = query.title;
         const baseURL: URL = new URL("https://rokuhentai.com/_search");
+        if (keyword.length > 0) {
+            baseURL.setQueryItem("q", keyword);
+        }
+        let url = baseURL.toString();
         if (tagFilter.length > 0) {
             tagFilter.forEach((filter) => {
-                keyword = `${keyword}+tag:${filter}`;
+                url = `${url}+tag:${filter}`;
             });
         }
         if (languageFilter.length > 0) {
             languageFilter.forEach((filter) => {
-                keyword = `${keyword}+language:${filter}`;
+                url = `${url}+language:${filter}`;
             });
         }
-        if (keyword.length > 0) {
-            baseURL.setQueryItem("q", keyword);
-        }
         const data = await Application.scheduleRequest({
-            url: page.length > 0 ? page : baseURL.toString(),
+            url: page.length > 0 ? page : url,
             method: "GET",
         });
         const js = Application.arrayBufferToUTF8String(data[1]);
