@@ -7,7 +7,7 @@ import {
 export default {
     name: "MangaWorldAdult",
     description: "Extension that pulls manga from MangaWorldAdult.",
-    version: "1.0.0-alpha.1",
+    version: "1.0.0-alpha.2",
     icon: "icon.png",
     language: "it",
     contentRating: ContentRating.ADULT,
