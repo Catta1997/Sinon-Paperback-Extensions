@@ -319,9 +319,24 @@ export class FilterPreferences {
                 );
             }
             if (item.kind == "search") {
-                filters.artist = this.mapStringToOptionItem(item.data.artists);
-                filters.year = this.mapStringToOptionItem(item.data.years);
-                filters.author = this.mapStringToOptionItem(item.data.authors);
+                const artists = (item.data.artists ?? []).filter(
+                    (a): a is string => a !== null,
+                );
+                const authors = (item.data.authors ?? []).filter(
+                    (a): a is string => a !== null,
+                );
+                const years = (item.data.years ?? []).filter(
+                    (a): a is string => a !== null,
+                );
+                if (artists.length > 0) {
+                    filters.artist = this.mapStringToOptionItem(artists);
+                }
+                if (authors.length > 0) {
+                    filters.artist = this.mapStringToOptionItem(authors);
+                }
+                if (years.length > 0) {
+                    filters.artist = this.mapStringToOptionItem(years);
+                }
             }
         });
         this.setGenreFilter(filters.genres);
