@@ -1,4 +1,4 @@
-import PhoenixTAMGeneral from "../PhoenixTAMGeneral/main";
+import PhoenixTAMGeneral from "../FansubGeneral/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://tuttoanimemanga.net/api";
