@@ -19,9 +19,9 @@ export default {
     ],
     badges: [
         {
-            label: "Italian",
+            label: "Italian 🇮🇹",
             textColor: "#ffffff",
-            backgroundColor: "#9ad3c7",
+            backgroundColor: "#28eac2",
         },
     ],
     developers: [
