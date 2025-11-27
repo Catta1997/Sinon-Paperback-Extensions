@@ -1,9 +1,9 @@
-import PhoenixTAMGeneral from "../FansubGeneral/main";
+import FansubGeneral from "../FansubGeneral/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://reader.gtothegreatsite.net/api";
 
-class GTOTheGreatSiteExtension extends PhoenixTAMGeneral {
+class GTOTheGreatSiteExtension extends FansubGeneral {
     constructor() {
         super({
             domain: DOMAIN,

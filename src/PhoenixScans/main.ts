@@ -1,9 +1,9 @@
-import PhoenixTAMGeneral from "../FansubGeneral/main";
+import FansubGeneral from "../FansubGeneral/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://phoenixscans.com/api";
 
-class PhoenixScansExtension extends PhoenixTAMGeneral {
+class PhoenixScansExtension extends FansubGeneral {
     constructor() {
         super({
             domain: DOMAIN,

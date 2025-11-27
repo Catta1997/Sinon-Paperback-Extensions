@@ -12,7 +12,7 @@ import {
     Tag,
     TagSection,
 } from "@paperback/types";
-import PhoenixTAMGeneral from "./main";
+import FansubGeneral from "./main";
 import {
     ComicDetailResponse,
     ComicListItem,
@@ -22,7 +22,7 @@ import {
 export class PTAMParsers {
     async parseSearchResults(
         query: SearchQuery,
-        source: PhoenixTAMGeneral,
+        source: FansubGeneral,
     ): Promise<PagedResults<SearchResultItem>> {
         const jsonRequest = await source.requestManager.apiSearchResult(query);
         const json = JSON.parse(jsonRequest) as ComicsListResponse;
@@ -45,7 +45,7 @@ export class PTAMParsers {
 
     async parseMangaDetails(
         mangaid: string,
-        source: PhoenixTAMGeneral,
+        source: FansubGeneral,
     ): Promise<SourceManga> {
         const jsonRequest =
             await source.requestManager.apiMangaDetails(mangaid);
@@ -75,9 +75,9 @@ export class PTAMParsers {
         return { mangaId: mangaid, mangaInfo: info };
     }
 
-    async parsetChapters(
+    async parseChapters(
         sourceManga: SourceManga,
-        source: PhoenixTAMGeneral,
+        source: FansubGeneral,
     ): Promise<Chapter[]> {
         const chapters: Chapter[] = [];
         const jsonRequest = await source.requestManager.apiMangaDetails(
@@ -95,14 +95,13 @@ export class PTAMParsers {
                 version: chapter.teams[0]?.name ?? "",
                 volume: chapter.volume ?? 0,
                 publishDate: new Date(chapter.published_on),
-                creationDate: new Date(chapter.updated_at),
             });
         });
         return chapters;
     }
 
     async parseSectionHome(
-        source: PhoenixTAMGeneral,
+        source: FansubGeneral,
         section: DiscoverSection,
     ): Promise<PagedResults<DiscoverSectionItem>> {
         const _ = section;
@@ -124,7 +123,7 @@ export class PTAMParsers {
 
     async parseChapterDetails(
         chapter: Chapter,
-        source: PhoenixTAMGeneral,
+        source: FansubGeneral,
     ): Promise<ChapterDetails> {
         const pages = await source.requestManager.getChapterPages(
             chapter.chapterId,

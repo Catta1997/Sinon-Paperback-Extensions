@@ -1,9 +1,9 @@
-import PhoenixTAMGeneral from "../FansubGeneral/main";
+import FansubGeneral from "../FansubGeneral/main";
 import pbconfig from "./pbconfig";
 
 const DOMAIN: string = "https://tuttoanimemanga.net/api";
 
-class TuttoAnimeMangaExtension extends PhoenixTAMGeneral {
+class TuttoAnimeMangaExtension extends FansubGeneral {
     constructor() {
         super({
             domain: DOMAIN,

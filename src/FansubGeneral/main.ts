@@ -20,15 +20,13 @@ import {
 import { APIRequests, MainInterceptor } from "./network";
 import { PTAMParsers } from "./parsers";
 
-export interface PTAMGenericParams {
+export interface FansubGenericParams {
     name: string;
     domain: string;
     contentRating: ContentRating;
-    parser?: PTAMParsers;
-    requestManager?: APIRequests;
 }
 
-abstract class PhoenixTAMGeneral
+abstract class FansubGeneral
     implements
         Extension,
         SearchResultsProviding,
@@ -44,14 +42,13 @@ abstract class PhoenixTAMGeneral
     mainRateLimiter: BasicRateLimiter;
     mainInterceptor: MainInterceptor;
 
-    protected constructor(params: PTAMGenericParams) {
+    protected constructor(params: FansubGenericParams) {
         this.name = params.name;
         this.base_url = params.domain;
         this.defaultContentRating =
             params.contentRating ?? ContentRating.EVERYONE;
-        this.parser = params.parser ?? new PTAMParsers();
-        this.requestManager =
-            params.requestManager ?? new APIRequests(this.base_url);
+        this.parser = new PTAMParsers();
+        this.requestManager = new APIRequests(this.base_url);
         // Rate limit: Wait 1 sec after 5 requests
         this.mainRateLimiter = new BasicRateLimiter("main", {
             numberOfRequests: 1,
@@ -74,7 +71,7 @@ abstract class PhoenixTAMGeneral
     }
 
     getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-        return this.parser.parsetChapters(sourceManga, this);
+        return this.parser.parseChapters(sourceManga, this);
     }
 
     getDiscoverSectionItems(
@@ -105,4 +102,4 @@ abstract class PhoenixTAMGeneral
     }
 }
 
-export default PhoenixTAMGeneral;
+export default FansubGeneral;
