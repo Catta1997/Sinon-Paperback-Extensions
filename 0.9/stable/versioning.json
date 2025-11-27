@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-11-27T15:34:41.113Z",
+  "buildTime": "2025-11-27T16:28:26.892Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -32,7 +32,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "SAFE",
       "capabilities": [
         1,
         4,
@@ -51,6 +50,7 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "SAFE",
       "id": "GTOTheGreatSite"
     },
     {
@@ -59,7 +59,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "SAFE",
       "capabilities": [
         1,
         4,
@@ -78,6 +77,7 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "SAFE",
       "id": "LupiTeam"
     },
     {
@@ -86,7 +86,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "SAFE",
       "capabilities": [
         1,
         4,
@@ -106,6 +105,7 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "SAFE",
       "id": "MangaWorld"
     },
     {
@@ -114,7 +114,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "ADULT",
       "capabilities": [
         1,
         4,
@@ -134,6 +133,7 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "ADULT",
       "id": "MangaWorldAdult"
     },
     {
@@ -142,7 +142,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "SAFE",
       "capabilities": [
         1,
         4,
@@ -161,14 +160,14 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "SAFE",
       "id": "PhoenixScans"
     },
     {
       "name": "RokuHentai",
       "description": "Extension that pulls content from RokuHentai.com",
-      "version": "1.0.0-alpha.1",
+      "version": "1.0.0-alpha.2",
       "icon": "icon.png",
-      "language": "en",
       "contentRating": "ADULT",
       "capabilities": 65,
       "badges": [],
@@ -186,7 +185,6 @@
       "version": "1.0.0-alpha.2",
       "icon": "icon.png",
       "language": "it",
-      "contentRating": "SAFE",
       "capabilities": [
         1,
         4,
@@ -205,6 +203,7 @@
           "website": "https://github.com/Catta1997"
         }
       ],
+      "contentRating": "SAFE",
       "id": "TuttoAnimeManga"
     }
   ]
