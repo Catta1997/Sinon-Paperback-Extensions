@@ -79,7 +79,7 @@ export abstract class MangaWorldGeneric
 
     async getSettingsForm(): Promise<Form> {
         await filter.populateFilter(this);
-        return new Forms();
+        return new Forms(this);
     }
 
     async getSearchFilters(): Promise<SearchFilter[]> {

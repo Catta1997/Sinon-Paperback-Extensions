@@ -1,4 +1,5 @@
 import {
+    ButtonRow,
     Form,
     NavigationRow,
     Section,
@@ -6,9 +7,14 @@ import {
     ToggleRow,
     type FormSectionElement,
 } from "@paperback/types";
-import { filter } from "./main";
+import { filter, MangaWorldGeneric } from "./main";
 
 export class Forms extends Form {
+    manga_source: MangaWorldGeneric;
+    constructor(manga_source: MangaWorldGeneric) {
+        super();
+        this.manga_source = manga_source;
+    }
     override getSections(): FormSectionElement[] {
         return [
             Section("settings", [
@@ -22,8 +28,20 @@ export class Forms extends Form {
                     subtitle: "Impostazioni Home",
                     form: new HomeSettings(),
                 }),
+                ButtonRow("reload_genres", {
+                    title: "Ricarica Tutti i Filtri",
+                    onSelect: Application.Selector(
+                        this as Forms,
+                        "refreshFilters",
+                    ),
+                }),
             ]),
         ];
+    }
+
+    async refreshFilters() {
+        Application.invalidateSearchFilters();
+        await filter.populateFilter(this.manga_source, true);
     }
 }
 

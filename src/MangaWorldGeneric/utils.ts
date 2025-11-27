@@ -136,6 +136,7 @@ export class FilterPreferences {
      */
     private setMangaTypeFilter(newValue: OptionItem[]) {
         this.MangaTypeFilter = newValue;
+        Application.setState(JSON.stringify(newValue), ".type");
     }
 
     /**
@@ -151,6 +152,7 @@ export class FilterPreferences {
      */
     private setOrderFilter(newValue: OptionItem[]) {
         this.OrderFilter = newValue;
+        Application.setState(JSON.stringify(newValue), ".sort");
     }
 
     /**
@@ -166,6 +168,7 @@ export class FilterPreferences {
      */
     private setStatusFilter(newValue: OptionItem[]) {
         this.StatusFilter = newValue;
+        Application.setState(JSON.stringify(newValue), ".status");
     }
 
     /**
@@ -181,6 +184,7 @@ export class FilterPreferences {
      */
     private setGenreFilter(newValue: OptionItem[]) {
         this.GenreFilter = newValue;
+        Application.setState(JSON.stringify(newValue), ".genres");
     }
 
     /**
@@ -196,6 +200,7 @@ export class FilterPreferences {
      */
     private setYearFilter(newValue: OptionItem[]) {
         this.YearFilter = newValue;
+        Application.setState(JSON.stringify(newValue), ".year");
     }
 
     /**
@@ -208,11 +213,12 @@ export class FilterPreferences {
     /**
      * Populate Search Filter
      */
-    async populateFilter(source: MangaWorldGeneric) {
+    async populateFilter(source: MangaWorldGeneric, force = false) {
         const lastFilterFetch = Number(
-            Application.getState("last-filter-fetch-date") ?? 0,
+            Application.getState("last-filter-fetch") ?? 0,
         );
-        if (lastFilterFetch + 604800 > new Date().valueOf() / 1000) {
+        const cached = lastFilterFetch + 604800 > new Date().valueOf() / 1000;
+        if (cached && !force) {
             this.setGenreFilter(
                 JSON.parse(
                     Application.getState(".genres") as string,
@@ -250,7 +256,7 @@ export class FilterPreferences {
             this.setYearFilter(JSONFilter.year);
             Application.setState(
                 String(new Date().valueOf() / 1000),
-                "last-filter-fetch-date",
+                "last-filter-fetch",
             );
         }
     }
@@ -319,24 +325,9 @@ export class FilterPreferences {
                 );
             }
             if (item.kind == "search") {
-                const artists = (item.data.artists ?? []).filter(
-                    (a): a is string => a !== null,
-                );
-                const authors = (item.data.authors ?? []).filter(
-                    (a): a is string => a !== null,
-                );
-                const years = (item.data.years ?? []).filter(
-                    (a): a is string => a !== null,
-                );
-                if (artists.length > 0) {
-                    filters.artist = this.mapStringToOptionItem(artists);
-                }
-                if (authors.length > 0) {
-                    filters.artist = this.mapStringToOptionItem(authors);
-                }
-                if (years.length > 0) {
-                    filters.artist = this.mapStringToOptionItem(years);
-                }
+                filters.artist = this.mapStringToOptionItem(item.data.artists);
+                filters.year = this.mapStringToOptionItem(item.data.years);
+                filters.author = this.mapStringToOptionItem(item.data.authors);
             }
         });
         this.setGenreFilter(filters.genres);

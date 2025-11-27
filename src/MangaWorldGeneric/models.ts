@@ -129,9 +129,10 @@ export interface GlobalData {
 export interface SearchResults {
     URL: string;
     results: number;
-    authors: (string | null)[];
-    artists: (string | null)[];
-    years: (number | string | null)[];
+    selected: object;
+    authors: string[];
+    artists: string[];
+    years: (number | string)[];
     mangas: Manga[];
     chapters: JSONChapter[];
 }
