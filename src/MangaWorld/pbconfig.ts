@@ -1,14 +1,12 @@
-import { ContentRating, type ExtensionInfo } from "@paperback/types";
-import { generalInfo } from "../MangaWorldGeneric/genericInfo";
+import { ContentRating } from "@paperback/types";
+import { basePbConfig } from "../MangaWorldGeneric/basePbConfig";
 
-export default {
-    name: "MangaWorld",
-    description: "Extension that pulls manga from MangaWorld.",
-    version: generalInfo.version,
-    icon: "icon.png",
-    language: "it",
-    contentRating: ContentRating.EVERYONE,
-    capabilities: generalInfo.capabilities,
-    badges: generalInfo.badges,
-    developers: generalInfo.developers,
-} satisfies ExtensionInfo;
+const pbConfig = basePbConfig;
+
+pbConfig.name = "MangaWorld";
+pbConfig.description = "Extension that pulls manga from MangaWorld.";
+pbConfig.language = "it";
+pbConfig.icon = "icon.png";
+pbConfig.contentRating = ContentRating.EVERYONE;
+
+export default pbConfig;

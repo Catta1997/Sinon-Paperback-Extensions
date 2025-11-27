@@ -1,14 +1,12 @@
-import { ContentRating, type ExtensionInfo } from "@paperback/types";
-import { generalInfo } from "../FansubGeneric/genericInfo";
+import { ContentRating } from "@paperback/types";
+import { basePbConfig } from "../FansubGeneric/basePbConfig";
 
-export default {
-    name: "GTOTheGreatSite",
-    description: "Extension that pulls manga from GTOTheGreatSite.",
-    version: generalInfo.version,
-    icon: "icon.png",
-    language: "it",
-    contentRating: ContentRating.EVERYONE,
-    capabilities: generalInfo.capabilities,
-    badges: generalInfo.badges,
-    developers: generalInfo.developers,
-} satisfies ExtensionInfo;
+const pbConfig = basePbConfig;
+
+pbConfig.name = "GTOTheGreatSite";
+pbConfig.description = "Extension that pulls manga from GTOTheGreatSite.";
+pbConfig.language = "it";
+pbConfig.icon = "icon.png";
+pbConfig.contentRating = ContentRating.EVERYONE;
+
+export default pbConfig;
