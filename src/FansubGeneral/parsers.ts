@@ -111,12 +111,15 @@ export class PTAMParsers {
         );
         const json = JSON.parse(jsonRequest) as ComicsListResponse;
         const items: DiscoverSectionItem[] = json.comics.map((manga) => ({
-            type: "simpleCarouselItem",
+            type: "chapterUpdatesCarouselItem",
+            mangaId: manga.slug,
+            chapterId: manga.last_chapter.url,
+            imageUrl: manga.thumbnail,
+            title: manga.title,
+            subtitle: manga.last_chapter.title ?? manga.last_chapter.full_title,
+            publishDate: new Date(manga.last_chapter.published_on),
             contentRating:
                 manga.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
-            imageUrl: manga.thumbnail,
-            mangaId: manga.slug,
-            title: manga.title ?? "",
         }));
         return { items: items };
     }

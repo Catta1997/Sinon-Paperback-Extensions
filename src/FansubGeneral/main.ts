@@ -86,7 +86,7 @@ abstract class FansubGeneral
             id: "section",
             title: "Tendenze",
             subtitle: "",
-            type: DiscoverSectionType.simpleCarousel,
+            type: DiscoverSectionType.chapterUpdates,
         });
         return discover_section;
     }
