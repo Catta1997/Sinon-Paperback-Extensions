@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-11-27T19:42:04.411Z",
+  "buildTime": "2025-11-28T10:36:04.869Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -79,6 +79,33 @@
       ],
       "contentRating": "SAFE",
       "id": "HastaTeam"
+    },
+    {
+      "name": "HastaTeamDDT",
+      "description": "Extension that pulls manga from HastaTeamDDT.",
+      "version": "1.0.0-alpha.2",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "HastaTeamDDT"
     },
     {
       "name": "LupiTeam",
