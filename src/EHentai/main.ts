@@ -14,7 +14,7 @@ import {
 } from "@paperback/types";
 import { MainInterceptor } from "./network";
 import { Parser } from "./parser";
-import { Metadata, ratingFilter, typeFilter } from "./utils";
+import { languageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
 type EHentaiiImplementation = Extension &
     SearchResultsProviding &
@@ -29,6 +29,16 @@ export class EHentaiExtension implements EHentaiiImplementation {
 
     async getSearchFilters(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
+        filters.push({
+            allowEmptySelection: false,
+            allowExclusion: false,
+            maximum: 1,
+            type: "multiselect",
+            id: "languageFilter",
+            title: "Language",
+            options: languageFilter,
+            value: {},
+        });
         filters.push({
             allowEmptySelection: false,
             allowExclusion: false,

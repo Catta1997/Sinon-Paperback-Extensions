@@ -54,7 +54,6 @@ export class Parser {
         $("#taglist a").each((i, el) => {
             const id = $(el).attr("id") || "";
             const title = $(el).text().trim();
-
             tags.push({ id: id, title: title });
         });
         const style = $("#gd1 > div").attr("style") || "";
@@ -103,34 +102,6 @@ export class Parser {
 
     async scrapeAllChapterPages(chapterId: string) {
         const images = await this.scrapeAllChapterPagesList(chapterId);
-        /*
-        const first = await Application.scheduleRequest(
-            {
-            url:`https://e-hentai.org/g/${chapterId}`,
-                method: "GET"
-            }
-        )
-        const html = Application.arrayBufferToUTF8String(first[1])
-        const firstParse = cheerio.load(html);
-        const element = firstParse("#gdt a").first();
-        let currentUrl = element.attr("href") || "";
-        console.log(currentUrl);
-        const images: string[] = [];
-        while (true) {
-            const html = await network.getChapterPages(currentUrl);
-            const $ = cheerio.load(html);
-            const div = $("#i3");
-            const imgUrl = div.find("img#img").attr("src");
-            if (imgUrl) images.push(imgUrl);
-            let nextUrl = div.find("a[href*='/s/']").attr("href");
-            if (nextUrl && !nextUrl.startsWith("http"))
-                nextUrl = "https://e-hentai.org" + nextUrl;
-            console.log(nextUrl);
-            console.log(currentUrl);
-            if (!nextUrl || nextUrl === currentUrl) break;
-            currentUrl = nextUrl;
-        }
-        */
         return {
             id: chapterId,
             mangaId: chapterId,
@@ -165,20 +136,6 @@ export class Parser {
             if (results.length >= totalImages) break;
             page++;
         }
-        //  console.log(results.join("££"));
         return results;
     }
 }
-/*
-
-https://nkjnbky.mgotlvykuirf.hath.network/
-h/3df60405c8cf9f9d901688970e008544dd5e5d3f-182404-1280-1869-wbp/
-keystamp=1764353400-9e145d5e55;fileindex=207683639;xres=1280/1_1.webp
-
-
-https://pdaziik.khqevofziobw.hath.network:15255
-/h/0575369ce9b9a33729d79d8c49eed9a99de93b28-153132-1280-1869-wbp/keystamp=1764353400-4c58897e51;fileindex=207683640;xres=1280/1_10.webp
-
-Kingfisher.KingfisherError.processorError(reason: Kingfisher.KingfisherError.ProcessorErrorReason.processingFailed(processor:
-KingfisherWebP.WebPProcessor(identifier: "com.yeatse.WebPProcessor"), item: Kingfisher.ImageProcessItem.data(5199 bytes)))
- */

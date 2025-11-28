@@ -44,14 +44,22 @@ export class Requests {
             query.filters.find((filter) => filter.id == id)?.value;
         const types: string[] = [];
         const star: string[] = [];
+        const language: string[] = [];
         const page = metadata?.page ?? "";
         const typeFilter: string | Record<string, "included" | "excluded"> =
             getFilterValue("typeFilter") ?? "";
         const ratingFilter: string | Record<string, "included" | "excluded"> =
             getFilterValue("ratingFilter") ?? "";
+        const langFilter: string | Record<string, "included" | "excluded"> =
+            getFilterValue("languageFilter") ?? "";
         if (typeFilter && typeof typeFilter === "object") {
             for (const tag of Object.entries(typeFilter)) {
                 if (tag[1] == "included") types.push(tag[0]);
+            }
+        }
+        if (langFilter && typeof langFilter === "object") {
+            for (const tag of Object.entries(langFilter)) {
+                if (tag[1] == "included") language.push(tag[0]);
             }
         }
         let ratingNumber = 0;
@@ -64,6 +72,11 @@ export class Requests {
             }
         }
         const url: URL = new URL("https://e-hentai.org/");
+        if (language.length > 0) {
+            language.forEach((lang) => {
+                query.title = `language:${lang}$ ${query.title}`;
+            });
+        }
         if (query.title.length > 0) {
             url.setQueryItem("f_search", query.title);
         }
