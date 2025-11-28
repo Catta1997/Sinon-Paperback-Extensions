@@ -109,7 +109,7 @@ export class ApiMaker {
         if (language.length > 0) url.setQueryItem("languages", language);
         if (category.length > 0) url.setQueryItem("categories", category);
         url.setQueryItem("per_page", "100");
-        url.setQueryItem("p", page.toString());
+        url.setQueryItem("page", page.toString());
         const html = await this.getDataFromRequest(url.toString());
         try {
             return JSON.parse(html) as JSONSearch;
