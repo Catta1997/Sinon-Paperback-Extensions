@@ -3,6 +3,7 @@ import {
     DiscoverSection,
     DiscoverSectionItem,
     DiscoverSectionType,
+    Form,
     type Chapter,
     type ChapterDetails,
     type ChapterProviding,
@@ -14,13 +15,16 @@ import {
     type SearchQuery,
     type SearchResultItem,
     type SearchResultsProviding,
+    type SettingsFormProviding,
     type SourceManga,
 } from "@paperback/types";
+import { Forms } from "./forms";
 import { MainInterceptor } from "./network";
 import { Parser } from "./parser";
 import { languageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
-type EHentaiiImplementation = DiscoverSectionProviding &
+type EHentaiiImplementation = SettingsFormProviding &
+    DiscoverSectionProviding &
     Extension &
     SearchResultsProviding &
     MangaProviding &
@@ -28,6 +32,10 @@ type EHentaiiImplementation = DiscoverSectionProviding &
 
 const parser = new Parser();
 export class EHentaiExtension implements EHentaiiImplementation {
+    async getSettingsForm(): Promise<Form> {
+        return new Forms();
+    }
+
     async getDiscoverSections(): Promise<DiscoverSection[]> {
         const discover_section: DiscoverSection[] = [];
         discover_section.push({
@@ -50,16 +58,12 @@ export class EHentaiExtension implements EHentaiiImplementation {
 
     async getSearchFilters(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
-        filters.push({
-            allowEmptySelection: false,
-            allowExclusion: false,
-            maximum: 1,
-            type: "multiselect",
-            id: "languageFilter",
-            title: "Language",
-            options: languageFilter,
-            value: {},
-        });
+        const getCategoryFilter = Object.fromEntries(
+            (Application.getState("_type") as string[]).map((item) => [
+                item.toLowerCase(),
+                "included" as const,
+            ]),
+        ) as Record<string, "included" | "excluded">;
         filters.push({
             allowEmptySelection: false,
             allowExclusion: false,
@@ -68,6 +72,16 @@ export class EHentaiExtension implements EHentaiiImplementation {
             id: "typeFilter",
             title: "Type",
             options: typeFilter,
+            value: getCategoryFilter,
+        });
+        filters.push({
+            allowEmptySelection: false,
+            allowExclusion: false,
+            maximum: 1,
+            type: "multiselect",
+            id: "languageFilter",
+            title: "Language",
+            options: languageFilter,
             value: {},
         });
         filters.push({
