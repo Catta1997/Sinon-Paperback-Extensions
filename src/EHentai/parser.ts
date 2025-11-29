@@ -56,8 +56,11 @@ export class Parser {
             const title = $(el).text().trim();
             tags.push({ id: id, title: title });
         });
-        const additionaMangalInfo = this.parseGalleryInfo(html)
-        tags.push({id: additionaMangalInfo.category, title:additionaMangalInfo.category})
+        const additionaMangalInfo = this.parseGalleryInfo(html);
+        tags.push({
+            id: additionaMangalInfo.category,
+            title: additionaMangalInfo.category,
+        });
         const style = $("#gd1 > div").attr("style") || "";
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
@@ -73,12 +76,15 @@ export class Parser {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
             author: additionaMangalInfo.uploader.name,
-            rating: additionaMangalInfo.rating.average / 500s,
+            rating: additionaMangalInfo.rating.average / 500,
             secondaryTitles: [""],
             primaryTitle: title ?? "",
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
-            additionalInfo: {pages: additionaMangalInfo.length.pages.toString(), language: additionaMangalInfo.language.text}
+            additionalInfo: {
+                pages: additionaMangalInfo.length.pages.toString(),
+                language: additionaMangalInfo.language.text,
+            },
         };
         return { mangaId: mangaID, mangaInfo: info };
     }
@@ -88,8 +94,11 @@ export class Parser {
             {
                 chapterId: sourceManga.mangaId,
                 sourceManga: sourceManga,
-                langCode: sourceManga.mangaInfo?.additionalInfo?.language ?? "LANG",
-                additionalInfo: {pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? '0'},
+                langCode:
+                    sourceManga.mangaInfo?.additionalInfo?.language ?? "LANG",
+                additionalInfo: {
+                    pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? "0",
+                },
                 chapNum: 1,
             },
         ];
@@ -118,7 +127,11 @@ export class Parser {
         const languageRaw = getRow("Language:");
         const lengthRaw = getRow("Length:");
         const ratingAverage = parseFloat(
-            $("#rating_label").text().replace("Average:", "").replace(".","").trim(),
+            $("#rating_label")
+                .text()
+                .replace("Average:", "")
+                .replace(".", "")
+                .trim(),
         );
         return {
             category,
@@ -140,7 +153,7 @@ export class Parser {
 
     async scrapeAllChapterPagesList(chapter: Chapter) {
         let page = 0;
-        const totalImages = chapter?.additionalInfo?.pages ?? '0';
+        const totalImages = chapter?.additionalInfo?.pages ?? "0";
         const results: string[] = [];
         while (true) {
             const html = await network.getChapterPages(
