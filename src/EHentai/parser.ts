@@ -11,7 +11,7 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
-import { Metadata } from "./utils";
+import { GalleryInfo, Metadata } from "./utils";
 
 const network = new Requests();
 export class Parser {
@@ -56,6 +56,8 @@ export class Parser {
             const title = $(el).text().trim();
             tags.push({ id: id, title: title });
         });
+        const additionaMangalInfo = this.parseGalleryInfo(html)
+        tags.push({id: additionaMangalInfo.category, title:additionaMangalInfo.category})
         const style = $("#gd1 > div").attr("style") || "";
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
@@ -70,10 +72,13 @@ export class Parser {
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
+            author: additionaMangalInfo.uploader.name,
+            rating: additionaMangalInfo.rating.average / 500s,
             secondaryTitles: [""],
             primaryTitle: title ?? "",
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
+            additionalInfo: {pages: additionaMangalInfo.length.pages.toString(), language: additionaMangalInfo.language.text}
         };
         return { mangaId: mangaID, mangaInfo: info };
     }
@@ -83,57 +88,70 @@ export class Parser {
             {
                 chapterId: sourceManga.mangaId,
                 sourceManga: sourceManga,
-                langCode: "",
+                langCode: sourceManga.mangaInfo?.additionalInfo?.language ?? "LANG",
+                additionalInfo: {pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? '0'},
                 chapNum: 1,
             },
         ];
     }
 
-    async getNewURL(url: string) {
-        const data = await Application.scheduleRequest({
-            url: url,
-            method: "GET",
-        });
-        const html = Application.arrayBufferToUTF8String(data[1]);
-        const $ = cheerio.load(html);
-        const div = $("#i3");
-        return div.find("img#img").attr("src") ?? url;
-    }
-
-    async scrapeAllChapterPages(chapterId: string) {
-        const images = await this.scrapeAllChapterPagesList(chapterId);
+    async scrapeAllChapterPages(chapter: Chapter) {
+        const images = await this.scrapeAllChapterPagesList(chapter);
         return {
-            id: chapterId,
-            mangaId: chapterId,
+            id: chapter.chapterId,
+            mangaId: chapter.chapterId,
             pages: images,
         };
     }
 
-    async scrapeAllChapterPagesList(chapterId: string) {
+    private parseGalleryInfo(html: string): GalleryInfo {
+        const $ = cheerio.load(html);
+        const category = $("#gdc .cs.ct2").text().trim();
+        const uploaderName = $("#gdn a").first().text().trim();
+        function getRow(label: string): string {
+            return $(`#gdd .gdt1:contains("${label}")`)
+                .next(".gdt2")
+                .text()
+                .trim();
+        }
+        const posted = getRow("Posted:");
+        const languageRaw = getRow("Language:");
+        const lengthRaw = getRow("Length:");
+        const ratingAverage = parseFloat(
+            $("#rating_label").text().replace("Average:", "").replace(".","").trim(),
+        );
+        return {
+            category,
+            uploader: {
+                name: uploaderName,
+            },
+            posted,
+            language: {
+                text: languageRaw,
+            },
+            length: {
+                pages: parseInt(lengthRaw),
+            },
+            rating: {
+                average: ratingAverage,
+            },
+        };
+    }
+
+    async scrapeAllChapterPagesList(chapter: Chapter) {
         let page = 0;
-        let totalImages = null;
+        const totalImages = chapter?.additionalInfo?.pages ?? '0';
         const results: string[] = [];
         while (true) {
             const html = await network.getChapterPages(
                 `https://e-hentai.org/g/${chapterId}p=${page}`,
             );
             const $ = cheerio.load(html);
-            if (totalImages === null) {
-                const text = $(".gpc").text();
-                const match = text.match(/of\s+(\d+)\s+images/);
-                if (match) {
-                    totalImages = Number(match[1]);
-                } else {
-                    throw new Error(
-                        "Impossibile determinare il numero totale di immagini!",
-                    );
-                }
-            }
             $("a[href^='https://e-hentai.org/s/']").each((i, el) => {
                 const url = $(el).attr("href");
                 if (url) results.push(url);
             });
-            if (results.length >= totalImages) break;
+            if (results.length >= Number(totalImages)) break;
             page++;
         }
         return results;

@@ -162,3 +162,20 @@ export const ratingFilter: {
         value: "5 Stars",
     },
 ];
+
+export interface GalleryInfo {
+    category: string;
+    uploader: {
+        name: string;
+    };
+    posted: string;
+    language: {
+        text: string;
+    };
+    length: {
+        pages: number;
+    };
+    rating: {
+        average: number;
+    };
+}

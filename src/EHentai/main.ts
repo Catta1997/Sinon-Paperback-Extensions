@@ -72,7 +72,7 @@ export class EHentaiExtension implements EHentaiiImplementation {
         return parser.parseChapters(sourceManga);
     }
     getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-        return parser.scrapeAllChapterPages(chapter.chapterId);
+        return parser.scrapeAllChapterPages(chapter);
     }
 
     mainRateLimiter = new BasicRateLimiter("main", {
