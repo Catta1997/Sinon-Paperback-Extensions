@@ -10,7 +10,12 @@ import { Metadata } from "./utils";
 
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
-        request.headers = { Cookie: "sl=dm_1" };
+        const pattern = /^https?:\/\/[^/]+\/s\/.+/;
+        if (pattern.test(request.url)) {
+            request.headers = { Cookie: "nw=1" };
+        } else {
+            request.headers = { Cookie: "sl=dm_1" };
+        }
         return request;
     }
 
@@ -23,16 +28,15 @@ export class MainInterceptor extends PaperbackInterceptor {
         void response;
         const pattern = /^https?:\/\/[^/]+\/s\/.+/;
         if (pattern.test(request.url)) {
-            console.log("È un URL di tipo /s/");
             const html = Application.arrayBufferToUTF8String(data);
             const $ = cheerio.load(html);
             const div = $("#i3");
             const nh = div.find("img#img").attr("src") ?? request.url;
-            const da = await Application.scheduleRequest({
+            const new_data = await Application.scheduleRequest({
                 url: nh,
                 method: "get",
             });
-            return da[1];
+            data = new_data[1];
         }
         return data;
     }
@@ -81,7 +85,7 @@ export class Requests {
             url.setQueryItem("f_search", query.title);
         }
         if (types.length > 0) {
-            url.setQueryItem("typeFilter", ratingNumber.toString());
+            url.setQueryItem("f_cats", (1023 - ratingNumber).toString());
         }
         if (star.length > 0) {
             url.setQueryItem("f_srdd", star);
@@ -100,6 +104,14 @@ export class Requests {
     async getPopular() {
         const data = await Application.scheduleRequest({
             url: `https://e-hentai.org/popular`,
+            method: "GET",
+        });
+        return Application.arrayBufferToUTF8String(data[1]);
+    }
+
+    async getRecent() {
+        const data = await Application.scheduleRequest({
+            url: `https://e-hentai.org/`,
             method: "GET",
         });
         return Application.arrayBufferToUTF8String(data[1]);

@@ -1,6 +1,5 @@
 import {
     ContentRating,
-    DiscoverSection,
     DiscoverSectionItem,
     MangaInfo,
     PagedResults,
@@ -50,10 +49,7 @@ export class Parser {
         };
     }
 
-    async parseFeatured(
-        section: DiscoverSection,
-    ): Promise<PagedResults<DiscoverSectionItem>> {
-        const _ = section;
+    async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
         const html = await network.getPopular();
         const $ = cheerio.load(html);
         const results: DiscoverSectionItem[] = [];
@@ -64,6 +60,26 @@ export class Parser {
             const image = container.find("img").attr("src");
             results.push({
                 type: "prominentCarouselItem",
+                mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
+                title: title,
+                imageUrl: image ?? "",
+                contentRating: ContentRating.ADULT,
+            });
+        });
+        return { items: results };
+    }
+
+    async parseRecent() {
+        const results: DiscoverSectionItem[] = [];
+        const html = await network.getRecent();
+        const $ = cheerio.load(html);
+        $(".gl1t").each((i, el) => {
+            const container = $(el);
+            const title = container.find(".gl4t.glname.glink").text().trim();
+            const url = container.find("a").first().attr("href");
+            const image = container.find("img").attr("src");
+            results.push({
+                type: "simpleCarouselItem",
                 mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
                 title: title,
                 imageUrl: image ?? "",
@@ -98,6 +114,7 @@ export class Parser {
                 tags: tags,
             },
         ];
+        const normalized = additionalMangaInfo.posted.replace(" ", "T");
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
@@ -110,6 +127,7 @@ export class Parser {
             additionalInfo: {
                 pages: additionalMangaInfo.length.pages.toString(),
                 language: additionalMangaInfo.language.text,
+                uploaded: normalized,
             },
         };
         return { mangaId: mangaID, mangaInfo: info };
@@ -125,6 +143,9 @@ export class Parser {
                 additionalInfo: {
                     pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? "0",
                 },
+                publishDate: new Date(
+                    sourceManga.mangaInfo?.additionalInfo?.uploaded ?? "",
+                ),
                 chapNum: 1,
             },
         ];
@@ -159,7 +180,6 @@ export class Parser {
                 .replace(".", "")
                 .trim(),
         );
-        console.log(category);
         return {
             category: category,
             uploader: {

@@ -44,12 +44,27 @@ export class EHentaiExtension implements EHentaiiImplementation {
             subtitle: "",
             type: DiscoverSectionType.prominentCarousel,
         });
+        discover_section.push({
+            id: "Recent",
+            title: "Recent",
+            subtitle: "",
+            type: DiscoverSectionType.simpleCarousel,
+        });
         return discover_section;
     }
-    getDiscoverSectionItems(
+    async getDiscoverSectionItems(
         section: DiscoverSection,
     ): Promise<PagedResults<DiscoverSectionItem>> {
-        return parser.parseFeatured(section);
+        switch (section.id) {
+            case "Popular": {
+                return parser.parseFeatured();
+            }
+            case "Recent": {
+                return parser.parseRecent();
+            }
+            default:
+                return { items: [] };
+        }
     }
 
     async getMangaDetails(mangaId: string): Promise<SourceManga> {
