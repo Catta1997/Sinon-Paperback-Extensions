@@ -7,10 +7,11 @@ import {
 export default {
     name: "EHentai",
     description: "Extension that pulls content from EHentai",
-    version: "1.0.0-alpha.2",
+    version: "1.0.0-alpha.3",
     icon: "icon.png",
     contentRating: ContentRating.ADULT,
     capabilities:
+        SourceIntents.DISCOVER_SECIONS_PROVIDING |
         SourceIntents.SEARCH_RESULTS_PROVIDING |
         SourceIntents.CHAPTER_PROVIDING,
     badges: [],

@@ -1,5 +1,7 @@
 import {
     ContentRating,
+    DiscoverSection,
+    DiscoverSectionItem,
     MangaInfo,
     PagedResults,
     SearchQuery,
@@ -10,6 +12,7 @@ import {
     type SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
+import { CheerioAPI } from "cheerio";
 import { Requests } from "./network";
 import { GalleryInfo, Metadata } from "./utils";
 
@@ -47,19 +50,42 @@ export class Parser {
         };
     }
 
+    async parseFeatured(
+        section: DiscoverSection,
+    ): Promise<PagedResults<DiscoverSectionItem>> {
+        const _ = section;
+        const html = await network.getPopular();
+        const $ = cheerio.load(html);
+        const results: DiscoverSectionItem[] = [];
+        $(".gl1t").each((i, el) => {
+            const container = $(el);
+            const title = container.find(".gl4t.glname.glink").text().trim();
+            const url = container.find("a").first().attr("href");
+            const image = container.find("img").attr("src");
+            results.push({
+                type: "prominentCarouselItem",
+                mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
+                title: title,
+                imageUrl: image ?? "",
+                contentRating: ContentRating.ADULT,
+            });
+        });
+        return { items: results };
+    }
+
     async parseMangaDetail(mangaID: string): Promise<SourceManga> {
         const html = await network.mangaDetailRequest(mangaID);
         const tags: Tag[] = [];
         const $ = cheerio.load(html);
+        const additionalMangaInfo = this.parseGalleryInfo($);
+        tags.push({
+            id: additionalMangaInfo.category.toLowerCase(),
+            title: additionalMangaInfo.category.toLowerCase(),
+        });
         $("#taglist a").each((i, el) => {
             const id = $(el).attr("id") || "";
             const title = $(el).text().trim();
             tags.push({ id: id, title: title });
-        });
-        const additionaMangalInfo = this.parseGalleryInfo(html);
-        tags.push({
-            id: additionaMangalInfo.category,
-            title: additionaMangalInfo.category,
         });
         const style = $("#gd1 > div").attr("style") || "";
         const match = style.match(/url\(([^)]+)\)/);
@@ -75,15 +101,15 @@ export class Parser {
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
-            author: additionaMangalInfo.uploader.name,
-            rating: additionaMangalInfo.rating.average / 500,
+            author: additionalMangaInfo.uploader.name,
+            rating: additionalMangaInfo.rating.average / 500,
             secondaryTitles: [""],
             primaryTitle: title ?? "",
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
             additionalInfo: {
-                pages: additionaMangalInfo.length.pages.toString(),
-                language: additionaMangalInfo.language.text,
+                pages: additionalMangaInfo.length.pages.toString(),
+                language: additionalMangaInfo.language.text,
             },
         };
         return { mangaId: mangaID, mangaInfo: info };
@@ -113,10 +139,10 @@ export class Parser {
         };
     }
 
-    private parseGalleryInfo(html: string): GalleryInfo {
-        const $ = cheerio.load(html);
-        const category = $("#gdc .cs.ct2").text().trim();
-        const uploaderName = $("#gdn a").first().text().trim();
+    private parseGalleryInfo($: CheerioAPI): GalleryInfo {
+        const root = $("#gmid #gd3");
+        const category = root.find("#gdc div").first().text().trim();
+        const uploaderName = root.find("#gdn a").first().text().trim();
         function getRow(label: string): string {
             return $(`#gdd .gdt1:contains("${label}")`)
                 .next(".gdt2")
@@ -133,12 +159,13 @@ export class Parser {
                 .replace(".", "")
                 .trim(),
         );
+        console.log(category);
         return {
-            category,
+            category: category,
             uploader: {
                 name: uploaderName,
             },
-            posted,
+            posted: posted,
             language: {
                 text: languageRaw,
             },

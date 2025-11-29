@@ -96,6 +96,15 @@ export class Requests {
         });
         return Application.arrayBufferToUTF8String(data[1]);
     }
+
+    async getPopular() {
+        const data = await Application.scheduleRequest({
+            url: `https://e-hentai.org/popular`,
+            method: "GET",
+        });
+        return Application.arrayBufferToUTF8String(data[1]);
+    }
+
     async mangaDetailRequest(mangaID: string) {
         const data = await Application.scheduleRequest({
             url: `https://e-hentai.org/g/${mangaID}`,

@@ -1,8 +1,12 @@
 import {
     BasicRateLimiter,
+    DiscoverSection,
+    DiscoverSectionItem,
+    DiscoverSectionType,
     type Chapter,
     type ChapterDetails,
     type ChapterProviding,
+    type DiscoverSectionProviding,
     type Extension,
     type MangaProviding,
     type PagedResults,
@@ -16,13 +20,30 @@ import { MainInterceptor } from "./network";
 import { Parser } from "./parser";
 import { languageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
-type EHentaiiImplementation = Extension &
+type EHentaiiImplementation = DiscoverSectionProviding &
+    Extension &
     SearchResultsProviding &
     MangaProviding &
     ChapterProviding;
 
 const parser = new Parser();
 export class EHentaiExtension implements EHentaiiImplementation {
+    async getDiscoverSections(): Promise<DiscoverSection[]> {
+        const discover_section: DiscoverSection[] = [];
+        discover_section.push({
+            id: "Popular",
+            title: "Popular",
+            subtitle: "",
+            type: DiscoverSectionType.prominentCarousel,
+        });
+        return discover_section;
+    }
+    getDiscoverSectionItems(
+        section: DiscoverSection,
+    ): Promise<PagedResults<DiscoverSectionItem>> {
+        return parser.parseFeatured(section);
+    }
+
     async getMangaDetails(mangaId: string): Promise<SourceManga> {
         return parser.parseMangaDetail(mangaId);
     }
@@ -76,7 +97,7 @@ export class EHentaiExtension implements EHentaiiImplementation {
     }
 
     mainRateLimiter = new BasicRateLimiter("main", {
-        numberOfRequests: 30,
+        numberOfRequests: 1,
         bufferInterval: 1,
         ignoreImages: true,
     });
