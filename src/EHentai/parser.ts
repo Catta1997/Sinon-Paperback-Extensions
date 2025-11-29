@@ -144,7 +144,7 @@ export class Parser {
         const results: string[] = [];
         while (true) {
             const html = await network.getChapterPages(
-                `https://e-hentai.org/g/${chapterId}p=${page}`,
+                `https://e-hentai.org/g/${chapter.chapterId}?p=${page}`,
             );
             const $ = cheerio.load(html);
             $("a[href^='https://e-hentai.org/s/']").each((i, el) => {
