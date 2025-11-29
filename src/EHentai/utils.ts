@@ -22,27 +22,27 @@ export const typeFilter: {
         value: "Game CG",
     },
     {
-        id: "32",
+        id: "512",
         value: "Western",
     },
     {
-        id: "64",
+        id: "256",
         value: "Non-H",
     },
     {
-        id: "128",
+        id: "32",
         value: "Image Set",
     },
     {
-        id: "256",
+        id: "64",
         value: "Cosplay",
     },
     {
-        id: "512",
+        id: "128",
         value: "Asian Porn",
     },
     {
-        id: "1028",
+        id: "1",
         value: "Misc",
     },
 ];
