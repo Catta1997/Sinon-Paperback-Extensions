@@ -74,7 +74,7 @@ export class EHentaiExtension implements EHentaiiImplementation {
     async getSearchFilters(): Promise<SearchFilter[]> {
         const filters: SearchFilter[] = [];
         const getCategoryFilter = Object.fromEntries(
-            (Application.getState("_type") as string[]).map((item) => [
+            ((Application.getState("_type") as string[]) ?? []).map((item) => [
                 item.toLowerCase(),
                 "included" as const,
             ]),
