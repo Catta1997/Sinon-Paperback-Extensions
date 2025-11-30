@@ -10,8 +10,21 @@ import { Metadata } from "./utils";
 
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
-        const pattern = /^https?:\/\/[^/]+\/s\/.+/;
-        if (pattern.test(request.url)) {
+        if (request.url.includes(`https://e-hentai.org/s/`)) {
+            if (request.headers && request.headers["x-intercepted"]) {
+                delete request.headers["x-intercepted"];
+                return request;
+            } else {
+                const newRequest = request;
+                newRequest.headers = { ["x-intercepted"]: "1" };
+                const data = await Application.scheduleRequest(newRequest);
+                const html = Application.arrayBufferToUTF8String(data[1]);
+                const $ = cheerio.load(html);
+                const div = $("#i3");
+                request.url = div.find("img#img").attr("src") ?? request.url;
+                return request;
+            }
+        } else if (request.url.includes(`https://e-hentai.org/g/`)) {
             request.headers = { Cookie: "nw=1" };
         } else {
             request.headers = { Cookie: "sl=dm_1" };
@@ -26,18 +39,6 @@ export class MainInterceptor extends PaperbackInterceptor {
     ): Promise<ArrayBuffer> {
         void request;
         void response;
-        const pattern = /^https?:\/\/[^/]+\/s\/.+/;
-        if (pattern.test(request.url)) {
-            const html = Application.arrayBufferToUTF8String(data);
-            const $ = cheerio.load(html);
-            const div = $("#i3");
-            const nh = div.find("img#img").attr("src") ?? request.url;
-            const new_data = await Application.scheduleRequest({
-                url: nh,
-                method: "get",
-            });
-            data = new_data[1];
-        }
         return data;
     }
 }
