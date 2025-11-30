@@ -7,7 +7,7 @@ import {
 export default {
     name: "EHentai",
     description: "Extension that pulls content from EHentai",
-    version: "1.0.0-alpha.4",
+    version: "1.0.0-alpha.5",
     icon: "icon.png",
     contentRating: ContentRating.ADULT,
     capabilities:
