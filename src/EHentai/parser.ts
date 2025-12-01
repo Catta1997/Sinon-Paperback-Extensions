@@ -143,6 +143,7 @@ export class Parser {
                 additionalInfo: {
                     pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? "0",
                 },
+                version: `${sourceManga.mangaInfo?.additionalInfo?.pages ?? "0"} pages`,
                 publishDate: new Date(
                     sourceManga.mangaInfo?.additionalInfo?.uploaded ?? "",
                 ),
