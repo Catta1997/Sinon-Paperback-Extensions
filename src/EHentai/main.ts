@@ -23,7 +23,7 @@ import { MainInterceptor } from "./network";
 import { Parser } from "./parser";
 import { languageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
-type EHentaiiImplementation = SettingsFormProviding &
+type EHentaiImplementation = SettingsFormProviding &
     DiscoverSectionProviding &
     Extension &
     SearchResultsProviding &
@@ -31,7 +31,7 @@ type EHentaiiImplementation = SettingsFormProviding &
     ChapterProviding;
 
 const parser = new Parser();
-export class EHentaiExtension implements EHentaiiImplementation {
+export class EHentaiExtension implements EHentaiImplementation {
     async getSettingsForm(): Promise<Form> {
         return new Forms();
     }
