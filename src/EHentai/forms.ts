@@ -4,7 +4,7 @@ import {
     SelectRow,
     type FormSectionElement,
 } from "@paperback/types";
-import { typeFilter } from "./utils";
+import { languageFilter, typeFilter } from "./utils";
 
 export class Forms extends Form {
     override getSections(): FormSectionElement[] {
@@ -14,6 +14,13 @@ export class Forms extends Form {
                 title: tag.value,
             }),
         );
+        const languages: { id: string; title: string }[] = languageFilter.map(
+            (tag) => ({
+                id: tag.id,
+                title: tag.value,
+            }),
+        );
+
         return [
             Section(
                 {
@@ -33,14 +40,26 @@ export class Forms extends Form {
                             "handleHideTypeStatusChange",
                         ),
                     }),
+                    SelectRow("language_filter", {
+                        title: "Show This Languages Only",
+                        subtitle: "Show only this languages in filter",
+                        value: this.getFilterStatus(),
+                        options: languages,
+                        minItemCount: 0,
+                        maxItemCount: languages.length,
+                        onValueChange: Application.Selector(
+                            this as Forms,
+                            "handleFilterStatusChange",
+                        ),
+                    }),
                 ],
             ),
         ];
     }
     public async updateValue(value: string[], filter: string): Promise<void> {
         Application.setState(value, filter);
-        this.reloadForm();
         Application.invalidateSearchFilters();
+        this.reloadForm();
     }
 
     getHideTypeStatus(): string[] {
@@ -49,5 +68,16 @@ export class Forms extends Form {
 
     async handleHideTypeStatusChange(value: string[]): Promise<void> {
         await this.updateValue(value, "_type");
+    }
+
+    getFilterStatus(): string[] {
+        return (
+            (Application.getState("_languageFilter") as string[] | undefined) ??
+            languageFilter.map((language) => language.id)
+        );
+    }
+
+    async handleFilterStatusChange(value: string[]): Promise<void> {
+        await this.updateValue(value, "_languageFilter");
     }
 }

@@ -47,6 +47,16 @@ export const typeFilter: {
     },
 ];
 
+function getLangFilter() {
+    return (
+        (Application.getState("_languageFilter") as string[] | undefined) ?? []
+    );
+}
+
+export function getLanguageFilter() {
+    return languageFilter.filter((lang) => getLangFilter().includes(lang.id));
+}
+
 export const languageFilter: {
     id: string;
     value: string;

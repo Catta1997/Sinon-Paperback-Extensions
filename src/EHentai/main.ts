@@ -21,7 +21,7 @@ import {
 import { Forms } from "./forms";
 import { MainInterceptor } from "./network";
 import { Parser } from "./parser";
-import { languageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
+import { getLanguageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
 type EHentaiImplementation = SettingsFormProviding &
     DiscoverSectionProviding &
@@ -93,8 +93,8 @@ export class EHentaiExtension implements EHentaiImplementation {
             type: "dropdown",
             id: "languageFilter",
             title: "Language",
-            options: languageFilter,
-            value: {},
+            options: getLanguageFilter(),
+            value: "",
         });
         filters.push({
             type: "dropdown",
