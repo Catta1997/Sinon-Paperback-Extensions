@@ -203,7 +203,7 @@ export class Parser {
         let page = 0;
         const totalImages = chapter?.additionalInfo?.pages ?? "0";
         const results: string[] = [];
-        while (true) {
+        while (results.length < Number(totalImages)) {
             const html = await network.getChapterPages(
                 `https://e-hentai.org/g/${chapter.chapterId}?p=${page}`,
             );
@@ -212,7 +212,6 @@ export class Parser {
                 const url = $(el).attr("href");
                 if (url) results.push(url);
             });
-            if (results.length >= Number(totalImages)) break;
             page++;
         }
         return results;
