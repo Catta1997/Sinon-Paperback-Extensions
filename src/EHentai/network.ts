@@ -57,6 +57,14 @@ export class Requests {
             getFilterValue("ratingFilter") ?? "";
         const langFilter: string | Record<string, "included" | "excluded"> =
             getFilterValue("languageFilter") ?? "";
+        const female: string | Record<string, "included" | "excluded"> =
+            getFilterValue("femaleFilter") ?? "";
+        const male: string | Record<string, "included" | "excluded"> =
+            getFilterValue("maleFilter") ?? "";
+        const character: string | Record<string, "included" | "excluded"> =
+            getFilterValue("characterFilter") ?? "";
+        console.log(ratingFilter);
+        console.log(langFilter);
         if (typeFilter && typeof typeFilter === "object") {
             for (const tag of Object.entries(typeFilter)) {
                 if (tag[1] == "included") types.push(tag[0]);

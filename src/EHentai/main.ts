@@ -108,6 +108,26 @@ export class EHentaiExtension implements EHentaiImplementation {
             title: "Rating",
             options: ratingFilter,
             value: {},
+        filters.push({
+            type: "input",
+            id: "characterFilter",
+            title: "Character",
+            placeholder: "",
+            value: "",
+        });
+        filters.push({
+            type: "input",
+            id: "femaleFilter",
+            title: "Female",
+            placeholder: "",
+            value: "",
+        });
+        filters.push({
+            type: "input",
+            id: "maleFilter",
+            title: "Male",
+            placeholder: "",
+            value: "",
         });
         return filters;
     }
