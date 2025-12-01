@@ -25,7 +25,7 @@ export class Forms extends Form {
             Section(
                 {
                     id: "update_settings",
-                    footer: "Show only this type of content in everywhere. ",
+                    footer: "Filter Settings",
                 },
                 [
                     SelectRow("hide_type", {
@@ -42,7 +42,8 @@ export class Forms extends Form {
                     }),
                     SelectRow("language_filter", {
                         title: "Show This Languages Only",
-                        subtitle: "Show only this languages in filter",
+                        subtitle:
+                            "Show only this languages in the search filter",
                         value: this.getFilterStatus(),
                         options: languages,
                         minItemCount: 0,
