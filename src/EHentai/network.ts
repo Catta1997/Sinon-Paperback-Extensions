@@ -48,8 +48,6 @@ export class Requests {
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
         const types: string[] = [];
-        const star: string[] = [];
-        const language: string[] = [];
         const page = metadata?.page ?? "";
         const typeFilter: string | Record<string, "included" | "excluded"> =
             getFilterValue("typeFilter") ?? "";
@@ -70,34 +68,44 @@ export class Requests {
                 if (tag[1] == "included") types.push(tag[0]);
             }
         }
-        if (langFilter && typeof langFilter === "object") {
-            for (const tag of Object.entries(langFilter)) {
-                if (tag[1] == "included") language.push(tag[0]);
-            }
-        }
         let ratingNumber = 0;
         types.forEach((type) => {
             ratingNumber += Number(type);
         });
-        if (ratingFilter && typeof ratingFilter === "object") {
-            for (const tag of Object.entries(ratingFilter)) {
-                if (tag[1] == "included") star.push(tag[0]);
-            }
-        }
         const url: URL = new URL("https://e-hentai.org/");
-        if (language.length > 0) {
-            language.forEach((lang) => {
-                query.title = `language:${lang}$ ${query.title}`;
-            });
-        }
-        if (query.title.length > 0) {
-            url.setQueryItem("f_search", query.title);
+        if (
+            langFilter &&
+            typeof langFilter === "string" &&
+            langFilter.length > 0
+        ) {
+            query.title = `language:${langFilter}$ ${query.title}`;
         }
         if (types.length > 0) {
             url.setQueryItem("f_cats", (1023 - ratingNumber).toString());
         }
-        if (star.length > 0) {
-            url.setQueryItem("f_srdd", star);
+        if (
+            ratingFilter &&
+            typeof ratingFilter === "string" &&
+            ratingFilter.length > 0
+        ) {
+            url.setQueryItem("f_srdd", ratingFilter);
+        }
+        if (male && typeof male === "string" && male.length > 0) {
+            query.title = query.title = `male:${male}$ ${query.title}`;
+        }
+        if (female && typeof female === "string" && female.length > 0) {
+            query.title = query.title = `female:${female}$ ${query.title}`;
+        }
+        if (
+            character &&
+            typeof character === "string" &&
+            character.length > 0
+        ) {
+            query.title =
+                query.title = `character:${character}$ ${query.title}`;
+        }
+        if (query.title.length > 0) {
+            url.setQueryItem("f_search", query.title);
         }
         if (page.length > 0) {
             url.setQueryItem("next", page);

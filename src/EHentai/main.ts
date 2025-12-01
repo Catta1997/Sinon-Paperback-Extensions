@@ -90,24 +90,19 @@ export class EHentaiExtension implements EHentaiImplementation {
             value: getCategoryFilter,
         });
         filters.push({
-            allowEmptySelection: false,
-            allowExclusion: false,
-            maximum: 1,
-            type: "multiselect",
+            type: "dropdown",
             id: "languageFilter",
             title: "Language",
             options: languageFilter,
             value: {},
         });
         filters.push({
-            allowEmptySelection: false,
-            allowExclusion: false,
-            maximum: 1,
-            type: "multiselect",
+            type: "dropdown",
             id: "ratingFilter",
             title: "Rating",
             options: ratingFilter,
-            value: {},
+            value: "",
+        });
         filters.push({
             type: "input",
             id: "characterFilter",
