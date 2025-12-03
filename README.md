@@ -1,6 +1,6 @@
 # 🎯 Sinon’s Extensions
 
-Estensioni custom per **[Paperback](https://paperback.moe/)**
+Custom extensions for **[Paperback](https://paperback.moe/)**
 
 ---
 
