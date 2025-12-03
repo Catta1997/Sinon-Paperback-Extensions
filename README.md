@@ -4,11 +4,24 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 
 ---
 
-## 🚀 Installazione
+## 📚 Available Sources
 
-Add extensions to Paperback:
+- Comix.to (🇺🇸)
+- E-Hentai (🔞 | Multi-Language)
+- GTOTheGreatSite (🇮🇹)
+- HastaTeam (🇮🇹)
+- HastaTeamDDT (🇮🇹)
+- HentaiHand (🔞 | Multi-Language)
+- LupiTeam (🇮🇹)
+- MangaWorld (🇮🇹)
+- MangaWorldAdult (🔞 | 🇮🇹)
+- PhoenixScans (🇮🇹)
+- RokuHentai (🔞 | Multi-Language)
+- TuttoAnimeManga (🇮🇹)
 
-- 🔒 **[Install][installation-webpage-stable]**
+## 🚀 Install
+
+- **[Install][installation-webpage-stable]**
 
 [installation-webpage-stable]: https://catta1997.github.io/Sinon-Paperback-Extensions/0.9/stable/
 
