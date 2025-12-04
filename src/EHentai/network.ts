@@ -144,7 +144,6 @@ export class Requests {
         if (page.length > 0) {
             url.setQueryItem("next", page);
         }
-      //  await Application.sleep(3);
         const data = await Application.scheduleRequest({
             url: url.toString(),
             method: "GET",

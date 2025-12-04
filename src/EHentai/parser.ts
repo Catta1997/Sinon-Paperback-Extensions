@@ -36,7 +36,7 @@ export class Parser {
                 contentRating: ContentRating.ADULT,
             });
         });
-        if(results.length == 0){
+        if (results.length == 0) {
             return {
                 items: [],
                 metadata: undefined,
