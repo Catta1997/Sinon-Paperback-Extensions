@@ -1,4 +1,5 @@
 import {
+    BasicRateLimiter,
     PaperbackInterceptor,
     URL,
     type Request,
@@ -8,13 +9,20 @@ import {
 import * as cheerio from "cheerio";
 import { Metadata } from "./utils";
 
+export const mainRateLimiter = new BasicRateLimiter("main", {
+    numberOfRequests: 1,
+    bufferInterval: 2,
+    ignoreImages: true,
+});
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
         if (request.url.includes(`https://e-hentai.org/s/`)) {
+            mainRateLimiter.options.numberOfRequests = 10; //faster img load
             if (request.headers && request.headers["x-intercepted"]) {
                 delete request.headers["x-intercepted"];
                 return request;
             } else {
+                mainRateLimiter.options.numberOfRequests = 20; //scrape correct image
                 const newRequest = request;
                 newRequest.headers = { ["x-intercepted"]: "1" };
                 const data = await Application.scheduleRequest(newRequest);
@@ -25,8 +33,10 @@ export class MainInterceptor extends PaperbackInterceptor {
                 return request;
             }
         } else if (request.url.includes(`https://e-hentai.org/g/`)) {
+            mainRateLimiter.options.numberOfRequests = 20; // scape pages
             request.headers = { Cookie: "nw=1" };
         } else {
+            mainRateLimiter.options.numberOfRequests = 1; // page scraping -> this might crash for app bug, limit to 1 request
             request.headers = { Cookie: "sl=dm_1" };
         }
         return request;
@@ -61,6 +71,10 @@ export class Requests {
             getFilterValue("maleFilter") ?? "";
         const character: string | Record<string, "included" | "excluded"> =
             getFilterValue("characterFilter") ?? "";
+        const other: string | Record<string, "included" | "excluded"> =
+            getFilterValue("otherFilter") ?? "";
+        const series: string | Record<string, "included" | "excluded"> =
+            getFilterValue("seriesFilter") ?? "";
         console.log(ratingFilter);
         console.log(langFilter);
         if (typeFilter && typeof typeFilter === "object") {
@@ -91,18 +105,38 @@ export class Requests {
             url.setQueryItem("f_srdd", ratingFilter);
         }
         if (male && typeof male === "string" && male.length > 0) {
-            query.title = query.title = `male:${male}$ ${query.title}`;
+            male.split(",").forEach((maleElement) => {
+                query.title =
+                    query.title = `male:"${maleElement}$" ${query.title}`;
+            });
         }
         if (female && typeof female === "string" && female.length > 0) {
-            query.title = query.title = `female:${female}$ ${query.title}`;
+            female.split(",").forEach((femaleElement) => {
+                query.title =
+                    query.title = `female:"${femaleElement}$" ${query.title}`;
+            });
         }
         if (
             character &&
             typeof character === "string" &&
             character.length > 0
         ) {
-            query.title =
-                query.title = `character:${character}$ ${query.title}`;
+            character.split(",").forEach((characterElement) => {
+                query.title =
+                    query.title = `character:"${characterElement}$" ${query.title}`;
+            });
+        }
+        if (other && typeof other === "string" && other.length > 0) {
+            other.split(",").forEach((otherElement) => {
+                query.title =
+                    query.title = `other:"${otherElement}$" ${query.title}`;
+            });
+        }
+        if (series && typeof series === "string" && series.length > 0) {
+            series.split(",").forEach((otherElement) => {
+                query.title =
+                    query.title = `parody:"${otherElement}$" ${query.title}`;
+            });
         }
         if (query.title.length > 0) {
             url.setQueryItem("f_search", query.title);
@@ -110,7 +144,7 @@ export class Requests {
         if (page.length > 0) {
             url.setQueryItem("next", page);
         }
-        await Application.sleep(3);
+      //  await Application.sleep(3);
         const data = await Application.scheduleRequest({
             url: url.toString(),
             method: "GET",

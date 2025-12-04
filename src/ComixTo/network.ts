@@ -1,4 +1,5 @@
 import {
+    BasicRateLimiter,
     CloudflareError,
     PaperbackInterceptor,
     URL,
@@ -30,6 +31,12 @@ export class MainInterceptor extends PaperbackInterceptor {
         return data;
     }
 }
+
+export const mainRateLimiter = new BasicRateLimiter("main", {
+    numberOfRequests: 1,
+    bufferInterval: 1,
+    ignoreImages: true,
+});
 
 export class ApiMaker {
     private checkResponseError(request: Request, response: Response): void {

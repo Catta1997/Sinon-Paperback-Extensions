@@ -1,5 +1,4 @@
 import {
-    BasicRateLimiter,
     DiscoverSectionType,
     Form,
     type Chapter,
@@ -21,7 +20,7 @@ import {
 } from "@paperback/types";
 import { Forms } from "./forms";
 import type { Metadata } from "./models";
-import { MainInterceptor } from "./network";
+import { MainInterceptor, mainRateLimiter } from "./network";
 import { JsonParser } from "./parsers";
 import { globalFilters } from "./utils";
 
@@ -39,16 +38,10 @@ export class ComiToExtension implements ComixToImplementation {
         return new Forms();
     }
 
-    mainRateLimiter = new BasicRateLimiter("main", {
-        numberOfRequests: 1,
-        bufferInterval: 1,
-        ignoreImages: true,
-    });
-
     mainInterceptor = new MainInterceptor("main");
 
     async initialise(): Promise<void> {
-        this.mainRateLimiter.registerInterceptor();
+        mainRateLimiter.registerInterceptor();
         this.mainInterceptor.registerInterceptor();
     }
 

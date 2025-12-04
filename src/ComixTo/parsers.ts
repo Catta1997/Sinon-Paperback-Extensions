@@ -13,7 +13,7 @@ import {
 } from "@paperback/types";
 import { filter } from "./main";
 import type { ChapterItem, Metadata } from "./models";
-import { ApiMaker } from "./network";
+import { ApiMaker, mainRateLimiter } from "./network";
 
 const api = new ApiMaker();
 export class JsonParser {
@@ -133,6 +133,8 @@ export class JsonParser {
         let chaptersArray: ChapterItem[] = [];
         let page = 1;
         let newPage = true;
+        const oldValue = mainRateLimiter.options.numberOfRequests.valueOf();
+        mainRateLimiter.options.numberOfRequests = 30;
         do {
             const chapters = await api.getJsonChapterApi(manga.mangaId, page);
             page++;
@@ -157,6 +159,7 @@ export class JsonParser {
                 creationDate: new Date(chapter.created_at * 1000),
             });
         });
+        mainRateLimiter.options.numberOfRequests = oldValue;
         return chapterList;
     }
 

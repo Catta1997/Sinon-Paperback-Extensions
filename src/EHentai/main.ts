@@ -1,5 +1,4 @@
 import {
-    BasicRateLimiter,
     DiscoverSection,
     DiscoverSectionItem,
     DiscoverSectionType,
@@ -19,7 +18,7 @@ import {
     type SourceManga,
 } from "@paperback/types";
 import { Forms } from "./forms";
-import { MainInterceptor } from "./network";
+import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
 import { getLanguageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
 
@@ -140,16 +139,10 @@ export class EHentaiExtension implements EHentaiImplementation {
         return parser.scrapeAllChapterPages(chapter);
     }
 
-    mainRateLimiter = new BasicRateLimiter("main", {
-        numberOfRequests: 1,
-        bufferInterval: 1,
-        ignoreImages: true,
-    });
-
     mainInterceptor = new MainInterceptor("main");
 
     async initialise(): Promise<void> {
-        this.mainRateLimiter.registerInterceptor();
+        mainRateLimiter.registerInterceptor();
         this.mainInterceptor.registerInterceptor();
     }
 }
