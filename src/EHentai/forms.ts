@@ -74,7 +74,8 @@ export class Forms extends Form {
     getFilterStatus(): string[] {
         return (
             (Application.getState("_languageFilter") as string[] | undefined) ??
-            languageFilter.map((language) => language.id)
+            []
+            //languageFilter.map((language) => language.id)
         );
     }
 

@@ -123,6 +123,20 @@ export class EHentaiExtension implements EHentaiImplementation {
             placeholder: "",
             value: "",
         });
+        filters.push({
+            type: "input",
+            id: "otherFilter",
+            title: "Other",
+            placeholder: "",
+            value: "",
+        });
+        filters.push({
+            type: "input",
+            id: "seriesFilter",
+            title: "Series",
+            placeholder: "",
+            value: "",
+        });
         return filters;
     }
     getSearchResults(

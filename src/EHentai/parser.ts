@@ -22,8 +22,8 @@ export class Parser {
         metadata: Metadata,
     ): Promise<PagedResults<SearchResultItem>> {
         const html = await network.searchRequest(query, metadata);
-        const $ = cheerio.load(html);
         const results: SearchResultItem[] = [];
+        const $ = cheerio.load(html);
         $(".gl1t").each((i, el) => {
             const container = $(el);
             const title = container.find(".gl4t.glname.glink").text().trim();
@@ -36,6 +36,12 @@ export class Parser {
                 contentRating: ContentRating.ADULT,
             });
         });
+        if(results.length == 0){
+            return {
+                items: [],
+                metadata: undefined,
+            };
+        }
         let nextValue = "";
         const nextEl = $("#unext");
         if (nextEl.is("a")) {
@@ -45,14 +51,14 @@ export class Parser {
         }
         return {
             items: results,
-            metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
+            metadata: { page: nextValue },
         };
     }
 
     async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
         const html = await network.getPopular();
-        const $ = cheerio.load(html);
         const results: DiscoverSectionItem[] = [];
+        const $ = cheerio.load(html);
         $(".gl1t").each((i, el) => {
             const container = $(el);
             const title = container.find(".gl4t.glname.glink").text().trim();
@@ -70,8 +76,8 @@ export class Parser {
     }
 
     async parseRecent() {
-        const results: DiscoverSectionItem[] = [];
         const html = await network.getRecent();
+        const results: DiscoverSectionItem[] = [];
         const $ = cheerio.load(html);
         $(".gl1t").each((i, el) => {
             const container = $(el);
@@ -91,29 +97,41 @@ export class Parser {
 
     async parseMangaDetail(mangaID: string): Promise<SourceManga> {
         const html = await network.mangaDetailRequest(mangaID);
-        const tags: Tag[] = [];
         const $ = cheerio.load(html);
         const additionalMangaInfo = this.parseGalleryInfo($);
-        tags.push({
-            id: additionalMangaInfo.category.toLowerCase(),
-            title: additionalMangaInfo.category.toLowerCase(),
+        const tagSectionList: TagSection[] = [];
+        tagSectionList.push({
+            id: "category",
+            title: "category",
+            tags: [
+                {
+                    id: additionalMangaInfo.category.toLowerCase(),
+                    title: additionalMangaInfo.category.toLowerCase(),
+                },
+            ],
         });
-        $("#taglist a").each((i, el) => {
-            const id = $(el).attr("id") || "";
-            const title = $(el).text().trim();
-            tags.push({ id: id, title: title });
+        $("#taglist tr").each((i, el) => {
+            const row = $(el);
+
+            const category = row.find("td.tc").text().trim().split(":")[0];
+
+            const tags: Tag[] = row
+                .find("td .gtl a, td .gt a")
+                .map((i, a) => ({
+                    id: $(a).attr("id") || "",
+                    title: $(a).text().trim(),
+                }))
+                .get();
+            tagSectionList.push({
+                id: category,
+                title: category,
+                tags: tags,
+            });
         });
         const style = $("#gd1 > div").attr("style") || "";
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
         const title = $("#gn").text().trim();
-        const tagSectionList: TagSection[] = [
-            {
-                id: "genres",
-                title: "genres",
-                tags: tags,
-            },
-        ];
         const normalized = additionalMangaInfo.posted.replace(" ", "T");
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
@@ -188,7 +206,7 @@ export class Parser {
             },
             posted: posted,
             language: {
-                text: languageRaw,
+                text: languageRaw.split(" ")[0],
             },
             length: {
                 pages: parseInt(lengthRaw),
