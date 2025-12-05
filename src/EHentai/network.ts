@@ -17,7 +17,7 @@ export const mainRateLimiter = new BasicRateLimiter("main", {
 export class MainInterceptor extends PaperbackInterceptor {
     override async interceptRequest(request: Request): Promise<Request> {
         if (request.url.includes(`https://e-hentai.org/s/`)) {
-            mainRateLimiter.options.numberOfRequests = 10; //faster img load
+            mainRateLimiter.options.numberOfRequests = 30; //faster img preload
             if (request.headers && request.headers["x-intercepted"]) {
                 delete request.headers["x-intercepted"];
                 return request;

@@ -284,20 +284,30 @@ export class Parser {
     }
 
     async scrapeAllChapterPagesList(chapter: Chapter) {
-        let page = 0;
-        const totalImages = chapter?.additionalInfo?.pages ?? "0";
-        const results: string[] = [];
-        while (results.length < Number(totalImages)) {
-            const html = await network.getChapterPages(
+        const totalImages = Number(chapter?.additionalInfo?.pages ?? "0");
+        if (totalImages === 0) return [];
+        const IMAGES_PER_PAGE = 20;
+        const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE);
+        const pageUrls = Array.from(
+            { length: totalPages },
+            (_, page) =>
                 `https://e-hentai.org/g/${chapter.chapterId}?p=${page}`,
-            );
+        );
+        const htmlPages = await Promise.all(
+            pageUrls.map((url) => network.getChapterPages(url)),
+        );
+        const results: string[] = [];
+
+        for (const html of htmlPages) {
             const $ = cheerio.load(html);
-            $("a[href^='https://e-hentai.org/s/']").each((i, el) => {
+            $("a[href^='https://e-hentai.org/s/']").each((_, el) => {
+                if (results.length >= totalImages) return;
                 const url = $(el).attr("href");
                 if (url) results.push(url);
             });
-            page++;
+            if (results.length >= totalImages) break;
         }
+
         return results;
     }
 }
