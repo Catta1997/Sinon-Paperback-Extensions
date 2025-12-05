@@ -130,24 +130,32 @@ export class JsonParser {
     }
 
     async parseChapters(manga: SourceManga): Promise<Chapter[]> {
-        let chaptersArray: ChapterItem[] = [];
-        let page = 1;
-        let newPage = true;
         const oldValue = mainRateLimiter.options.numberOfRequests.valueOf();
-        mainRateLimiter.options.numberOfRequests = 30;
-        do {
-            const chapters = await api.getJsonChapterApi(manga.mangaId, page);
-            page++;
-            chaptersArray = [...chaptersArray, ...chapters.result.items];
-            if (chapters.result.items.length == 0) newPage = false;
-        } while (newPage);
-        const chapterList: Chapter[] = [];
-        chaptersArray.forEach((chapter) => {
+        mainRateLimiter.options.numberOfRequests = 8;
+        const firstPage = await api.getJsonChapterApi(manga.mangaId, 1);
+
+        const totalPages = firstPage.result.pagination.last_page ?? 1;
+        const requests: Promise<{ page: number; data: ChapterItem[] }>[] = [];
+        requests.push(
+            Promise.resolve({ page: 1, data: firstPage.result.items }),
+        );
+        for (let page = 2; page <= totalPages; page++) {
+            requests.push(
+                api.getJsonChapterApi(manga.mangaId, page).then((r) => ({
+                    page,
+                    data: r.result.items,
+                })),
+            );
+        }
+        const allPages = await Promise.all(requests);
+        allPages.sort((a, b) => a.page - b.page);
+        const chaptersArray = allPages.flatMap((p) => p.data);
+        const chapterList: Chapter[] = chaptersArray.map((chapter) => {
             let version = chapter.scanlation_group?.name ?? "";
             if (chapter.volume > 0) {
-                version = chapter.scanlation_group?.name + " Volumes";
+                version = version.length > 0 ? `${version} Volumes` : "Volumes";
             }
-            chapterList.push({
+            return {
                 chapterId: chapter.chapter_id.toString(),
                 sourceManga: manga,
                 langCode: chapter.language,
@@ -157,8 +165,9 @@ export class JsonParser {
                 volume: chapter.volume,
                 publishDate: new Date(chapter.updated_at * 1000),
                 creationDate: new Date(chapter.created_at * 1000),
-            });
+            };
         });
+
         mainRateLimiter.options.numberOfRequests = oldValue;
         return chapterList;
     }

@@ -13,12 +13,17 @@ export interface ApiResponseChapter {
     result: ResultChapter;
 }
 
+interface pagination {
+    last_page: number;
+}
+
 export interface ResultManga {
     items: MangaItem[];
 }
 
 export interface ResultChapter {
     items: ChapterItem[];
+    pagination: pagination;
 }
 
 export interface ApiResponseChapterPages {
