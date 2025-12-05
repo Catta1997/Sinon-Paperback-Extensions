@@ -37,7 +37,7 @@ export class MainInterceptor extends PaperbackInterceptor {
             request.headers = { Cookie: "nw=1" };
         } else {
             mainRateLimiter.options.numberOfRequests = 1; // page scraping -> this might crash for app bug, limit to 1 request
-            request.headers = { Cookie: "sl=dm_1" };
+            request.headers = { Cookie: "sl=dm_2" };
         }
         return request;
     }

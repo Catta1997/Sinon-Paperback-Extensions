@@ -13,29 +13,86 @@ import {
 import * as cheerio from "cheerio";
 import { CheerioAPI } from "cheerio";
 import { Requests } from "./network";
-import { GalleryInfo, Metadata } from "./utils";
+import { GalleryInfo, getLangFlag, Metadata } from "./utils";
 
 const network = new Requests();
 export class Parser {
+    private parseTable($: cheerio.CheerioAPI) {
+        const results: {
+            title: string;
+            image: string;
+            url: string;
+            lang: string;
+            artist: string;
+            subtitle: string;
+        }[] = [];
+        $("tr")
+            .has("td.gl1e")
+            .each((i, el) => {
+                console.log(`Riga ${i}`);
+                const container = $(el);
+                const title = container.find("div.glink").text().trim();
+                const url = container.find("a").first().attr("href") ?? "";
+                const image = container.find("img").attr("src") ?? "";
+                let artist = "";
+                let lang = "";
+                container.find("td.tc").each((i, td) => {
+                    if ($(td).text().trim() === "artist:") {
+                        artist = $(td)
+                            .next("td")
+                            .find("div")
+                            .first()
+                            .text()
+                            .trim();
+                    }
+                });
+                container.find("td.tc").each((i, td) => {
+                    if ($(td).text().trim() === "language:") {
+                        const lang_text = $(td)
+                            .next("td")
+                            .find("div.gt")
+                            .first()
+                            .text()
+                            .trim();
+                        lang = getLangFlag(lang_text);
+                    }
+                });
+                const subtitle =
+                    lang.length > 0 && artist.length > 0
+                        ? `${lang} | ${artist}`
+                        : lang.length > 0
+                          ? `${lang}`
+                          : artist.length > 0
+                            ? `${artist}`
+                            : "";
+                results.push({
+                    title: title,
+                    image: image,
+                    url: url,
+                    lang: lang,
+                    artist: artist,
+                    subtitle: subtitle,
+                });
+            });
+        return results;
+    }
+
     async parseSearchResults(
         query: SearchQuery,
         metadata: Metadata,
     ): Promise<PagedResults<SearchResultItem>> {
         const html = await network.searchRequest(query, metadata);
-        const results: SearchResultItem[] = [];
         const $ = cheerio.load(html);
-        $(".gl1t").each((i, el) => {
-            const container = $(el);
-            const title = container.find(".gl4t.glname.glink").text().trim();
-            const url = container.find("a").first().attr("href");
-            const image = container.find("img").attr("src");
-            results.push({
-                mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
-                title: title,
-                imageUrl: image ?? "",
-                contentRating: ContentRating.ADULT,
-            });
-        });
+        const results: SearchResultItem[] = this.parseTable($).map((item) => ({
+            mangaId: item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
+            title: item.title
+                .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+                .replaceAll(/\s+/g, " ")
+                .trim(),
+            imageUrl: item.image,
+            subtitle: item.subtitle,
+            contentRating: ContentRating.ADULT,
+        }));
         if (results.length == 0) {
             return {
                 items: [],
@@ -51,47 +108,47 @@ export class Parser {
         }
         return {
             items: results,
-            metadata: { page: nextValue },
+            metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
         };
     }
 
     async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
         const html = await network.getPopular();
-        const results: DiscoverSectionItem[] = [];
         const $ = cheerio.load(html);
-        $(".gl1t").each((i, el) => {
-            const container = $(el);
-            const title = container.find(".gl4t.glname.glink").text().trim();
-            const url = container.find("a").first().attr("href");
-            const image = container.find("img").attr("src");
-            results.push({
+        const results: DiscoverSectionItem[] = this.parseTable($).map(
+            (item) => ({
                 type: "prominentCarouselItem",
-                mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
-                title: title,
-                imageUrl: image ?? "",
+                mangaId:
+                    item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
+                title: item.title
+                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+                    .replaceAll(/\s+/g, " ")
+                    .trim(),
+                subtitle: item.subtitle,
+                imageUrl: item.image,
                 contentRating: ContentRating.ADULT,
-            });
-        });
+            }),
+        );
         return { items: results };
     }
 
     async parseRecent() {
         const html = await network.getRecent();
-        const results: DiscoverSectionItem[] = [];
         const $ = cheerio.load(html);
-        $(".gl1t").each((i, el) => {
-            const container = $(el);
-            const title = container.find(".gl4t.glname.glink").text().trim();
-            const url = container.find("a").first().attr("href");
-            const image = container.find("img").attr("src");
-            results.push({
+        const results: DiscoverSectionItem[] = this.parseTable($).map(
+            (item) => ({
                 type: "simpleCarouselItem",
-                mangaId: url?.replace("https://e-hentai.org/g/", "") ?? "",
-                title: title,
-                imageUrl: image ?? "",
+                mangaId:
+                    item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
+                title: item.title
+                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+                    .replaceAll(/\s+/g, " ")
+                    .trim(),
+                subtitle: item.subtitle,
+                imageUrl: item.image,
                 contentRating: ContentRating.ADULT,
-            });
-        });
+            }),
+        );
         return { items: results };
     }
 
@@ -119,7 +176,12 @@ export class Parser {
                 .find("td .gtl a, td .gt a")
                 .map((i, a) => ({
                     id: $(a).attr("id") || "",
-                    title: $(a).text().trim(),
+                    title: $(a)
+                        .text()
+                        .trim()
+                        .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+                        .replaceAll(/\s+/g, " ")
+                        .trim(),
                 }))
                 .get();
             tagSectionList.push({
@@ -132,14 +194,18 @@ export class Parser {
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
         const title = $("#gn").text().trim();
-        const normalized = additionalMangaInfo.posted.replace(" ", "T");
+        const normalized = additionalMangaInfo.posted.replaceAll(" ", "T");
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
             author: additionalMangaInfo.uploader.name,
             rating: additionalMangaInfo.rating.average / 500,
             secondaryTitles: [""],
-            primaryTitle: title ?? "",
+            primaryTitle:
+                title
+                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+                    .replaceAll(/\s+/g, " ")
+                    .trim() ?? "",
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
             additionalInfo: {
@@ -195,8 +261,8 @@ export class Parser {
         const ratingAverage = parseFloat(
             $("#rating_label")
                 .text()
-                .replace("Average:", "")
-                .replace(".", "")
+                .replaceAll("Average:", "")
+                .replaceAll(".", "")
                 .trim(),
         );
         return {
