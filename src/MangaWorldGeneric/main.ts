@@ -65,7 +65,7 @@ export abstract class MangaWorldGeneric
         this.requestManager = params.requestManager ?? new Requests();
         // Rate limit: Wait 1 sec after 5 requests
         this.mainRateLimiter = new BasicRateLimiter("main", {
-            numberOfRequests: 1,
+            numberOfRequests: 5,
             bufferInterval: 1,
             ignoreImages: true,
         });

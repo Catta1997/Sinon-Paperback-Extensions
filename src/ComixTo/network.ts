@@ -33,7 +33,7 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-    numberOfRequests: 1,
+    numberOfRequests: 5,
     bufferInterval: 1,
     ignoreImages: true,
 });
