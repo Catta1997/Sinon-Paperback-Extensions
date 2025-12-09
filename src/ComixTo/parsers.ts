@@ -262,8 +262,10 @@ export class JsonParser {
         const genresFilter: string[] = [];
         const themesFilter: string[] = [];
         const typeFilter: string[] = [];
-        const demogFilter: string[] = [];
-        const stutusFilter: string[] = [];
+        const demographicFilter: string[] = [];
+        const statusFilter: string[] = [];
+        const formatsFilter: string[] = [];
+        let modeFilter: string = "and";
         if (genres && typeof genres === "object") {
             for (const tag of Object.entries(genres)) {
                 if (tag[1] == "included") genresFilter.push(tag[0]);
@@ -283,12 +285,17 @@ export class JsonParser {
         }
         if (demographic && typeof demographic === "object") {
             for (const tag of Object.entries(demographic)) {
-                if (tag[1] == "included") demogFilter.push(tag[0]);
+                if (tag[1] == "included") demographicFilter.push(tag[0]);
             }
         }
         if (status && typeof status === "object") {
             for (const tag of Object.entries(status)) {
-                if (tag[1] == "included") stutusFilter.push(tag[0]);
+                if (tag[1] == "included") statusFilter.push(tag[0]);
+            }
+        }
+        if (formats && typeof formats === "object") {
+            for (const tag of Object.entries(formats)) {
+                if (tag[1] == "included") formatsFilter.push(tag[0]);
             }
         }
         const [sortBy, orderBy] = sortingOption.id.split("$");
@@ -298,8 +305,10 @@ export class JsonParser {
             genresFilter,
             themesFilter,
             typeFilter,
-            demogFilter,
-            stutusFilter,
+            demographicFilter,
+            statusFilter,
+            formatsFilter,
+            mode as string,
             sortBy,
             orderBy,
         );

@@ -50,8 +50,8 @@ export class Requests {
                 if (tag[1] == "excluded") tipi_esclusi.push(tag[0]);
             }
         }
-        const statusFilter = status as string
-        const yearFilter = year as string
+        const statusFilter = status as string;
+        const yearFilter = year as string;
         const url = new URL(source.base_url).addPathComponent("archive");
         if (query.title.toString().length > 0)
             url.setQueryItem("keyword", query.title.toString() ?? "");
@@ -59,8 +59,9 @@ export class Requests {
         if (sorting?.id) url.setQueryItem("sort", sorting?.id);
         if (generi.length > 0) url.setQueryItem("genre", generi);
         if (tipologia.length > 0) url.setQueryItem("type", tipologia);
-        if (stato.length > 0) url.setQueryItem("status", stato[0] ?? "");
-        if (anno.length > 0) url.setQueryItem("year", anno[0] ?? "");
+        if (statusFilter.length > 0)
+            url.setQueryItem("status", statusFilter ?? "");
+        if (yearFilter.length > 0) url.setQueryItem("year", yearFilter ?? "");
         return {
             url: url.toString(),
             excluded: { generi: generi_esclusi, tipi: tipi_esclusi },
