@@ -265,7 +265,6 @@ export class JsonParser {
         const demographicFilter: string[] = [];
         const statusFilter: string[] = [];
         const formatsFilter: string[] = [];
-        let modeFilter: string = "and";
         if (genres && typeof genres === "object") {
             for (const tag of Object.entries(genres)) {
                 if (tag[1] == "included") genresFilter.push(tag[0]);
