@@ -108,6 +108,17 @@ export class globalFilters {
         { id: "3", value: "Josei" },
         { id: "4", value: "Seinen" },
     ];
+    formats = [
+        { id: "93164", value: "4-Koma" },
+        { id: "93167", value: "Adaptation" },
+        { id: "93165", value: "Anthology" },
+        { id: "93166", value: "Award Winning" },
+        { id: "93168", value: "Doujinshi" },
+        { id: "93172", value: "Full Color" },
+        { id: "93170", value: "Long Strip" },
+        { id: "93169", value: "Oneshot" },
+        { id: "93171", value: "Options" },
+    ];
 
     sectionLimit = [
         { id: "7", value: "Week" },
@@ -157,6 +168,26 @@ export class globalFilters {
             allowExclusion: true,
             allowEmptySelection: true,
             maximum: this.themes.length,
+        });
+        filters.push({
+            type: "multiselect",
+            id: "formats",
+            title: "Formats",
+            options: this.formats,
+            value: {},
+            allowExclusion: false,
+            allowEmptySelection: true,
+            maximum: this.formats.length,
+        });
+        filters.push({
+            type: "dropdown",
+            id: "filter_mode",
+            title: "Filter Mode",
+            value: "and",
+            options: [
+                { id: "and", value: "AND" },
+                { id: "or", value: "OR" },
+            ],
         });
         filters.push({
             type: "multiselect",

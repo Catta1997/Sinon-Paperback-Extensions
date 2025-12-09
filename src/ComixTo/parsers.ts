@@ -255,6 +255,10 @@ export class JsonParser {
             getFilterValue("demographic") ?? "";
         const status: string | Record<string, "included" | "excluded"> =
             getFilterValue("status") ?? "";
+        const mode: string | Record<string, "included" | "excluded"> =
+            getFilterValue("filter_mode") ?? "";
+        const formats: string | Record<string, "included" | "excluded"> =
+            getFilterValue("formats") ?? "";
         const genresFilter: string[] = [];
         const themesFilter: string[] = [];
         const typeFilter: string[] = [];
