@@ -213,6 +213,8 @@ export class ApiMaker {
         types: string[],
         demographic: string[],
         status: string[],
+        formats: string[],
+        mode: string,
         sortBy: string,
         orderBy: string,
     ) {
@@ -220,12 +222,14 @@ export class ApiMaker {
         if (keyword.length > 0) url.setQueryItem("keyword", keyword);
         if (genres.length > 0) url.setQueryItem("genres[]", genres);
         if (themes.length > 0) url.setQueryItem("genres[]", themes);
+        if (formats.length > 0) url.setQueryItem("genres[]", formats);
         if (types.length > 0) url.setQueryItem("types[]", types);
         if (demographic.length > 0)
             url.setQueryItem("demographics[]", demographic);
         if (status.length > 0) url.setQueryItem("statuses[]", status);
         url.setQueryItem("page", page.toString());
         url.setQueryItem(`order[${sortBy}]`, orderBy);
+        url.setQueryItem("genres_mode", mode);
         const html = await this.getDataFromRequest(url.toString());
         try {
             return JSON.parse(html) as ApiResponseManga;

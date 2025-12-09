@@ -22,8 +22,6 @@ export class Requests {
         const generi_esclusi: string[] = [];
         const tipi_esclusi: string[] = [];
         const tipologia: string[] = [];
-        const stato: string[] = [];
-        const anno: string[] = [];
         const getFilterValue = (id: string) =>
             query.filters.find((filter) => filter.id == id)?.value;
         const genres: string | Record<string, "included" | "excluded"> =
@@ -52,19 +50,8 @@ export class Requests {
                 if (tag[1] == "excluded") tipi_esclusi.push(tag[0]);
             }
         }
-
-        if (status && typeof status === "object") {
-            for (const tag of Object.entries(status)) {
-                if (tag[0].length > 0) stato.push(tag[0]);
-            }
-        } else if (status.length > 0) stato.push(status);
-
-        if (year && typeof year === "object") {
-            for (const tag of Object.entries(year)) {
-                if (tag[0].length > 0) anno.push(tag[0]);
-            }
-        } else if (year.length > 0) anno.push(year);
-
+        const statusFilter = status as string
+        const yearFilter = year as string
         const url = new URL(source.base_url).addPathComponent("archive");
         if (query.title.toString().length > 0)
             url.setQueryItem("keyword", query.title.toString() ?? "");
