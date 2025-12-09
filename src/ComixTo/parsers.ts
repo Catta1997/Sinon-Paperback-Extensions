@@ -177,7 +177,7 @@ export class JsonParser {
         return {
             id: chapterId,
             mangaId: pages.result.manga_id.toString(),
-            pages: pages.result.images,
+            pages: pages.result.images.map((img) => img.url),
         };
     }
 

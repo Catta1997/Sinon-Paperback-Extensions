@@ -33,7 +33,11 @@ export interface ApiResponseChapterPages {
 
 export interface ChapterPages {
     manga_id: number;
-    images: string[];
+    images: Images[];
+}
+
+export interface Images {
+    url: string;
 }
 
 export interface MangaItem {
