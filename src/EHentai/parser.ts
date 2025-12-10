@@ -206,13 +206,14 @@ export class Parser {
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
         const title = $("#gn").text().trim();
+        const secondaryTitle = $("#gj").text().trim();
         const updateTime = additionalMangaInfo.posted.replaceAll(" ", "T");
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
             artist: this.capitalLetter(artist),
             rating: additionalMangaInfo.rating.average / 500,
-            secondaryTitles: [""],
+            secondaryTitles: [this.parseTitle(secondaryTitle)],
             primaryTitle: this.parseTitle(title),
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
