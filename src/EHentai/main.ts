@@ -125,15 +125,15 @@ export class EHentaiExtension implements EHentaiImplementation {
         });
         filters.push({
             type: "input",
-            id: "otherFilter",
-            title: "Other",
+            id: "seriesFilter",
+            title: "Series",
             placeholder: "",
             value: "",
         });
         filters.push({
             type: "input",
-            id: "seriesFilter",
-            title: "Series",
+            id: "otherFilter",
+            title: "Other",
             placeholder: "",
             value: "",
         });
