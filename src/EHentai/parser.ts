@@ -210,7 +210,7 @@ export class Parser {
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
-            author: this.capitalLetter(artist),
+            artist: this.capitalLetter(artist),
             rating: additionalMangaInfo.rating.average / 500,
             secondaryTitles: [""],
             primaryTitle: this.parseTitle(title),
