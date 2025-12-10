@@ -85,12 +85,15 @@ export class globalFilters {
     ];
 
     order = [
-        { id: "views_30d$desc", label: "Any" },
         { id: "relevance$desc", label: "Best Match" },
         { id: "chapter_updated_at$desc", label: "Update Date" },
         { id: "created_at$desc", label: "Created Date" },
         { id: "title$asc", label: "Title Ascending" },
         { id: "year$desc", label: "Year Descending" },
+        { id: "score$desc", label: "Average Score" },
+        { id: "views_7d$desc", label: "Most Views 7 Days" },
+        { id: "views_30d$desc", label: "Most Views 1 Month" },
+        { id: "views_90d$desc", label: "Most Views 3 Month" },
         { id: "total_views$desc", label: "Total Views" },
         { id: "followed_count$desc", label: "Most Follows" },
     ];
