@@ -100,10 +100,7 @@ export class Parser {
         const $ = cheerio.load(html);
         const results: SearchResultItem[] = this.parseTable($).map((item) => ({
             mangaId: item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
-            title: item.title
-                .replaceAll(/(\[.*?]|\(.*?\))/g, "")
-                .replaceAll(/\s+/g, " ")
-                .trim(),
+            title: this.parseTitle(item.title),
             imageUrl: item.image,
             subtitle: item.subtitle,
             contentRating: ContentRating.ADULT,
@@ -135,10 +132,7 @@ export class Parser {
                 type: "prominentCarouselItem",
                 mangaId:
                     item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
-                title: item.title
-                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
-                    .replaceAll(/\s+/g, " ")
-                    .trim(),
+                title: this.parseTitle(item.title),
                 subtitle: item.subtitle,
                 imageUrl: item.image,
                 contentRating: ContentRating.ADULT,
@@ -155,10 +149,7 @@ export class Parser {
                 type: "simpleCarouselItem",
                 mangaId:
                     item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
-                title: item.title
-                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
-                    .replaceAll(/\s+/g, " ")
-                    .trim(),
+                title: this.parseTitle(item.title),
                 subtitle: item.subtitle,
                 imageUrl: item.image,
                 contentRating: ContentRating.ADULT,
@@ -213,11 +204,7 @@ export class Parser {
             author: additionalMangaInfo.uploader.name,
             rating: additionalMangaInfo.rating.average / 500,
             secondaryTitles: [""],
-            primaryTitle:
-                title
-                    .replaceAll(/(\[.*?]|\(.*?\))/g, "")
-                    .replaceAll(/\s+/g, " ")
-                    .trim() ?? "",
+            primaryTitle: this.parseTitle(title),
             contentRating: ContentRating.ADULT,
             tagGroups: tagSectionList,
             additionalInfo: {
