@@ -161,6 +161,7 @@ export class Parser {
     async parseMangaDetail(mangaID: string): Promise<SourceManga> {
         const html = await network.mangaDetailRequest(mangaID);
         const $ = cheerio.load(html);
+        let artist = "";
         const additionalMangaInfo = this.parseGalleryInfo($);
         const tagSectionList: TagSection[] = [];
         tagSectionList.push({
@@ -168,8 +169,10 @@ export class Parser {
             title: "Category",
             tags: [
                 {
-                    id: additionalMangaInfo.category.toLowerCase(),
-                    title: additionalMangaInfo.category.toLowerCase(),
+                    id: additionalMangaInfo.category
+                        .toLowerCase()
+                        .replaceAll(" ", "_"),
+                    title: this.capitalLetter(additionalMangaInfo.category),
                 },
             ],
         });
@@ -187,21 +190,27 @@ export class Parser {
                     ),
                 }))
                 .get();
-            tagSectionList.push({
-                id: category,
-                title: category,
-                tags: tags,
-            });
+            const artistTag = tags.find((tag) => tag.id.includes("ta_artist"));
+            if (artistTag) {
+                artist = artistTag.title;
+            }
+            if (category !== "artist") {
+                tagSectionList.push({
+                    id: category,
+                    title: this.capitalLetter(category),
+                    tags: tags,
+                });
+            }
         });
         const style = $("#gd1 > div").attr("style") || "";
         const match = style.match(/url\(([^)]+)\)/);
         const imageUrl = match ? match[1] : "";
         const title = $("#gn").text().trim();
-        const normalized = additionalMangaInfo.posted.replaceAll(" ", "T");
+        const updateTime = additionalMangaInfo.posted.replaceAll(" ", "T");
         const info: MangaInfo = {
             thumbnailUrl: imageUrl ?? "",
             synopsis: "",
-            author: additionalMangaInfo.uploader.name,
+            author: this.capitalLetter(artist),
             rating: additionalMangaInfo.rating.average / 500,
             secondaryTitles: [""],
             primaryTitle: this.parseTitle(title),
@@ -210,7 +219,7 @@ export class Parser {
             additionalInfo: {
                 pages: additionalMangaInfo.length.pages.toString(),
                 language: additionalMangaInfo.language.text,
-                uploaded: normalized,
+                uploaded: updateTime,
             },
         };
         return { mangaId: mangaID, mangaInfo: info };
@@ -247,7 +256,18 @@ export class Parser {
     private parseGalleryInfo($: CheerioAPI): GalleryInfo {
         const root = $("#gmid #gd3");
         const category = root.find("#gdc div").first().text().trim();
-        const uploaderName = root.find("#gdn a").first().text().trim();
+        let uploaderName = root.find("#gdn a").first().text().trim();
+        const tags = $("#gmid #gd4");
+        tags.find("td.tc").each((i, td) => {
+            if ($(td).text().trim() === "artist:") {
+                uploaderName = $(td)
+                    .next("td")
+                    .find("div")
+                    .first()
+                    .text()
+                    .trim();
+            }
+        });
         function getRow(label: string): string {
             return $(`#gdd .gdt1:contains("${label}")`)
                 .next(".gdt2")
