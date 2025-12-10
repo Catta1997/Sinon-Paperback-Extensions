@@ -17,6 +17,21 @@ import { GalleryInfo, getLangFlag, Metadata } from "./utils";
 
 const network = new Requests();
 export class Parser {
+    private capitalLetter(str: string): string {
+        return str
+            .toLowerCase()
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.substring(1))
+            .join(" ");
+    }
+
+    private parseTitle(str: string): string {
+        return str
+            .replaceAll(/(\[.*?]|\(.*?\))/g, "")
+            .replaceAll(/\s+/g, " ")
+            .trim();
+    }
+
     private parseTable($: cheerio.CheerioAPI) {
         const results: {
             title: string;
@@ -29,7 +44,6 @@ export class Parser {
         $("tr")
             .has("td.gl1e")
             .each((i, el) => {
-                console.log(`Riga ${i}`);
                 const container = $(el);
                 const title = container.find("div.glink").text().trim();
                 const url = container.find("a").first().attr("href") ?? "";
@@ -57,14 +71,15 @@ export class Parser {
                         lang = getLangFlag(lang_text);
                     }
                 });
-                const subtitle =
+                const subtitle = this.capitalLetter(
                     lang.length > 0 && artist.length > 0
                         ? `${lang} | ${artist}`
                         : lang.length > 0
                           ? `${lang}`
                           : artist.length > 0
                             ? `${artist}`
-                            : "";
+                            : "",
+                );
                 results.push({
                     title: title,
                     image: image,
@@ -159,7 +174,7 @@ export class Parser {
         const tagSectionList: TagSection[] = [];
         tagSectionList.push({
             id: "category",
-            title: "category",
+            title: "Category",
             tags: [
                 {
                     id: additionalMangaInfo.category.toLowerCase(),
@@ -176,12 +191,9 @@ export class Parser {
                 .find("td .gtl a, td .gt a")
                 .map((i, a) => ({
                     id: $(a).attr("id") || "",
-                    title: $(a)
-                        .text()
-                        .trim()
-                        .replaceAll(/(\[.*?]|\(.*?\))/g, "")
-                        .replaceAll(/\s+/g, " ")
-                        .trim(),
+                    title: this.capitalLetter(
+                        $(a).text().trim().replaceAll(/\s+/g, " ").trim(),
+                    ),
                 }))
                 .get();
             tagSectionList.push({
