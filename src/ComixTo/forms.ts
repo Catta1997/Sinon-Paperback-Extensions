@@ -1,4 +1,5 @@
 import {
+    ButtonRow,
     Form,
     NavigationRow,
     Section,
@@ -16,6 +17,13 @@ export class Forms extends Form {
                     subtitle: "Contents Settings",
                     form: new FilterSettings(),
                 }),
+                ButtonRow("reload_genres", {
+                    title: "Reload all Filters",
+                    onSelect: Application.Selector(
+                        this as Forms,
+                        "refreshFilters",
+                    ),
+                }),
             ]),
             Section("limit", [
                 NavigationRow("Limit", {
@@ -25,6 +33,10 @@ export class Forms extends Form {
                 }),
             ]),
         ];
+    }
+    async refreshFilters() {
+        Application.invalidateSearchFilters();
+        await filter.updateFilters(true);
     }
 }
 

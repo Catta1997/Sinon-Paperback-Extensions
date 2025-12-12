@@ -1,81 +1,11 @@
 import type { SearchFilter } from "@paperback/types";
+import { parse } from "./main";
+import { OptionItem } from "./models";
 
 export class globalFilters {
-    genres = [
-        { id: "6", value: "Action" },
-        { id: "87264", value: "Adult" },
-        { id: "7", value: "Adventure" },
-        { id: "8", value: "Boys Love" },
-        { id: "9", value: "Comedy" },
-        { id: "10", value: "Crime" },
-        { id: "11", value: "Drama" },
-        { id: "87265", value: "Ecchi" },
-        { id: "12", value: "Fantasy" },
-        { id: "13", value: "Girls Love" },
-        { id: "87266", value: "Hentai" },
-        { id: "14", value: "Historical" },
-        { id: "15", value: "Horror" },
-        { id: "16", value: "Isekai" },
-        { id: "17", value: "Magical Girls" },
-        { id: "87267", value: "Mature" },
-        { id: "18", value: "Mecha" },
-        { id: "19", value: "Medical" },
-        { id: "20", value: "Mystery" },
-        { id: "21", value: "Philosophical" },
-        { id: "22", value: "Psychological" },
-        { id: "23", value: "Romance" },
-        { id: "24", value: "Sci-Fi" },
-        { id: "25", value: "Slice of Life" },
-        { id: "87268", value: "Smut" },
-        { id: "26", value: "Sports" },
-        { id: "27", value: "Superhero" },
-        { id: "28", value: "Thriller" },
-        { id: "29", value: "Tragedy" },
-        { id: "30", value: "Wuxia" },
-        { id: "1", value: "Shoujo" },
-        { id: "2", value: "Shounen" },
-        { id: "3", value: "Josei" },
-    ];
+    genres: OptionItem[] = [];
 
-    themes = [
-        { id: "31", value: "Aliens" },
-        { id: "32", value: "Animals" },
-        { id: "33", value: "Cooking" },
-        { id: "34", value: "Crossdressing" },
-        { id: "35", value: "Delinquents" },
-        { id: "36", value: "Demons" },
-        { id: "37", value: "Genderswap" },
-        { id: "38", value: "Ghosts" },
-        { id: "39", value: "Gyaru" },
-        { id: "40", value: "Harem" },
-        { id: "41", value: "Incest" },
-        { id: "42", value: "Loli" },
-        { id: "43", value: "Mafia" },
-        { id: "44", value: "Magic" },
-        { id: "45", value: "Martial Arts" },
-        { id: "46", value: "Military" },
-        { id: "47", value: "Monster Girls" },
-        { id: "48", value: "Monsters" },
-        { id: "49", value: "Music" },
-        { id: "50", value: "Ninja" },
-        { id: "51", value: "Office Workers" },
-        { id: "52", value: "Police" },
-        { id: "53", value: "Post-Apocalyptic" },
-        { id: "54", value: "Reincarnation" },
-        { id: "55", value: "Reverse Harem" },
-        { id: "56", value: "Samurai" },
-        { id: "57", value: "School Life" },
-        { id: "58", value: "Shota" },
-        { id: "59", value: "Supernatural" },
-        { id: "60", value: "Survival" },
-        { id: "61", value: "Time Travel" },
-        { id: "62", value: "Traditional Games" },
-        { id: "63", value: "Vampires" },
-        { id: "64", value: "Video Games" },
-        { id: "65", value: "Villainess" },
-        { id: "66", value: "Virtual Reality" },
-        { id: "67", value: "Zombies" },
-    ];
+    themes: OptionItem[] = [];
 
     contentType = [
         { id: "manga", value: "Manga" },
@@ -115,23 +45,10 @@ export class globalFilters {
         { id: "discontinued", value: "Discontinued" },
         { id: "not_yet_released", value: "Not Yet Released" },
     ];
-    demographic = [
-        { id: "1", value: "Shoujo" },
-        { id: "2", value: "Shounen" },
-        { id: "3", value: "Josei" },
-        { id: "4", value: "Seinen" },
-    ];
-    formats = [
-        { id: "93164", value: "4-Koma" },
-        { id: "93167", value: "Adaptation" },
-        { id: "93165", value: "Anthology" },
-        { id: "93166", value: "Award Winning" },
-        { id: "93168", value: "Doujinshi" },
-        { id: "93172", value: "Full Color" },
-        { id: "93170", value: "Long Strip" },
-        { id: "93169", value: "Oneshot" },
-        { id: "93171", value: "Options" },
-    ];
+
+    demographic: OptionItem[] = [];
+
+    formats: OptionItem[] = [];
 
     sectionLimit = [
         { id: "7", value: "Week" },
@@ -141,8 +58,9 @@ export class globalFilters {
         { id: "365", value: "1 Year" },
     ];
 
-    getFilters() {
+    async getFilters() {
         const filters: SearchFilter[] = [];
+        await this.updateFilters(false);
         const genresHidden = this.getHiddenGenresSettings();
         const getExcludedGenreObject = Object.fromEntries(
             this.genres
@@ -255,5 +173,58 @@ export class globalFilters {
 
     getLimitSettings() {
         return (Application.getState("limit") as string[] | undefined) ?? ["7"];
+    }
+
+    async updateFilters(force: boolean) {
+        const lastFilterFetch = Number(
+            Application.getState("last-filter-fetch") ?? 0,
+        );
+        const cached = lastFilterFetch + 172800 > new Date().valueOf() / 1000;
+        if (cached && !force) {
+            const keys = ["genre", "demographic", "theme", "format"] as const;
+            const values = keys.map(
+                (k) => Application.getState(`${k}`) as string | undefined,
+            );
+            const [genres, demographic, themes, formats] = values;
+            if (
+                genres === undefined ||
+                demographic === undefined ||
+                themes === undefined ||
+                formats === undefined
+            ) {
+                await this.updateFilters(true);
+                return;
+            }
+
+            this.setGenreFilter(JSON.parse(genres) as OptionItem[]);
+            this.setDemographicFilter(JSON.parse(demographic) as OptionItem[]);
+            this.setThemesFilter(JSON.parse(themes) as OptionItem[]);
+            this.setFormatsFilter(JSON.parse(formats) as OptionItem[]);
+        } else {
+            this.genres = await parse.parseFilterUpdate("genre");
+            this.demographic = await parse.parseFilterUpdate("demographic");
+            this.themes = await parse.parseFilterUpdate("theme");
+            this.formats = await parse.parseFilterUpdate("format");
+            Application.setState(
+                String(new Date().valueOf() / 1000),
+                "last-filter-fetch",
+            );
+        }
+    }
+    private setGenreFilter(newValue: OptionItem[]) {
+        this.genres = newValue;
+        Application.setState(JSON.stringify(newValue), "genre");
+    }
+    private setDemographicFilter(newValue: OptionItem[]) {
+        this.genres = newValue;
+        Application.setState(JSON.stringify(newValue), "demographic");
+    }
+    private setThemesFilter(newValue: OptionItem[]) {
+        this.genres = newValue;
+        Application.setState(JSON.stringify(newValue), "theme");
+    }
+    private setFormatsFilter(newValue: OptionItem[]) {
+        this.genres = newValue;
+        Application.setState(JSON.stringify(newValue), "format");
     }
 }

@@ -94,3 +94,23 @@ export interface ScanlationGroup {
 export interface Metadata {
     page: number;
 }
+
+export interface ApiResponseFilter {
+    status: number;
+    result: ResultFilter;
+}
+
+export interface ResultFilter {
+    items: Filter[];
+    pagination: pagination;
+}
+
+export interface Filter {
+    term_id: number;
+    title: string;
+}
+
+export type OptionItem = {
+    value: string;
+    id: string;
+};

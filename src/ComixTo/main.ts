@@ -24,7 +24,7 @@ import { MainInterceptor, mainRateLimiter } from "./network";
 import { JsonParser } from "./parsers";
 import { globalFilters } from "./utils";
 
-const parse = new JsonParser();
+export const parse = new JsonParser();
 export const filter = new globalFilters();
 type ComixToImplementation = SettingsFormProviding &
     Extension &

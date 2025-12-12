@@ -10,6 +10,7 @@ import { filter } from "./main";
 import type {
     ApiResponseChapter,
     ApiResponseChapterPages,
+    ApiResponseFilter,
     ApiResponseManga,
     ApiResponseMangaInfo,
 } from "./models";
@@ -244,6 +245,18 @@ export class ApiMaker {
         const html = await this.getDataFromRequest(url.toString());
         try {
             return JSON.parse(html) as ApiResponseChapterPages;
+        } catch {
+            throw new Error("Json parse failed");
+        }
+    }
+
+    async getFiltersApi(filter: string) {
+        const url = new URL(BASE_API).addPathComponent("terms");
+        url.setQueryItem("limit", "100");
+        url.setQueryItem("type", filter);
+        const html = await this.getDataFromRequest(url.toString());
+        try {
+            return JSON.parse(html) as ApiResponseFilter;
         } catch {
             throw new Error("Json parse failed");
         }

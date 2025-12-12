@@ -148,7 +148,7 @@ export class JsonParser {
         const allPages = await Promise.all(requests);
         allPages.sort((a, b) => a.page - b.page);
         const chaptersArray = allPages.flatMap((p) => p.data);
-        const chapterList: Chapter[] = chaptersArray.map((chapter) => {
+        return chaptersArray.map((chapter) => {
             let version = chapter.scanlation_group?.name ?? "";
             if (chapter.volume > 0) {
                 version = version.length > 0 ? `${version} Volumes` : "Volumes";
@@ -165,8 +165,6 @@ export class JsonParser {
                 creationDate: new Date(chapter.created_at * 1000),
             };
         });
-
-        return chapterList;
     }
 
     async parseChapterDetails(chapterId: string): Promise<ChapterDetails> {
@@ -335,5 +333,19 @@ export class JsonParser {
             items: items,
             metadata: undefined,
         };
+    }
+
+    async parseFilterUpdate(
+        type: string,
+    ): Promise<{ id: string; value: string }[]> {
+        const filter = await api.getFiltersApi(type);
+        const filters: { id: string; value: string }[] = [];
+        filter.result.items.forEach((filter) => {
+            filters.push({
+                id: filter.term_id.toString(),
+                value: filter.title,
+            });
+        });
+        return filters;
     }
 }
