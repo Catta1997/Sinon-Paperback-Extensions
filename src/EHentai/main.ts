@@ -1,164 +1,164 @@
 import {
-    DiscoverSection,
-    DiscoverSectionItem,
-    DiscoverSectionType,
-    Form,
-    type Chapter,
-    type ChapterDetails,
-    type ChapterProviding,
-    type DiscoverSectionProviding,
-    type Extension,
-    type MangaProviding,
-    type PagedResults,
-    type SearchFilter,
-    type SearchQuery,
-    type SearchResultItem,
-    type SearchResultsProviding,
-    type SettingsFormProviding,
-    type SourceManga,
+  type DiscoverSection,
+  type DiscoverSectionItem,
+  DiscoverSectionType,
+  Form,
+  type Chapter,
+  type ChapterDetails,
+  type ChapterProviding,
+  type DiscoverSectionProviding,
+  type Extension,
+  type MangaProviding,
+  type PagedResults,
+  type SearchFilter,
+  type SearchQuery,
+  type SearchResultItem,
+  type SearchResultsProviding,
+  type SettingsFormProviding,
+  type SourceManga,
 } from "@paperback/types";
 import { Forms } from "./forms";
 import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
-import { getLanguageFilter, Metadata, ratingFilter, typeFilter } from "./utils";
+import { getLanguageFilter, type Metadata, ratingFilter, typeFilter } from "./utils";
 
 type EHentaiImplementation = SettingsFormProviding &
-    DiscoverSectionProviding &
-    Extension &
-    SearchResultsProviding &
-    MangaProviding &
-    ChapterProviding;
+  DiscoverSectionProviding &
+  Extension &
+  SearchResultsProviding &
+  MangaProviding &
+  ChapterProviding;
 
 const parser = new Parser();
 export class EHentaiExtension implements EHentaiImplementation {
-    async getSettingsForm(): Promise<Form> {
-        return new Forms();
-    }
+  async getSettingsForm(): Promise<Form> {
+    return new Forms();
+  }
 
-    async getDiscoverSections(): Promise<DiscoverSection[]> {
-        const discover_section: DiscoverSection[] = [];
-        discover_section.push({
-            id: "Popular",
-            title: "Popular",
-            subtitle: "",
-            type: DiscoverSectionType.prominentCarousel,
-        });
-        discover_section.push({
-            id: "Recent",
-            title: "Recent",
-            subtitle: "",
-            type: DiscoverSectionType.simpleCarousel,
-        });
-        return discover_section;
+  async getDiscoverSections(): Promise<DiscoverSection[]> {
+    const discover_section: DiscoverSection[] = [];
+    discover_section.push({
+      id: "Popular",
+      title: "Popular",
+      subtitle: "",
+      type: DiscoverSectionType.prominentCarousel,
+    });
+    discover_section.push({
+      id: "Recent",
+      title: "Recent",
+      subtitle: "",
+      type: DiscoverSectionType.simpleCarousel,
+    });
+    return discover_section;
+  }
+  async getDiscoverSectionItems(
+    section: DiscoverSection,
+  ): Promise<PagedResults<DiscoverSectionItem>> {
+    switch (section.id) {
+      case "Popular": {
+        return parser.parseFeatured();
+      }
+      case "Recent": {
+        return parser.parseRecent();
+      }
+      default:
+        return { items: [] };
     }
-    async getDiscoverSectionItems(
-        section: DiscoverSection,
-    ): Promise<PagedResults<DiscoverSectionItem>> {
-        switch (section.id) {
-            case "Popular": {
-                return parser.parseFeatured();
-            }
-            case "Recent": {
-                return parser.parseRecent();
-            }
-            default:
-                return { items: [] };
-        }
-    }
+  }
 
-    async getMangaDetails(mangaId: string): Promise<SourceManga> {
-        return parser.parseMangaDetail(mangaId);
-    }
+  async getMangaDetails(mangaId: string): Promise<SourceManga> {
+    return parser.parseMangaDetail(mangaId);
+  }
 
-    async getSearchFilters(): Promise<SearchFilter[]> {
-        const filters: SearchFilter[] = [];
-        const getCategoryFilter = Object.fromEntries(
-            ((Application.getState("_type") as string[]) ?? []).map((item) => [
-                item.toLowerCase(),
-                "included" as const,
-            ]),
-        ) as Record<string, "included" | "excluded">;
-        filters.push({
-            allowEmptySelection: false,
-            allowExclusion: false,
-            maximum: typeFilter.length,
-            type: "multiselect",
-            id: "typeFilter",
-            title: "Type",
-            options: typeFilter,
-            value: getCategoryFilter,
-        });
-        filters.push({
-            type: "dropdown",
-            id: "languageFilter",
-            title: "Language",
-            options: getLanguageFilter(),
-            value: "",
-        });
-        filters.push({
-            type: "dropdown",
-            id: "ratingFilter",
-            title: "Rating",
-            options: ratingFilter,
-            value: "",
-        });
-        filters.push({
-            type: "input",
-            id: "characterFilter",
-            title: "Character",
-            placeholder: "",
-            value: "",
-        });
-        filters.push({
-            type: "input",
-            id: "femaleFilter",
-            title: "Female",
-            placeholder: "",
-            value: "",
-        });
-        filters.push({
-            type: "input",
-            id: "maleFilter",
-            title: "Male",
-            placeholder: "",
-            value: "",
-        });
-        filters.push({
-            type: "input",
-            id: "seriesFilter",
-            title: "Series",
-            placeholder: "",
-            value: "",
-        });
-        filters.push({
-            type: "input",
-            id: "otherFilter",
-            title: "Other",
-            placeholder: "",
-            value: "",
-        });
-        return filters;
-    }
-    getSearchResults(
-        query: SearchQuery,
-        metadata: Metadata,
-    ): Promise<PagedResults<SearchResultItem>> {
-        return parser.parseSearchResults(query, metadata);
-    }
+  async getSearchFilters(): Promise<SearchFilter[]> {
+    const filters: SearchFilter[] = [];
+    const getCategoryFilter = Object.fromEntries(
+      ((Application.getState("_type") as string[]) ?? []).map((item) => [
+        item.toLowerCase(),
+        "included" as const,
+      ]),
+    ) as Record<string, "included" | "excluded">;
+    filters.push({
+      allowEmptySelection: false,
+      allowExclusion: false,
+      maximum: typeFilter.length,
+      type: "multiselect",
+      id: "typeFilter",
+      title: "Type",
+      options: typeFilter,
+      value: getCategoryFilter,
+    });
+    filters.push({
+      type: "dropdown",
+      id: "languageFilter",
+      title: "Language",
+      options: getLanguageFilter(),
+      value: "",
+    });
+    filters.push({
+      type: "dropdown",
+      id: "ratingFilter",
+      title: "Rating",
+      options: ratingFilter,
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "characterFilter",
+      title: "Character",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "femaleFilter",
+      title: "Female",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "maleFilter",
+      title: "Male",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "seriesFilter",
+      title: "Series",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "otherFilter",
+      title: "Other",
+      placeholder: "",
+      value: "",
+    });
+    return filters;
+  }
+  getSearchResults(
+    query: SearchQuery,
+    metadata: Metadata,
+  ): Promise<PagedResults<SearchResultItem>> {
+    return parser.parseSearchResults(query, metadata);
+  }
 
-    getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-        return parser.parseChapters(sourceManga);
-    }
-    getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-        return parser.scrapeAllChapterPages(chapter);
-    }
+  getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
+    return parser.parseChapters(sourceManga);
+  }
+  getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
+    return parser.scrapeAllChapterPages(chapter);
+  }
 
-    mainInterceptor = new MainInterceptor("main");
+  mainInterceptor = new MainInterceptor("main");
 
-    async initialise(): Promise<void> {
-        mainRateLimiter.registerInterceptor();
-        this.mainInterceptor.registerInterceptor();
-    }
+  async initialise(): Promise<void> {
+    mainRateLimiter.registerInterceptor();
+    this.mainInterceptor.registerInterceptor();
+  }
 }
 
 export const EHentai = new EHentaiExtension();

@@ -2,26 +2,26 @@
 
 version: 2
 updates:
-    - package-ecosystem: npm
-      directory: /
-      schedule:
-          interval: weekly
-          day: monday
-      labels:
-          - chore
-          - dependencies
-      groups:
-          security:
-              applies-to: security-updates
-              patterns:
-                  - "*"
-          minor_patch:
-              update-types:
-                  - minor
-                  - patch
-          major:
-              update-types:
-                  - major
-          pre_release:
-              patterns:
-                  - "*"
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - chore
+      - dependencies
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      minor_patch:
+        update-types:
+          - minor
+          - patch
+      major:
+        update-types:
+          - major
+      pre_release:
+        patterns:
+          - "*"
