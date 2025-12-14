@@ -7,7 +7,7 @@ import {
     type SearchQuery,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { Metadata } from "./utils";
+import { type Metadata } from "./utils";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
     numberOfRequests: 1,
@@ -29,7 +29,15 @@ export class MainInterceptor extends PaperbackInterceptor {
                 const html = Application.arrayBufferToUTF8String(data[1]);
                 const $ = cheerio.load(html);
                 const div = $("#i3");
-                request.url = div.find("img#img").attr("src") ?? request.url;
+                const image = div.find("img#img");
+                const new_page = image.attr("onerror") ?? "";
+                const match = new_page.match(/'(\d+-\d+)'/);
+                if (match && match[1]) {
+                    request.headers = {
+                        ["reloadImage"]: `${request.url}?nl=${match[1]}`,
+                    };
+                }
+                request.url = image.attr("src") ?? request.url;
                 return request;
             }
         } else if (request.url.includes(`https://e-hentai.org/g/`)) {
