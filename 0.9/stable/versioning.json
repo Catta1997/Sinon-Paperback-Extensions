@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-12-14T20:25:11.003Z",
+  "buildTime": "2025-12-15T09:58:44.292Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -184,6 +184,11 @@
           "label": "Italian 🇮🇹",
           "textColor": "#ffffff",
           "backgroundColor": "#28eac2"
+        },
+        {
+          "label": "Deprecated: Now on Inkdex",
+          "textColor": "#ffffff",
+          "backgroundColor": "#df1616"
         }
       ],
       "developers": [
@@ -212,6 +217,11 @@
           "label": "Italian 🇮🇹",
           "textColor": "#ffffff",
           "backgroundColor": "#28eac2"
+        },
+        {
+          "label": "Deprecated: Now on Inkdex",
+          "textColor": "#ffffff",
+          "backgroundColor": "#df1616"
         }
       ],
       "developers": [
