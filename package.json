@@ -18,22 +18,22 @@
         "prepare": "husky"
     },
     "devDependencies": {
-        "@eslint/js": "^9.39.1",
+        "@eslint/js": "^9.39.2",
         "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
         "@paperback/toolchain": "^1.0.0-alpha.57",
         "@paperback/types": "^1.0.0-alpha.57",
         "@types/eslint": "^9.6.1",
         "@types/upng-js": "^2.1.5",
         "cheerio": "^1.1.2",
-        "eslint": "^9.39.1",
+        "eslint": "^9.39.2",
         "fastest-levenshtein": "^1.0.16",
         "husky": "^9.1.7",
         "jpeg-js": "^0.4.4",
         "moment": "^2.30.1",
-        "prettier": "^3.7.3",
+        "prettier": "^3.7.4",
         "stemmer": "^2.0.1",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.48.0",
+        "typescript-eslint": "^8.49.0",
         "upng-js": "^2.1.0"
     }
 }
