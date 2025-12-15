@@ -22,6 +22,11 @@ export const basePbConfig = {
             textColor: "#ffffff",
             backgroundColor: "#28eac2",
         },
+        {
+            label: "Deprecated: Now on Inkdex",
+            textColor: "#ffffff",
+            backgroundColor: "#df1616",
+        },
     ],
     developers: [
         {
