@@ -31,7 +31,7 @@ export class Forms extends Form {
           SelectRow("language_filter", {
             title: "Show This Languages Only",
             subtitle: "Show only this languages in the search filter",
-            value: this.getFilterStatus(),
+            value: this.getLanguageFormsValue(),
             options: languages,
             minItemCount: 0,
             maxItemCount: languages.length,
@@ -55,11 +55,8 @@ export class Forms extends Form {
     await this.updateValue(value, "_type");
   }
 
-  getFilterStatus(): string[] {
-    return (
-      (Application.getState("_languageFilter") as string[] | undefined) ?? []
-      //languageFilter.map((language) => language.id)
-    );
+  getLanguageFormsValue(): string[] {
+    return (Application.getState("_languageFilter") as string[] | undefined) ?? [];
   }
 
   async handleFilterStatusChange(value: string[]): Promise<void> {

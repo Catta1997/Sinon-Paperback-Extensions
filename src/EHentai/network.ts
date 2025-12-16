@@ -65,6 +65,7 @@ export class Requests {
     const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
     const types: string[] = [];
     const page = metadata?.page ?? "";
+    const isValidNumber = (n: number) => Number.isFinite(n) && n > 0;
     const typeFilter: string | Record<string, "included" | "excluded"> =
       getFilterValue("typeFilter") ?? "";
     const ratingFilter: string | Record<string, "included" | "excluded"> =
@@ -81,8 +82,12 @@ export class Requests {
       getFilterValue("otherFilter") ?? "";
     const series: string | Record<string, "included" | "excluded"> =
       getFilterValue("seriesFilter") ?? "";
-    console.log(ratingFilter);
-    console.log(langFilter);
+    const expunged: string | Record<string, "included" | "excluded"> =
+      getFilterValue("expungedFilter") ?? "";
+    const minPages: string | Record<string, "included" | "excluded"> =
+      getFilterValue("minPagesFilter") ?? "";
+    const maxPages: string | Record<string, "included" | "excluded"> =
+      getFilterValue("maxPagesFilter") ?? "";
     if (typeFilter && typeof typeFilter === "object") {
       for (const tag of Object.entries(typeFilter)) {
         if (tag[1] == "included") types.push(tag[0]);
@@ -129,6 +134,23 @@ export class Requests {
     }
     if (query.title.length > 0) {
       url.setQueryItem("f_search", query.title);
+    }
+    if (expunged && typeof expunged === "string" && expunged.length > 0) {
+      url.setQueryItem("f_sh", expunged);
+    }
+    const min = Number(minPages);
+    const max = Number(maxPages);
+    if (isValidNumber(max) && max < 10) {
+      throw new Error("The page range maximum cannot be below 10");
+    }
+    if (isValidNumber(min) && isValidNumber(max) && max - min < 20) {
+      throw new Error("Your page range filter is too narrow");
+    }
+    if (isValidNumber(min)) {
+      url.setQueryItem("f_spf", String(min));
+    }
+    if (isValidNumber(max)) {
+      url.setQueryItem("f_spt", String(max));
     }
     if (page.length > 0) {
       url.setQueryItem("next", page);

@@ -103,6 +103,22 @@ export class EHentaiExtension implements EHentaiImplementation {
       value: "",
     });
     filters.push({
+      type: "dropdown",
+      id: "expungedFilter",
+      title: "Browse Expunged Galleries",
+      options: [
+        {
+          id: "on",
+          value: "Yes",
+        },
+        {
+          id: "",
+          value: "No",
+        },
+      ],
+      value: "",
+    });
+    filters.push({
       type: "input",
       id: "characterFilter",
       title: "Character",
@@ -134,6 +150,20 @@ export class EHentaiExtension implements EHentaiImplementation {
       type: "input",
       id: "otherFilter",
       title: "Other",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "minPagesFilter",
+      title: "Minimum pages",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "maxPagesFilter",
+      title: "Maximum pages",
       placeholder: "",
       value: "",
     });
