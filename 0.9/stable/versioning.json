@@ -1,5 +1,5 @@
 {
-  "buildTime": "2025-12-16T11:21:56.249Z",
+  "buildTime": "2025-12-16T18:41:54.765Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -9,23 +9,6 @@
     "description": "Some Paperback Extensions"
   },
   "sources": [
-    {
-      "name": "ComixTo",
-      "description": "Extension that pulls content from Comix.to.",
-      "version": "1.0.0-alpha.5",
-      "icon": "icon.png",
-      "language": "en",
-      "contentRating": "SAFE",
-      "capabilities": 101,
-      "badges": [],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "github": "https://github.com/Catta1997"
-        }
-      ],
-      "id": "ComixTo"
-    },
     {
       "name": "EHentai",
       "description": "Extension that pulls content from EHentai",
@@ -166,72 +149,6 @@
       ],
       "contentRating": "SAFE",
       "id": "LupiTeam"
-    },
-    {
-      "name": "MangaWorld",
-      "description": "Extension that pulls manga from MangaWorld.",
-      "version": "1.0.0-alpha.2",
-      "icon": "icon.png",
-      "language": "it",
-      "capabilities": [
-        1,
-        4,
-        64,
-        32
-      ],
-      "badges": [
-        {
-          "label": "Italian 🇮🇹",
-          "textColor": "#ffffff",
-          "backgroundColor": "#28eac2"
-        },
-        {
-          "label": "Deprecated: Now on Inkdex",
-          "textColor": "#ffffff",
-          "backgroundColor": "#df1616"
-        }
-      ],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "website": "https://github.com/Catta1997"
-        }
-      ],
-      "contentRating": "SAFE",
-      "id": "MangaWorld"
-    },
-    {
-      "name": "MangaWorldAdult",
-      "description": "Extension that pulls manga from MangaWorldAdult.",
-      "version": "1.0.0-alpha.2",
-      "icon": "icon.png",
-      "language": "it",
-      "capabilities": [
-        1,
-        4,
-        64,
-        32
-      ],
-      "badges": [
-        {
-          "label": "Italian 🇮🇹",
-          "textColor": "#ffffff",
-          "backgroundColor": "#28eac2"
-        },
-        {
-          "label": "Deprecated: Now on Inkdex",
-          "textColor": "#ffffff",
-          "backgroundColor": "#df1616"
-        }
-      ],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "website": "https://github.com/Catta1997"
-        }
-      ],
-      "contentRating": "ADULT",
-      "id": "MangaWorldAdult"
     },
     {
       "name": "PhoenixScans",
