@@ -203,15 +203,15 @@ export class globalFilters {
     Application.setState(JSON.stringify(newValue), "genre");
   }
   private setDemographicFilter(newValue: OptionItem[]) {
-    this.genres = newValue;
+    this.demographic = newValue;
     Application.setState(JSON.stringify(newValue), "demographic");
   }
   private setThemesFilter(newValue: OptionItem[]) {
-    this.genres = newValue;
+    this.themes = newValue;
     Application.setState(JSON.stringify(newValue), "theme");
   }
   private setFormatsFilter(newValue: OptionItem[]) {
-    this.genres = newValue;
+    this.formats = newValue;
     Application.setState(JSON.stringify(newValue), "format");
   }
 }
