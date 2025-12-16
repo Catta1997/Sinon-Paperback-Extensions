@@ -24,15 +24,14 @@ import { MainInterceptor, mainRateLimiter } from "./network";
 import { JsonParser } from "./parsers";
 import { globalFilters } from "./utils";
 
-export const parse = new JsonParser();
-export const filter = new globalFilters();
 type ComixToImplementation = SettingsFormProviding &
   Extension &
   DiscoverSectionProviding &
   SearchResultsProviding &
   MangaProviding &
   ChapterProviding;
-
+export const parse = new JsonParser();
+export const filter = new globalFilters();
 export class ComiToExtension implements ComixToImplementation {
   async getSettingsForm(): Promise<Form> {
     return new Forms();
