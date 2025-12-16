@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "EHentai",
   description: "Extension that pulls content from EHentai",
-  version: "1.0.0-alpha.9",
+  version: "1.0.0-alpha.10",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
   capabilities:
