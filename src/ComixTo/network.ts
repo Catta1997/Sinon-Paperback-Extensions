@@ -40,6 +40,7 @@ export const mainRateLimiter = new BasicRateLimiter("main", {
 });
 
 export class ApiMaker {
+  apiLink = "";
   private checkResponseError(request: Request, response: Response): void {
     switch (response.status) {
       case 200:
@@ -67,7 +68,7 @@ export class ApiMaker {
         throw new Error(`Unexpected HTTP error: ${response.status}`);
     }
   }
-  private buildApiUrl(section: string, page: number): string {
+  private build(section: string, page: number): string {
     const hidden_gen = filter.getHiddenGenresSettings();
     const hidden_them = filter.getHiddenThemesSettings();
     const show_only = filter.getShowOnlySettings();
@@ -130,9 +131,9 @@ export class ApiMaker {
     }
   }
 
-  private async getDataFromRequest(api: string): Promise<string> {
+  private async getDataFromRequest(): Promise<string> {
     const request = {
-      url: api,
+      url: this.apiLink,
       method: "GET",
     };
     const [response, data] = await Application.scheduleRequest(request);
@@ -141,8 +142,8 @@ export class ApiMaker {
   }
 
   async getJsonMangaApi(section: string, page: number) {
-    const api = this.buildApiUrl(section, page);
-    const html = await this.getDataFromRequest(api);
+    this.apiLink = this.build(section, page);
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseManga;
     } catch {
@@ -155,7 +156,8 @@ export class ApiMaker {
     const additionalInfo = ["author", "artist"];
     url.addPathComponent(mangaId);
     url.setQueryItem("includes[]", additionalInfo);
-    const html = await this.getDataFromRequest(url.toString());
+    this.apiLink = url.toString();
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseMangaInfo;
     } catch {
@@ -170,7 +172,8 @@ export class ApiMaker {
     url.setQueryItem("page", page.toString());
     url.setQueryItem("limit", "100");
     url.setQueryItem("order[number]", "desc");
-    const html = await this.getDataFromRequest(url.toString());
+    this.apiLink = url.toString();
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseChapter;
     } catch {
@@ -202,7 +205,8 @@ export class ApiMaker {
     url.setQueryItem("page", page.toString());
     url.setQueryItem(`order[${sortBy}]`, orderBy);
     url.setQueryItem("genres_mode", mode);
-    const html = await this.getDataFromRequest(url.toString());
+    this.apiLink = url.toString();
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseManga;
     } catch {
@@ -213,7 +217,8 @@ export class ApiMaker {
   async getJsonChapPagesApi(chapterId: string) {
     const url = new URL(BASE_API).addPathComponent("chapters");
     url.addPathComponent(chapterId);
-    const html = await this.getDataFromRequest(url.toString());
+    this.apiLink = url.toString();
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseChapterPages;
     } catch {
@@ -225,7 +230,8 @@ export class ApiMaker {
     const url = new URL(BASE_API).addPathComponent("terms");
     url.setQueryItem("limit", "100");
     url.setQueryItem("type", filter);
-    const html = await this.getDataFromRequest(url.toString());
+    this.apiLink = url.toString();
+    const html = await this.getDataFromRequest();
     try {
       return JSON.parse(html) as ApiResponseFilter;
     } catch {
