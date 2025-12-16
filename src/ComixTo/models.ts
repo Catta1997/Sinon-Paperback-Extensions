@@ -81,7 +81,6 @@ export interface ChapterItem {
   number: number;
   name: string;
   language: string;
-  volume: number;
   created_at: number;
   updated_at: number;
   scanlation_group?: ScanlationGroup | null;
