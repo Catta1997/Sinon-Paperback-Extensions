@@ -14,6 +14,7 @@ import * as cheerio from "cheerio";
 import { type CheerioAPI } from "cheerio";
 import { Requests } from "./network";
 import { type GalleryInfo, getLangFlag, type Metadata } from "./utils";
+import { BASE_URL } from "./main";
 
 const network = new Requests();
 export class Parser {
@@ -54,10 +55,14 @@ export class Parser {
           if ($(td).text().trim() === "artist:") {
             artist = $(td).next("td").find("div").first().text().trim();
           }
-        });
-        container.find("td.tc").each((i, td) => {
           if ($(td).text().trim() === "language:") {
-            const lang_text = $(td).next("td").find("div.gt").first().text().trim();
+            const lang_text =
+              $(td)
+                .next("td")
+                .find("div.gt, div.gtl")
+                .map((_, el) => $(el).text().trim())
+                .get()
+                .find((text) => text && text.toLowerCase() !== "translated") || "";
             lang = getLangFlag(lang_text);
           }
         });
@@ -89,7 +94,7 @@ export class Parser {
     const html = await network.searchRequest(query, metadata);
     const $ = cheerio.load(html);
     const results: SearchResultItem[] = this.parseTable($).map((item) => ({
-      mangaId: item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
+      mangaId: item.url?.replaceAll(`${BASE_URL}/g/`, "") ?? "",
       title: this.parseTitle(item.title),
       imageUrl: item.image,
       subtitle: item.subtitle,
@@ -104,7 +109,7 @@ export class Parser {
     let nextValue = "";
     const nextEl = $("#unext");
     if (nextEl.is("a")) {
-      const href = nextEl.attr("href") || "";
+      const href = nextEl.attr("href") ?? "";
       const match = href.match(/next=([^&]+)/);
       nextValue = match && match[1] ? match[1] : "";
     }
@@ -116,30 +121,30 @@ export class Parser {
 
   async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
     const html = await network.getPopular();
-    const $ = cheerio.load(html);
-    const results: DiscoverSectionItem[] = this.parseTable($).map((item) => ({
-      type: "prominentCarouselItem",
-      mangaId: item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
-      title: this.parseTitle(item.title),
-      subtitle: item.subtitle,
-      imageUrl: item.image,
-      contentRating: ContentRating.ADULT,
-    }));
-    return { items: results };
+    return this.parseDiscover(html, "prominentCarouselItem");
   }
 
   async parseRecent() {
     const html = await network.getRecent();
+    return this.parseDiscover(html, "simpleCarouselItem");
+  }
+
+  private async parseDiscover(
+    html: string,
+    type: "prominentCarouselItem" | "simpleCarouselItem",
+  ): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
-    const results: DiscoverSectionItem[] = this.parseTable($).map((item) => ({
-      type: "simpleCarouselItem",
-      mangaId: item.url?.replaceAll("https://e-hentai.org/g/", "") ?? "",
-      title: this.parseTitle(item.title),
-      subtitle: item.subtitle,
-      imageUrl: item.image,
-      contentRating: ContentRating.ADULT,
-    }));
-    return { items: results };
+
+    return {
+      items: this.parseTable($).map((item) => ({
+        type,
+        mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
+        title: this.parseTitle(item.title),
+        subtitle: item.subtitle,
+        imageUrl: item.image,
+        contentRating: ContentRating.ADULT,
+      })),
+    };
   }
 
   async parseMangaDetail(mangaID: string): Promise<SourceManga> {
@@ -166,7 +171,7 @@ export class Parser {
       const tags: Tag[] = row
         .find("td .gtl a, td .gt a")
         .map((i, a) => ({
-          id: $(a).attr("id") || "",
+          id: $(a).attr("id") ?? "",
           title: this.capitalLetter($(a).text().trim().replaceAll(/\s+/g, " ").trim()),
         }))
         .get();
@@ -182,7 +187,7 @@ export class Parser {
         });
       }
     });
-    const style = $("#gd1 > div").attr("style") || "";
+    const style = $("#gd1 > div").attr("style") ?? "";
     const match = style.match(/url\(([^)]+)\)/);
     const imageUrl = match ? match[1] : "";
     const title = $("#gn").text().trim();
@@ -207,18 +212,17 @@ export class Parser {
   }
 
   async parseChapters(sourceManga: SourceManga): Promise<Chapter[]> {
+    const info = sourceManga.mangaInfo?.additionalInfo;
     return [
       {
         chapterId: sourceManga.mangaId,
-        sourceManga: sourceManga,
-        langCode: sourceManga.mangaInfo?.additionalInfo?.language ?? "LANG",
-        additionalInfo: {
-          pages: sourceManga.mangaInfo?.additionalInfo?.pages ?? "0",
-        },
-        volume: 0,
-        version: `${sourceManga.mangaInfo?.additionalInfo?.pages ?? "0"} pages`,
-        publishDate: new Date(sourceManga.mangaInfo?.additionalInfo?.uploaded ?? ""),
+        sourceManga,
         chapNum: 1,
+        volume: 0,
+        langCode: info?.language ?? "LANG",
+        publishDate: new Date(info?.uploaded ?? ""),
+        version: `${info?.pages ?? "0"} pages`,
+        additionalInfo: { pages: info?.pages ?? "0" },
       },
     ];
   }
@@ -231,7 +235,9 @@ export class Parser {
       pages: images,
     };
   }
-
+  private getRow($: CheerioAPI, label: string): string {
+    return $(`#gdd .gdt1:contains("${label}")`).next(".gdt2").text().trim();
+  }
   private parseGalleryInfo($: CheerioAPI): GalleryInfo {
     const root = $("#gmid #gd3");
     const category = root.find("#gdc div").first().text().trim();
@@ -242,12 +248,9 @@ export class Parser {
         uploaderName = $(td).next("td").find("div").first().text().trim();
       }
     });
-    function getRow(label: string): string {
-      return $(`#gdd .gdt1:contains("${label}")`).next(".gdt2").text().trim();
-    }
-    const posted = getRow("Posted:");
-    const languageRaw = getRow("Language:");
-    const lengthRaw = getRow("Length:");
+    const posted = this.getRow($, "Posted:");
+    const languageRaw = this.getRow($, "Language:");
+    const lengthRaw = this.getRow($, "Length:");
     const ratingAverage = parseFloat(
       $("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim(),
     );
@@ -276,7 +279,7 @@ export class Parser {
     const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE);
     const pageUrls = Array.from(
       { length: totalPages },
-      (_, page) => `https://e-hentai.org/g/${chapter.chapterId}?p=${page}`,
+      (_, page) => `${BASE_URL}/g/${chapter.chapterId}?p=${page}`,
     );
     const htmlPages = await Promise.all(pageUrls.map((url) => network.getChapterPages(url)));
     const results: string[] = [];

@@ -8,21 +8,20 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { type Metadata } from "./utils";
+import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: 6,
+  numberOfRequests: 15,
   bufferInterval: 1,
   ignoreImages: true,
 });
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
-    if (request.url.includes(`https://e-hentai.org/s/`)) {
-      mainRateLimiter.options.numberOfRequests = 30; //faster img preload
+    if (request.url.includes(`${BASE_URL}/s/`)) {
       if (request.headers && request.headers["x-intercepted"]) {
         delete request.headers["x-intercepted"];
         return request;
       } else {
-        mainRateLimiter.options.numberOfRequests = 20; //scrape correct image
         const newRequest = request;
         newRequest.headers = { ["x-intercepted"]: "1" };
         const data = await Application.scheduleRequest(newRequest);
@@ -40,8 +39,7 @@ export class MainInterceptor extends PaperbackInterceptor {
         request.url = image.attr("src") ?? request.url;
         return request;
       }
-    } else if (request.url.includes(`https://e-hentai.org/g/`)) {
-      mainRateLimiter.options.numberOfRequests = 20; // scape pages
+    } else if (request.url.includes(`${BASE_URL}/g/`)) {
       request.headers = { Cookie: "nw=1" };
     } else {
       request.headers = { Cookie: "sl=dm_2" };
@@ -56,14 +54,17 @@ export class MainInterceptor extends PaperbackInterceptor {
   ): Promise<ArrayBuffer> {
     void request;
     void response;
+
     return data;
   }
 }
 
 export class Requests {
   async searchRequest(query: SearchQuery, metadata: Metadata) {
+    let ratingNumber = 0;
     const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
     const types: string[] = [];
+    const url: URL = new URL(BASE_URL);
     const page = metadata?.page ?? "";
     const isValidNumber = (n: number) => Number.isFinite(n) && n > 0;
     const typeFilter: string | Record<string, "included" | "excluded"> =
@@ -93,11 +94,9 @@ export class Requests {
         if (tag[1] == "included") types.push(tag[0]);
       }
     }
-    let ratingNumber = 0;
     types.forEach((type) => {
       ratingNumber += Number(type);
     });
-    const url: URL = new URL("https://e-hentai.org/");
     if (langFilter && typeof langFilter === "string" && langFilter.length > 0) {
       query.title = `language:${langFilter}$ ${query.title}`;
     }
@@ -164,7 +163,7 @@ export class Requests {
 
   async getPopular() {
     const data = await Application.scheduleRequest({
-      url: `https://e-hentai.org/popular`,
+      url: `${BASE_URL}/popular`,
       method: "GET",
     });
     return Application.arrayBufferToUTF8String(data[1]);
@@ -172,7 +171,7 @@ export class Requests {
 
   async getRecent() {
     const data = await Application.scheduleRequest({
-      url: `https://e-hentai.org/`,
+      url: `${BASE_URL}/`,
       method: "GET",
     });
     return Application.arrayBufferToUTF8String(data[1]);
@@ -180,7 +179,7 @@ export class Requests {
 
   async mangaDetailRequest(mangaID: string) {
     const data = await Application.scheduleRequest({
-      url: `https://e-hentai.org/g/${mangaID}`,
+      url: `${BASE_URL}/g/${mangaID}`,
       method: "GET",
     });
     return Application.arrayBufferToUTF8String(data[1]);

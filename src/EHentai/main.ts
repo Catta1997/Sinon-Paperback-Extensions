@@ -30,6 +30,7 @@ type EHentaiImplementation = SettingsFormProviding &
   ChapterProviding;
 
 const parser = new Parser();
+export const BASE_URL = "https://e-hentai.org";
 export class EHentaiExtension implements EHentaiImplementation {
   async getSettingsForm(): Promise<Form> {
     return new Forms();
@@ -51,6 +52,7 @@ export class EHentaiExtension implements EHentaiImplementation {
     });
     return discover_section;
   }
+
   async getDiscoverSectionItems(
     section: DiscoverSection,
   ): Promise<PagedResults<DiscoverSectionItem>> {
@@ -72,14 +74,12 @@ export class EHentaiExtension implements EHentaiImplementation {
 
   async getSearchFilters(): Promise<SearchFilter[]> {
     const filters: SearchFilter[] = [];
+    const filterValue = (Application.getState("_type") as string[]) ?? [];
+    const fullList = typeFilter.map((item) => item.id);
     const getCategoryFilter = Object.fromEntries(
-      ((Application.getState("_type") as string[]) ?? []).map((item) => [
-        item.toLowerCase(),
-        "included" as const,
-      ]),
+      (filterValue.length > 0 ? filterValue : fullList).map((item) => [item, "included" as const]),
     ) as Record<string, "included" | "excluded">;
     filters.push({
-      allowEmptySelection: false,
       allowExclusion: false,
       maximum: typeFilter.length,
       type: "multiselect",
@@ -87,6 +87,7 @@ export class EHentaiExtension implements EHentaiImplementation {
       title: "Type",
       options: typeFilter,
       value: getCategoryFilter,
+      allowEmptySelection: false,
     });
     filters.push({
       type: "dropdown",
@@ -169,6 +170,7 @@ export class EHentaiExtension implements EHentaiImplementation {
     });
     return filters;
   }
+
   getSearchResults(
     query: SearchQuery,
     metadata: Metadata,

@@ -21,10 +21,10 @@ export class Forms extends Form {
         [
           SelectRow("hide_type", {
             title: "Show Only",
-            subtitle: "Show only this contents",
+            subtitle: "Default value for contents",
             value: this.getHideTypeStatus(),
             options: types,
-            minItemCount: 0,
+            minItemCount: 1,
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as Forms, "handleHideTypeStatusChange"),
           }),
