@@ -6,15 +6,12 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 
 ## 📚 Available Sources
 
-- Comix.to (🇺🇸)
 - E-Hentai (🔞 | Multi-Language)
 - GTOTheGreatSite (🇮🇹)
 - HastaTeam (🇮🇹)
 - HastaTeamDDT (🇮🇹)
 - HentaiHand (🔞 | Multi-Language)
 - LupiTeam (🇮🇹)
-- MangaWorld (🇮🇹)
-- MangaWorldAdult (🔞 | 🇮🇹)
 - PhoenixScans (🇮🇹)
 - RokuHentai (🔞 | Multi-Language)
 - TuttoAnimeManga (🇮🇹)
