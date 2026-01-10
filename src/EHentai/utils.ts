@@ -56,54 +56,25 @@ export function getLangFlag(lang: string) {
 }
 
 export function getLanguageFilter() {
-  const languages = languageFilter.filter((lang) => getLangFilter().includes(lang.id));
+  const languages = languageFilter; //.filter((lang) => getLangFilter().includes(lang.id));
   languages.unshift({ id: "", value: "All", flag: "All" });
   return languages;
 }
 
 export const languageFilter = [
-  { id: "afrikaans", value: "Afrikaans", flag: "🇿🇦" },
-  { id: "albanian", value: "Albanian", flag: "🇦🇱" },
-  { id: "arabic", value: "Arabic", flag: "🇸🇦" },
-  { id: "armenian", value: "Armenian", flag: "🇦🇲" },
-  { id: "bengali", value: "Bengali", flag: "🇧🇩" },
-  { id: "bulgarian", value: "Bulgarian", flag: "🇧🇬" },
-  { id: "catalan", value: "Catalan", flag: "🇪🇸" },
   { id: "chinese", value: "Chinese", flag: "🇨🇳" },
-  { id: "croatian", value: "Croatian", flag: "🇭🇷" },
-  { id: "czech", value: "Czech", flag: "🇨🇿" },
-  { id: "danish", value: "Danish", flag: "🇩🇰" },
-  { id: "dutch", value: "Dutch", flag: "🇳🇱" },
   { id: "english", value: "English", flag: "🇬🇧" },
-  { id: "estonian", value: "Estonian", flag: "🇪🇪" },
-  { id: "finnish", value: "Finnish", flag: "🇫🇮" },
   { id: "french", value: "French", flag: "🇫🇷" },
   { id: "german", value: "German", flag: "🇩🇪" },
-  { id: "greek", value: "Greek", flag: "🇬🇷" },
-  { id: "hebrew", value: "Hebrew", flag: "🇮🇱" },
-  { id: "hindi", value: "Hindi", flag: "🇮🇳" },
-  { id: "hungarian", value: "Hungarian", flag: "🇭🇺" },
-  { id: "icelandic", value: "Icelandic", flag: "🇮🇸" },
   { id: "indonesian", value: "Indonesian", flag: "🇮🇩" },
-  { id: "irish", value: "Irish", flag: "🇮🇪" },
   { id: "italian", value: "Italian", flag: "🇮🇹" },
   { id: "japanese", value: "Japanese", flag: "🇯🇵" },
   { id: "korean", value: "Korean", flag: "🇰🇷" },
-  { id: "latvian", value: "Latvian", flag: "🇱🇻" },
-  { id: "norwegian", value: "Norwegian", flag: "🇳🇴" },
   { id: "polish", value: "Polish", flag: "🇵🇱" },
   { id: "portuguese", value: "Portuguese", flag: "🇵🇹" },
-  { id: "romanian", value: "Romanian", flag: "🇷🇴" },
   { id: "russian", value: "Russian", flag: "🇷🇺" },
-  { id: "serbian", value: "Serbian", flag: "🇷🇸" },
-  { id: "slovak", value: "Slovak", flag: "🇸🇰" },
-  { id: "slovenian", value: "Slovenian", flag: "🇸🇮" },
   { id: "spanish", value: "Spanish", flag: "🇪🇸" },
-  { id: "swedish", value: "Swedish", flag: "🇸🇪" },
   { id: "thai", value: "Thai", flag: "🇹🇭" },
-  { id: "turkish", value: "Turkish", flag: "🇹🇷" },
-  { id: "ukrainian", value: "Ukrainian", flag: "🇺🇦" },
-  { id: "urdu", value: "Urdu", flag: "🇵🇰" },
   { id: "vietnamese", value: "Vietnamese", flag: "🇻🇳" },
 ];
 

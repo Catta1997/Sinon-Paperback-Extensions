@@ -91,14 +91,14 @@ export class EHentaiExtension implements EHentaiImplementation {
     });
     filters.push({
       type: "dropdown",
-      id: "languageFilter",
+      id: "language",
       title: "Language",
       options: getLanguageFilter(),
       value: "",
     });
     filters.push({
       type: "dropdown",
-      id: "ratingFilter",
+      id: "f_srdd",
       title: "Rating",
       options: ratingFilter,
       value: "",
@@ -121,35 +121,35 @@ export class EHentaiExtension implements EHentaiImplementation {
     });
     filters.push({
       type: "input",
-      id: "characterFilter",
+      id: "character",
       title: "Character",
       placeholder: "",
       value: "",
     });
     filters.push({
       type: "input",
-      id: "femaleFilter",
+      id: "female",
       title: "Female",
       placeholder: "",
       value: "",
     });
     filters.push({
       type: "input",
-      id: "maleFilter",
+      id: "male",
       title: "Male",
       placeholder: "",
       value: "",
     });
     filters.push({
       type: "input",
-      id: "seriesFilter",
+      id: "parody",
       title: "Series",
       placeholder: "",
       value: "",
     });
     filters.push({
       type: "input",
-      id: "otherFilter",
+      id: "other",
       title: "Other",
       placeholder: "",
       value: "",

@@ -28,15 +28,6 @@ export class Forms extends Form {
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as Forms, "handleHideTypeStatusChange"),
           }),
-          SelectRow("language_filter", {
-            title: "Show This Languages Only",
-            subtitle: "Show only this languages in the search filter",
-            value: this.getLanguageFormsValue(),
-            options: languages,
-            minItemCount: 0,
-            maxItemCount: languages.length,
-            onValueChange: Application.Selector(this as Forms, "handleFilterStatusChange"),
-          }),
         ],
       ),
     ];

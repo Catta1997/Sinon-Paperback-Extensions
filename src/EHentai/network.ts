@@ -11,7 +11,7 @@ import { type Metadata } from "./utils";
 import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: 15,
+  numberOfRequests: 9,
   bufferInterval: 1,
   ignoreImages: true,
 });
@@ -54,110 +54,84 @@ export class MainInterceptor extends PaperbackInterceptor {
   ): Promise<ArrayBuffer> {
     void request;
     void response;
-
     return data;
   }
 }
 
 export class Requests {
+  private applyFilters(filterIds: string[], query: SearchQuery): string {
+    const prefix = filterIds
+      .flatMap((id) => {
+        const value = query.filters.find((f) => f.id === id)?.value;
+        return typeof value === "string" && value.length
+          ? value.split(",").map((v) => `${id}:"${v}$"`)
+          : [];
+      })
+      .join(" ");
+
+    return prefix ? `${prefix} ${query.title}`.trim() : query.title;
+  }
+
   async searchRequest(query: SearchQuery, metadata: Metadata) {
-    let ratingNumber = 0;
-    const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
-    const types: string[] = [];
-    const url: URL = new URL(BASE_URL);
-    const page = metadata?.page ?? "";
-    const isValidNumber = (n: number) => Number.isFinite(n) && n > 0;
-    const typeFilter: string | Record<string, "included" | "excluded"> =
-      getFilterValue("typeFilter") ?? "";
-    const ratingFilter: string | Record<string, "included" | "excluded"> =
-      getFilterValue("ratingFilter") ?? "";
-    const langFilter: string | Record<string, "included" | "excluded"> =
-      getFilterValue("languageFilter") ?? "";
-    const female: string | Record<string, "included" | "excluded"> =
-      getFilterValue("femaleFilter") ?? "";
-    const male: string | Record<string, "included" | "excluded"> =
-      getFilterValue("maleFilter") ?? "";
-    const character: string | Record<string, "included" | "excluded"> =
-      getFilterValue("characterFilter") ?? "";
-    const other: string | Record<string, "included" | "excluded"> =
-      getFilterValue("otherFilter") ?? "";
-    const series: string | Record<string, "included" | "excluded"> =
-      getFilterValue("seriesFilter") ?? "";
-    const expunged: string | Record<string, "included" | "excluded"> =
-      getFilterValue("expungedFilter") ?? "";
-    const minPages: string | Record<string, "included" | "excluded"> =
-      getFilterValue("minPagesFilter") ?? "";
-    const maxPages: string | Record<string, "included" | "excluded"> =
-      getFilterValue("maxPagesFilter") ?? "";
+    const url = new URL(BASE_URL);
+
+    const getFilter = (id: string) => query.filters.find((f) => f.id === id)?.value;
+
+    const isValid = (n: number) => Number.isFinite(n) && n > 0;
+    const typeFilter = getFilter("typeFilter");
     if (typeFilter && typeof typeFilter === "object") {
-      for (const tag of Object.entries(typeFilter)) {
-        if (tag[1] == "included") types.push(tag[0]);
+      const ratingSum = Object.entries(typeFilter)
+        .filter(([, v]) => v === "included")
+        .reduce((sum, [k]) => sum + Number(k), 0);
+
+      if (ratingSum > 0) {
+        url.setQueryItem("f_cats", String(1023 - ratingSum));
       }
     }
-    types.forEach((type) => {
-      ratingNumber += Number(type);
+    const stringFilters: [string, string][] = [
+      ["ratingFilter", "f_srdd"],
+      ["expungedFilter", "f_sh"],
+    ];
+
+    stringFilters.forEach(([id, param]) => {
+      const value = getFilter(id);
+      if (typeof value === "string" && value.length) {
+        url.setQueryItem(param, value);
+      }
     });
-    if (langFilter && typeof langFilter === "string" && langFilter.length > 0) {
-      query.title = `language:${langFilter}$ ${query.title}`;
-    }
-    if (types.length > 0) {
-      url.setQueryItem("f_cats", (1023 - ratingNumber).toString());
-    }
-    if (ratingFilter && typeof ratingFilter === "string" && ratingFilter.length > 0) {
-      url.setQueryItem("f_srdd", ratingFilter);
-    }
-    if (male && typeof male === "string" && male.length > 0) {
-      male.split(",").forEach((maleElement) => {
-        query.title = query.title = `male:"${maleElement}$" ${query.title}`;
-      });
-    }
-    if (female && typeof female === "string" && female.length > 0) {
-      female.split(",").forEach((femaleElement) => {
-        query.title = query.title = `female:"${femaleElement}$" ${query.title}`;
-      });
-    }
-    if (character && typeof character === "string" && character.length > 0) {
-      character.split(",").forEach((characterElement) => {
-        query.title = query.title = `character:"${characterElement}$" ${query.title}`;
-      });
-    }
-    if (other && typeof other === "string" && other.length > 0) {
-      other.split(",").forEach((otherElement) => {
-        query.title = query.title = `other:"${otherElement}$" ${query.title}`;
-      });
-    }
-    if (series && typeof series === "string" && series.length > 0) {
-      series.split(",").forEach((otherElement) => {
-        query.title = query.title = `parody:"${otherElement}$" ${query.title}`;
-      });
-    }
-    if (query.title.length > 0) {
+
+    query.title = this.applyFilters(
+      ["character", "language", "male", "female", "other", "parody"],
+      query,
+    );
+
+    if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
-    if (expunged && typeof expunged === "string" && expunged.length > 0) {
-      url.setQueryItem("f_sh", expunged);
-    }
-    const min = Number(minPages);
-    const max = Number(maxPages);
-    if (isValidNumber(max) && max < 10) {
+
+    const min = Number(getFilter("minPagesFilter"));
+    const max = Number(getFilter("maxPagesFilter"));
+
+    if (isValid(max) && max < 10) {
       throw new Error("The page range maximum cannot be below 10");
     }
-    if (isValidNumber(min) && isValidNumber(max) && max - min < 20) {
+
+    if (isValid(min) && isValid(max) && max - min < 20) {
       throw new Error("Your page range filter is too narrow");
     }
-    if (isValidNumber(min)) {
-      url.setQueryItem("f_spf", String(min));
+
+    if (isValid(min)) url.setQueryItem("f_spf", String(min));
+    if (isValid(max)) url.setQueryItem("f_spt", String(max));
+
+    if (metadata?.page) {
+      url.setQueryItem("next", metadata.page);
     }
-    if (isValidNumber(max)) {
-      url.setQueryItem("f_spt", String(max));
-    }
-    if (page.length > 0) {
-      url.setQueryItem("next", page);
-    }
+
     const data = await Application.scheduleRequest({
       url: url.toString(),
       method: "GET",
     });
+
     return Application.arrayBufferToUTF8String(data[1]);
   }
 
