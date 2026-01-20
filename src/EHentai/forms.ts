@@ -1,13 +1,9 @@
 import { Form, Section, SelectRow, type FormSectionElement } from "@paperback/types";
-import { languageFilter, typeFilter } from "./utils";
+import { typeFilter } from "./utils";
 
 export class Forms extends Form {
   override getSections(): FormSectionElement[] {
     const types: { id: string; title: string }[] = typeFilter.map((tag) => ({
-      id: tag.id,
-      title: tag.value,
-    }));
-    const languages: { id: string; title: string }[] = languageFilter.map((tag) => ({
       id: tag.id,
       title: tag.value,
     }));
@@ -20,7 +16,7 @@ export class Forms extends Form {
         },
         [
           SelectRow("hide_type", {
-            title: "Show Only",
+            title: "Contents",
             subtitle: "Default value for contents",
             value: this.getHideTypeStatus(),
             options: types,

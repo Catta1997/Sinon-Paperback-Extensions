@@ -169,7 +169,7 @@ export class Parser {
       const category = row.find("td.tc").text().trim().split(":")[0];
 
       const tags: Tag[] = row
-        .find("td .gtl a, td .gt a")
+        .find('td div[class^="gt"] > a')
         .map((i, a) => ({
           id: $(a).attr("id") ?? "",
           title: this.capitalLetter($(a).text().trim().replaceAll(/\s+/g, " ").trim()),
@@ -206,7 +206,9 @@ export class Parser {
         pages: additionalMangaInfo.length.pages.toString(),
         language: additionalMangaInfo.language.text,
         uploaded: updateTime,
+        favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
       },
+      shareUrl: `https://e-hentai.org/g/${mangaID}`,
     };
     return { mangaId: mangaID, mangaInfo: info };
   }
@@ -216,10 +218,10 @@ export class Parser {
     return [
       {
         chapterId: sourceManga.mangaId,
-        sourceManga,
+        sourceManga: sourceManga,
         chapNum: 1,
         volume: 0,
-        langCode: info?.language ?? "LANG",
+        langCode: info?.language ?? "",
         publishDate: new Date(info?.uploaded ?? ""),
         version: `${info?.pages ?? "0"} pages`,
         additionalInfo: { pages: info?.pages ?? "0" },
@@ -251,6 +253,7 @@ export class Parser {
     const posted = this.getRow($, "Posted:");
     const languageRaw = this.getRow($, "Language:");
     const lengthRaw = this.getRow($, "Length:");
+    const favsRaw = this.getRow($, "Favorited:");
     const ratingAverage = parseFloat(
       $("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim(),
     );
@@ -265,6 +268,9 @@ export class Parser {
       },
       length: {
         pages: parseInt(lengthRaw),
+      },
+      favs: {
+        text: favsRaw,
       },
       rating: {
         average: ratingAverage,

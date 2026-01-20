@@ -46,10 +46,6 @@ export const typeFilter: {
   },
 ];
 
-function getLangFilter() {
-  return (Application.getState("_languageFilter") as string[] | undefined) ?? [];
-}
-
 export function getLangFlag(lang: string) {
   const langFlag = languageFilter.find((language) => language.id === lang);
   return langFlag?.flag ?? lang;
@@ -111,6 +107,9 @@ export interface GalleryInfo {
   };
   posted: string;
   language: {
+    text: string;
+  };
+  favs: {
     text: string;
   };
   length: {
