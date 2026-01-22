@@ -48,7 +48,7 @@ export const typeFilter: {
 
 export function getLangFlag(lang: string) {
   const langFlag = languageFilter.find((language) => language.id === lang);
-  return langFlag?.flag ?? "🇯🇵";
+  return langFlag?.flag ?? "";
 }
 
 export function getLanguageFilter() {

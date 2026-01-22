@@ -186,7 +186,9 @@ export class Parser {
       if (category === "language") {
         tags.map((t) => {
           if (t.title !== "Translated") {
-            languages.push(`${getLangFlag(t.title.toLowerCase())} ${t.title}`);
+            if (getLangFlag(t.title.toLowerCase()).length > 0) {
+              languages.push(`${getLangFlag(t.title.toLowerCase())} ${t.title}`);
+            }
           }
         });
       }
