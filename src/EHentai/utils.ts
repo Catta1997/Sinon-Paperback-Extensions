@@ -48,12 +48,12 @@ export const typeFilter: {
 
 export function getLangFlag(lang: string) {
   const langFlag = languageFilter.find((language) => language.id === lang);
-  return langFlag?.flag ?? lang;
+  return langFlag?.flag ?? "🇯🇵";
 }
 
 export function getLanguageFilter() {
   const languages = languageFilter; //.filter((lang) => getLangFilter().includes(lang.id));
-  languages.unshift({ id: "", value: "All", flag: "All" });
+  languages.unshift({ id: "all", value: "All", flag: "All" });
   return languages;
 }
 
@@ -106,9 +106,6 @@ export interface GalleryInfo {
     name: string;
   };
   posted: string;
-  language: {
-    text: string;
-  };
   favs: {
     text: string;
   };

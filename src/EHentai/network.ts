@@ -5,14 +5,15 @@ import {
   type Request,
   type Response,
   type SearchQuery,
+  CloudflareError,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { type Metadata } from "./utils";
 import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: 9,
-  bufferInterval: 1,
+  numberOfRequests: 40,
+  bufferInterval: 0.5,
   ignoreImages: true,
 });
 export class MainInterceptor extends PaperbackInterceptor {
@@ -52,8 +53,14 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    void request;
-    void response;
+    const cfMitigated = response.headers?.["cf-mitigated"];
+    if (cfMitigated === "challenge") {
+      throw new CloudflareError({
+        url: request.url,
+        method: request.method ?? "GET",
+      });
+    }
+
     return data;
   }
 }

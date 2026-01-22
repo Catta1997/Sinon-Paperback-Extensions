@@ -56,24 +56,20 @@ export class Parser {
             artist = $(td).next("td").find("div").first().text().trim();
           }
           if ($(td).text().trim() === "language:") {
-            const lang_text =
-              $(td)
-                .next("td")
-                .find("div.gt, div.gtl")
-                .map((_, el) => $(el).text().trim())
-                .get()
-                .find((text) => text && text.toLowerCase() !== "translated") || "";
-            lang = getLangFlag(lang_text);
+            const langTexts = $(td)
+              .next("td")
+              .find("div.gt, div.gtl")
+              .map((_, el) => $(el).text().trim())
+              .get()
+              .filter((text) => text && text.toLowerCase() !== "translated");
+            lang = langTexts
+              .map((text) => getLangFlag(text))
+              .filter(Boolean)
+              .join(" ");
           }
         });
         const subtitle = this.capitalLetter(
-          lang.length > 0 && artist.length > 0
-            ? `${lang} | ${artist}`
-            : lang.length > 0
-              ? `${lang}`
-              : artist.length > 0
-                ? `${artist}`
-                : "",
+          [lang, artist].filter((v) => v.trim().length > 0).join(" | "),
         );
         results.push({
           title: title,
@@ -163,6 +159,7 @@ export class Parser {
         },
       ],
     });
+    let languages: string[] = [];
     $("#taglist tr").each((i, el) => {
       const row = $(el);
 
@@ -179,14 +176,22 @@ export class Parser {
       if (artistTag) {
         artist = artistTag.title;
       }
-      if (category !== "artist") {
+      if (category !== "artist" && category !== "language") {
         tagSectionList.push({
           id: category ?? "",
           title: this.capitalLetter(category ?? ""),
           tags: tags,
         });
       }
+      if (category === "language") {
+        tags.map((t) => {
+          if (t.title !== "Translated") {
+            languages.push(`${getLangFlag(t.title.toLowerCase())} ${t.title}`);
+          }
+        });
+      }
     });
+    console.log(languages.join(","));
     const style = $("#gd1 > div").attr("style") ?? "";
     const match = style.match(/url\(([^)]+)\)/);
     const imageUrl = match ? match[1] : "";
@@ -203,8 +208,9 @@ export class Parser {
       contentRating: ContentRating.ADULT,
       tagGroups: tagSectionList,
       additionalInfo: {
+        title: this.parseTitle(title).split("| ")[1] ?? "",
         pages: additionalMangaInfo.length.pages.toString(),
-        language: additionalMangaInfo.language.text,
+        language: languages.join(" | "),
         uploaded: updateTime,
         favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
       },
@@ -218,12 +224,13 @@ export class Parser {
     return [
       {
         chapterId: sourceManga.mangaId,
+        title: info?.title ?? undefined,
         sourceManga: sourceManga,
         chapNum: 1,
         volume: 0,
         langCode: info?.language ?? "",
         publishDate: new Date(info?.uploaded ?? ""),
-        version: `${info?.pages ?? "0"} pages`,
+        version: info?.pages ? `${info?.pages} Pages` : "",
         additionalInfo: { pages: info?.pages ?? "0" },
       },
     ];
@@ -251,7 +258,6 @@ export class Parser {
       }
     });
     const posted = this.getRow($, "Posted:");
-    const languageRaw = this.getRow($, "Language:");
     const lengthRaw = this.getRow($, "Length:");
     const favsRaw = this.getRow($, "Favorited:");
     const ratingAverage = parseFloat(
@@ -263,9 +269,6 @@ export class Parser {
         name: uploaderName,
       },
       posted: posted,
-      language: {
-        text: languageRaw.split(" ")[0] ?? "",
-      },
       length: {
         pages: parseInt(lengthRaw),
       },
