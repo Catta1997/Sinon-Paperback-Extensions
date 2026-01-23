@@ -17,25 +17,29 @@ export const mainRateLimiter = new BasicRateLimiter("main", {
   ignoreImages: true,
 });
 export class MainInterceptor extends PaperbackInterceptor {
+  private async getImage(request: Request) {
+    const data = await Application.scheduleRequest(request);
+    const html = Application.arrayBufferToUTF8String(data[1]);
+    const $ = cheerio.load(html);
+    const div = $("#i3");
+    return div.find("img#img");
+  }
   override async interceptRequest(request: Request): Promise<Request> {
     if (request.url.includes(`${BASE_URL}/s/`)) {
       if (request.headers && request.headers["x-intercepted"]) {
         delete request.headers["x-intercepted"];
         return request;
       } else {
-        const newRequest = request;
-        newRequest.headers = { ["x-intercepted"]: "1" };
-        const data = await Application.scheduleRequest(newRequest);
-        const html = Application.arrayBufferToUTF8String(data[1]);
-        const $ = cheerio.load(html);
-        const div = $("#i3");
-        const image = div.find("img#img");
-        const new_page = image.attr("onerror") ?? "";
-        const match = new_page.match(/'(\d+-\d+)'/);
-        if (match && match[1]) {
-          request.headers = {
-            ["reloadImage"]: `${request.url}?nl=${match[1]}`,
-          };
+        request.headers = { ["x-intercepted"]: "1" };
+        let image = await this.getImage(request);
+
+        if (!request.url.includes("?nl=")) {
+          const new_page = image.attr("onerror") ?? "";
+          const match = new_page.match(/'(\d+-\d+)'/);
+          if (match && match[1]) {
+            request.url = `${request.url}?nl=${match[1]}`;
+            image = await this.getImage(request);
+          }
         }
         request.url = image.attr("src") ?? request.url;
         return request;
