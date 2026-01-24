@@ -1,5 +1,13 @@
-import { Form, Section, SelectRow, type FormSectionElement } from "@paperback/types";
+import {
+  Form,
+  Section,
+  SelectRow,
+  type FormSectionElement,
+  StepperRow,
+  ToggleRow,
+} from "@paperback/types";
 import { typeFilter } from "./utils";
+import { mainRateLimiter } from "./network";
 
 export class Forms extends Form {
   override getSections(): FormSectionElement[] {
@@ -24,13 +32,29 @@ export class Forms extends Form {
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as Forms, "handleHideTypeStatusChange"),
           }),
+          StepperRow("rate_limit", {
+            title: "Rate Limit",
+            subtitle: "Set Custom Rate Limit",
+            value: this.getRateFormsValue(),
+            minValue: 9,
+            maxValue: 100,
+            stepValue: 1,
+            loopOver: true,
+            onValueChange: Application.Selector(this as Forms, "handleRateStatusChange"),
+          }),
+          ToggleRow("tl_link", {
+            title: "Use Secondary Image Link",
+            subtitle:
+              "Use every time the second available image link (chapter image load will be slower)",
+            value: this.getRateNLValue(),
+            onValueChange: Application.Selector(this as Forms, "handleNLStatusChange"),
+          }),
         ],
       ),
     ];
   }
-  public async updateValue(value: string[], filter: string): Promise<void> {
+  public async updateValue<T>(value: T, filter: string): Promise<void> {
     Application.setState(value, filter);
-    Application.invalidateSearchFilters();
     this.reloadForm();
   }
 
@@ -40,13 +64,26 @@ export class Forms extends Form {
 
   async handleHideTypeStatusChange(value: string[]): Promise<void> {
     await this.updateValue(value, "_type");
+    Application.invalidateSearchFilters();
   }
 
-  getLanguageFormsValue(): string[] {
-    return (Application.getState("_languageFilter") as string[] | undefined) ?? [];
+  getRateFormsValue(): number {
+    return (
+      (Application.getState("RateFilter") as number | undefined) ??
+      mainRateLimiter.options.numberOfRequests.valueOf()
+    );
   }
 
-  async handleFilterStatusChange(value: string[]): Promise<void> {
-    await this.updateValue(value, "_languageFilter");
+  async handleRateStatusChange(value: number): Promise<void> {
+    await this.updateValue(value, "RateFilter");
+    mainRateLimiter.options.numberOfRequests = value;
+  }
+
+  getRateNLValue(): boolean {
+    return (Application.getState("nlLink") as boolean | undefined) ?? false;
+  }
+
+  async handleNLStatusChange(value: boolean): Promise<void> {
+    await this.updateValue(value, "nlLink");
   }
 }

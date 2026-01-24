@@ -12,7 +12,7 @@ import { type Metadata } from "./utils";
 import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: 40,
+  numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
   bufferInterval: 0.5,
   ignoreImages: true,
 });
@@ -24,6 +24,9 @@ export class MainInterceptor extends PaperbackInterceptor {
     const div = $("#i3");
     return div.find("img#img");
   }
+  private getNLsSettings() {
+    return (Application.getState("nlLink") as boolean | undefined) ?? false;
+  }
   override async interceptRequest(request: Request): Promise<Request> {
     if (request.url.includes(`${BASE_URL}/s/`)) {
       if (request.headers && request.headers["x-intercepted"]) {
@@ -33,7 +36,8 @@ export class MainInterceptor extends PaperbackInterceptor {
         request.headers = { ["x-intercepted"]: "1" };
         let image = await this.getImage(request);
 
-        if (!request.url.includes("?nl=")) {
+        // !request.url.includes("?nl=") -> first loaded page
+        if (!request.url.includes("?nl=") && this.getNLsSettings()) {
           const new_page = image.attr("onerror") ?? "";
           const match = new_page.match(/'(\d+-\d+)'/);
           if (match && match[1]) {
