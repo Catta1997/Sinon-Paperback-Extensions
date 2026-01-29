@@ -79,11 +79,14 @@ export class Requests {
       .flatMap((id) => {
         const value = query.filters.find((f) => f.id === id)?.value;
         return typeof value === "string" && value.length
-          ? value.split(",").map((v) => `${id}:"${v}$"`)
+          ? value.split(/\s*,\s*/).map((v) => {
+              const isNegated = v.startsWith("-");
+              const cleanValue = isNegated ? v.slice(1) : v;
+              return `${isNegated ? "-" : ""}${id}:"${cleanValue}$"`;
+            })
           : [];
       })
       .join(" ");
-
     return prefix ? `${prefix} ${query.title}`.trim() : query.title;
   }
 
@@ -116,7 +119,7 @@ export class Requests {
     });
 
     query.title = this.applyFilters(
-      ["character", "language", "male", "female", "other", "parody"],
+      ["character", "language", "male", "female", "other", "parody", "author", "mixed"],
       query,
     );
 

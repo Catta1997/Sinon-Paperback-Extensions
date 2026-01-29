@@ -123,21 +123,21 @@ export class EHentaiExtension implements EHentaiImplementation {
       type: "input",
       id: "character",
       title: "Character",
-      placeholder: "",
+      placeholder: "You can separate them with ',' and exclude it with '-'",
       value: "",
     });
     filters.push({
       type: "input",
       id: "female",
       title: "Female",
-      placeholder: "",
+      placeholder: "You can separate them with ',' and exclude it with '-'",
       value: "",
     });
     filters.push({
       type: "input",
       id: "male",
       title: "Male",
-      placeholder: "",
+      placeholder: "You can separate them with ',' and exclude it with '-'",
       value: "",
     });
     filters.push({
@@ -151,7 +151,7 @@ export class EHentaiExtension implements EHentaiImplementation {
       type: "input",
       id: "other",
       title: "Other",
-      placeholder: "",
+      placeholder: "You can separate them with ',' and exclude it with '-'",
       value: "",
     });
     filters.push({
@@ -166,6 +166,20 @@ export class EHentaiExtension implements EHentaiImplementation {
       id: "maxPagesFilter",
       title: "Maximum pages",
       placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "artist",
+      title: "Artist",
+      placeholder: "",
+      value: "",
+    });
+    filters.push({
+      type: "input",
+      id: "mixed",
+      title: "Mixed",
+      placeholder: "You can separate them with ',' and exclude it with '-'",
       value: "",
     });
     return filters;

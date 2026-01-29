@@ -193,7 +193,6 @@ export class Parser {
         });
       }
     });
-    console.log(languages.join(","));
     const style = $("#gd1 > div").attr("style") ?? "";
     const match = style.match(/url\(([^)]+)\)/);
     const imageUrl = match ? match[1] : "";
