@@ -46,14 +46,7 @@ export class RokuHentaiExtension implements RokuHentaiImplementation {
 
   async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
     for (const cookie of cookies) {
-      console.log(cookie.name);
-      console.log(cookie.created);
-      console.log(cookie.domain);
-      console.log(cookie.expires);
-      console.log(cookie.path);
-      console.log(cookie.value);
       if (cookie.name == "cf_clearance") {
-        console.log("SAVE");
         this.cookieStorageInterceptor.setCookie(cookie);
       }
     }

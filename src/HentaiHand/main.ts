@@ -3,6 +3,9 @@ import {
   type Chapter,
   type ChapterDetails,
   type ChapterProviding,
+  type CloudflareBypassRequestProviding,
+  type Cookie,
+  CookieStorageInterceptor,
   type Extension,
   type MangaProviding,
   type PagedResults,
@@ -22,22 +25,32 @@ export const filter = new globalFilters();
 type HentaiHandImplementation = Extension &
   SearchResultsProviding &
   MangaProviding &
-  ChapterProviding;
+  ChapterProviding &
+  CloudflareBypassRequestProviding;
 
 export class HentaiHandExtension implements HentaiHandImplementation {
   mainRateLimiter = new BasicRateLimiter("main", {
-    numberOfRequests: 1,
+    numberOfRequests: 8,
     bufferInterval: 1,
     ignoreImages: true,
   });
 
   mainInterceptor = new MainInterceptor("main");
-
+  cookieStorageInterceptor = new CookieStorageInterceptor({
+    storage: "stateManager",
+  });
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
+    this.cookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
   }
-
+  async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
+    for (const cookie of cookies) {
+      if (cookie.name == "cf_clearance") {
+        this.cookieStorageInterceptor.setCookie(cookie);
+      }
+    }
+  }
   async getSearchFilters(): Promise<SearchFilter[]> {
     return filter.getFilters();
   }

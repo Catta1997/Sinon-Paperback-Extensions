@@ -10,13 +10,12 @@ import type { GetMangaInfo, JSONSearch, MangaDetails, TagParsing } from "./model
 const BASE_API = "https://hentaihand.com/api";
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: {
-        Referer: "https://hentaihand.com/",
-      },
+    request.headers = {
+      ...request.headers,
+      referer: "https://hentaihand.com/",
+      "user-agent": await Application.getDefaultUserAgent(),
     };
+    return request;
   }
 
   override async interceptResponse(
@@ -24,9 +23,13 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    void request;
-    void response;
-
+    const cfMitigated = response.headers?.["cf-mitigated"];
+    if (cfMitigated === "challenge") {
+      throw new CloudflareError({
+        url: request.url,
+        method: request.method ?? "GET",
+      });
+    }
     return data;
   }
 }
