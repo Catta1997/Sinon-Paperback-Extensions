@@ -3,6 +3,9 @@ import {
   type Chapter,
   type ChapterDetails,
   type ChapterProviding,
+  type CloudflareBypassRequestProviding,
+  type Cookie,
+  CookieStorageInterceptor,
   type Extension,
   type MangaProviding,
   type PagedResults,
@@ -21,20 +24,39 @@ const parser = new Parser();
 type RokuHentaiImplementation = Extension &
   SearchResultsProviding &
   MangaProviding &
-  ChapterProviding;
+  ChapterProviding &
+  CloudflareBypassRequestProviding;
 
 export class RokuHentaiExtension implements RokuHentaiImplementation {
   mainRateLimiter = new BasicRateLimiter("main", {
-    numberOfRequests: 1,
+    numberOfRequests: 8,
     bufferInterval: 1,
     ignoreImages: true,
   });
-
+  cookieStorageInterceptor = new CookieStorageInterceptor({
+    storage: "stateManager",
+  });
   mainInterceptor = new MainInterceptor("main");
 
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
+    this.cookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
+  }
+
+  async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
+    for (const cookie of cookies) {
+      console.log(cookie.name);
+      console.log(cookie.created);
+      console.log(cookie.domain);
+      console.log(cookie.expires);
+      console.log(cookie.path);
+      console.log(cookie.value);
+      if (cookie.name == "cf_clearance") {
+        console.log("SAVE");
+        this.cookieStorageInterceptor.setCookie(cookie);
+      }
+    }
   }
 
   getMangaDetails(mangaId: string): Promise<SourceManga> {

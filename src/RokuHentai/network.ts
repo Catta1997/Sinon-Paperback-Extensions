@@ -4,18 +4,18 @@ import {
   URL,
   type Request,
   type Response,
+  CloudflareError,
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
 
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
-    return {
-      url: request.url,
-      method: request.method,
-      headers: {
-        Referer: "https://rokuhentai.com/",
-      },
+    request.headers = {
+      ...request.headers,
+      referer: "https://rokuhentai.com/",
+      "user-agent": await Application.getDefaultUserAgent(),
     };
+    return request;
   }
 
   override async interceptResponse(
@@ -23,9 +23,13 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    void request;
-    void response;
-
+    const cfMitigated = response.headers?.["cf-mitigated"];
+    if (cfMitigated === "challenge") {
+      throw new CloudflareError({
+        url: request.url,
+        method: request.method ?? "GET",
+      });
+    }
     return data;
   }
 }
