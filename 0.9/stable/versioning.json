@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-01-29T10:12:06.513Z",
+  "buildTime": "2026-02-17T17:00:48.395Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.57",
     "types": "1.0.0-alpha.57"
@@ -180,10 +180,10 @@
     {
       "name": "RokuHentai",
       "description": "Extension that pulls content from RokuHentai.com",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.3",
       "icon": "icon.png",
       "contentRating": "ADULT",
-      "capabilities": 65,
+      "capabilities": 81,
       "badges": [],
       "developers": [
         {
