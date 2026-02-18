@@ -30,7 +30,7 @@ type RokuHentaiImplementation = Extension &
 
 export class RokuHentaiExtension implements RokuHentaiImplementation {
   mainRateLimiter = new BasicRateLimiter("main", {
-    numberOfRequests: 8,
+    numberOfRequests: 5,
     bufferInterval: 1,
     ignoreImages: true,
   });

@@ -31,7 +31,7 @@ type HentaiHandImplementation = Extension &
 
 export class HentaiHandExtension implements HentaiHandImplementation {
   mainRateLimiter = new BasicRateLimiter("main", {
-    numberOfRequests: 8,
+    numberOfRequests: 5,
     bufferInterval: 1,
     ignoreImages: true,
   });
