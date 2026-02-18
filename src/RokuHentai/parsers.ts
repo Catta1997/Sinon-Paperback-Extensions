@@ -13,6 +13,7 @@ import {
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
 import { filter_lang, filter_tags, type MangaCardInfo, type RokuMetadata } from "./utils";
+import { DOMAIN } from "./main";
 
 const requestMaker = new Requests();
 
@@ -43,7 +44,7 @@ export class Parser {
 
   async parseMangaDetails(mangaId: string): Promise<SourceManga> {
     const html = await Application.scheduleRequest({
-      url: `https://rokuhentai.com/${mangaId}`,
+      url: `${DOMAIN}${mangaId}`,
       method: "GET",
     });
     const data = Application.arrayBufferToUTF8String(html[1]);
@@ -60,7 +61,7 @@ export class Parser {
       title: tag,
     }));
     const mangaDetails: MangaInfo = {
-      thumbnailUrl: `https://rokuhentai.com/_images/cover-thumbnails/${mangaId}.jpg`,
+      thumbnailUrl: `${DOMAIN}_images/cover-thumbnails/${mangaId}.jpg`,
       synopsis: "",
       primaryTitle: title.split(" - Roku")[0] ?? "",
       secondaryTitles: [],
@@ -77,9 +78,7 @@ export class Parser {
   async parseChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
     const manga_pages: string[] = [];
     for (let page = 0; page < Number(chapter.sourceManga.mangaInfo.additionalInfo?.pages); page++) {
-      manga_pages.push(
-        `https://rokuhentai.com/_images/pages/${chapter.sourceManga.mangaId}/${page}.jpg`,
-      );
+      manga_pages.push(`${DOMAIN}_images/pages/${chapter.sourceManga.mangaId}/${page}.jpg`);
     }
     return {
       id: chapter.chapterId,
@@ -142,9 +141,3 @@ export class Parser {
     return filters;
   }
 }
-
-/*
-NIFTeam -> orribile
-Anime GDR Club -> no https,
-DigitalTeam -> meh
- */

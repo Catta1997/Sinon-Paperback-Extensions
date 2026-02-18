@@ -19,6 +19,7 @@ import { MainInterceptor } from "./network";
 import { Parser } from "./parsers";
 import { type RokuMetadata } from "./utils";
 
+export const DOMAIN = "https://rokuhentai.com/";
 const parser = new Parser();
 
 type RokuHentaiImplementation = Extension &

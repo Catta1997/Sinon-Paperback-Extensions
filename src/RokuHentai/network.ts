@@ -7,12 +7,13 @@ import {
   CloudflareError,
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
+import { DOMAIN } from "./main";
 
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
-      referer: "https://rokuhentai.com/",
+      referer: DOMAIN,
       "user-agent": await Application.getDefaultUserAgent(),
     };
     return request;
@@ -55,7 +56,7 @@ export class Requests {
     }
     const page = metadata?.page ?? "";
     const keyword = query.title;
-    const baseURL: URL = new URL("https://rokuhentai.com/_search");
+    const baseURL: URL = new URL(`${DOMAIN}_search`);
     if (keyword.length > 0) {
       baseURL.setQueryItem("q", keyword);
     }

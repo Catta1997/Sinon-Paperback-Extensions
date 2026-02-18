@@ -6,13 +6,14 @@ import {
   type Response,
 } from "@paperback/types";
 import type { GetMangaInfo, JSONSearch, MangaDetails, TagParsing } from "./models";
+import { DOMAIN } from "./main";
 
-const BASE_API = "https://hentaihand.com/api";
+const BASE_API = `${DOMAIN}api`;
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
-      referer: "https://hentaihand.com/",
+      referer: DOMAIN,
       "user-agent": await Application.getDefaultUserAgent(),
     };
     return request;
@@ -117,34 +118,3 @@ export class ApiMaker {
     return JSON.parse(html) as TagParsing;
   }
 }
-
-// https://hentaihand.com/api/comics/
-// https://hentaihand.com/api/tags/
-// https://hentaihand.com/api/comics/$SLUG
-// https://hentaihand.com/api/comics/$SLUG/images
-/*
-https://hentaihand.com/api/comics?q=sinon&per_page=6&lang=en&nsfw=false -> SEARCH
-https://hentaihand.com/api/comics?q=sinon&per_page=6&nsfw=false&tags=$TAGSID -> search with ID
-
-
-
-99 MAX items per page
-https://hentaihand.com/api/comics/
-https://hentaihand.com/api/tags/ -> genres list
-https://hentaihand.com/api/comics/$SLUG
-https://hentaihand.com/api/comics/$SLUG/images
-
-
-
-
-
-https://hentaihand.com/api/parodies?q=sinon&per_page=6&lang=en&nsfw=false
-https://hentaihand.com/api/groups?q=sinon&per_page=6&lang=en&nsfw=false
-https://hentaihand.com/api/artists?q=sinon&per_page=6&lang=en&nsfw=false
-https://hentaihand.com/api/characters?q=sinon&per_page=6&lang=en&nsfw=false
-https://hentaihand.com/api/relationships?q=sinon&per_page=6&lang=en&nsfw=false
-
-
-
-
- */
