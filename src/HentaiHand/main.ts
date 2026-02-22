@@ -20,7 +20,6 @@ import type { Metadata } from "./models";
 import { MainInterceptor } from "./network";
 import { globalFilters, JsonParser } from "./parsers";
 
-export const DOMAIN = "https://hentaihand.com/";
 const parse = new JsonParser();
 export const filter = new globalFilters();
 type HentaiHandImplementation = Extension &

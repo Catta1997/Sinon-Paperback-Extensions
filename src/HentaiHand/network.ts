@@ -6,9 +6,9 @@ import {
   type Response,
 } from "@paperback/types";
 import type { GetMangaInfo, JSONSearch, MangaDetails, TagParsing } from "./models";
-import { DOMAIN } from "./main";
 
-const BASE_API = `${DOMAIN}api`;
+const DOMAIN = "https://hentaihand.com/";
+let BASE_API = `${DOMAIN}api`;
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
