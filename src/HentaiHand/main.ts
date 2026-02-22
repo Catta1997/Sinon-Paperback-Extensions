@@ -21,7 +21,7 @@ import { MainInterceptor } from "./network";
 import { globalFilters, JsonParser } from "./parsers";
 
 const parse = new JsonParser();
-export const DOMAIN = "https://hentaihand.com/";
+export const DOMAIN = "https://www.hentaihand.com/";
 export const filter = new globalFilters();
 type HentaiHandImplementation = Extension &
   SearchResultsProviding &
