@@ -153,17 +153,16 @@ export class Requests {
     return Application.arrayBufferToUTF8String(data[1]);
   }
 
-  async getPopular() {
+  async getSection(popular: boolean) {
+    const filterValue = (Application.getState("_type") as string[]) ?? [];
+    const ratingSum = filterValue.reduce((acc, val) => acc + Number(val), 0);
+    const url = new URL(BASE_URL);
+    if (popular) {
+      url.setPath("popular");
+    }
+    url.setQueryItem("f_cats", String(1023 - ratingSum));
     const data = await Application.scheduleRequest({
-      url: `${BASE_URL}/popular`,
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
-  }
-
-  async getRecent() {
-    const data = await Application.scheduleRequest({
-      url: `${BASE_URL}/`,
+      url: url.toString(),
       method: "GET",
     });
     return Application.arrayBufferToUTF8String(data[1]);

@@ -116,12 +116,12 @@ export class Parser {
   }
 
   async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
-    const html = await network.getPopular();
+    const html = await network.getSection(true);
     return this.parseDiscover(html, "prominentCarouselItem");
   }
 
   async parseRecent() {
-    const html = await network.getRecent();
+    const html = await network.getSection(false);
     return this.parseDiscover(html, "simpleCarouselItem");
   }
 
