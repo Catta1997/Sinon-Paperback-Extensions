@@ -14,10 +14,11 @@ import {
 } from "@paperback/types";
 import FansubGeneral from "./main";
 import type { ComicDetailResponse, ComicListItem, ComicsListResponse } from "./models";
+import type { SearchMetadata } from "../EHentai/utils";
 
 export class FansubGeneralParsers {
   async parseSearchResults(
-    query: SearchQuery,
+    query: SearchQuery<SearchMetadata>,
     source: FansubGeneral,
   ): Promise<PagedResults<SearchResultItem>> {
     const jsonRequest = await source.requestManager.apiSearchResult(query);

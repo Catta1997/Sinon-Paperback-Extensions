@@ -1,3 +1,5 @@
+import type { JSONObject } from "@paperback/types";
+
 export type Metadata = { page: string };
 
 export const typeFilter: {
@@ -74,32 +76,6 @@ export const languageFilter = [
   { id: "vietnamese", value: "Vietnamese", flag: "🇻🇳" },
 ];
 
-export const ratingFilter: {
-  id: string;
-  value: string;
-}[] = [
-  {
-    id: "",
-    value: "Any Rating",
-  },
-  {
-    id: "2",
-    value: "2 Stars",
-  },
-  {
-    id: "3",
-    value: "3 Stars",
-  },
-  {
-    id: "4",
-    value: "4 Stars",
-  },
-  {
-    id: "5",
-    value: "5 Stars",
-  },
-];
-
 export interface GalleryInfo {
   category: string;
   uploader: {
@@ -115,4 +91,19 @@ export interface GalleryInfo {
   rating: {
     average: number;
   };
+}
+
+export interface SearchMetadata extends JSONObject {
+  type?: string[];
+  language?: string[];
+  male?: string[];
+  female?: string[];
+  character?: string[];
+  other?: string[];
+  parody?: string[];
+  author?: string[];
+  mixed?: string[];
+  rating?: number;
+  minPages?: number;
+  maxPages?: number;
 }

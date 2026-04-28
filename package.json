@@ -13,13 +13,13 @@
     "bundle": "paperback-cli bundle",
     "serve": "paperback-cli serve",
     "logcat": "paperback-cli logcat",
-    "dev": "paperback-cli serve --watch -p 38613",
+    "dev": "paperback-cli serve --watch",
     "test": "npm run tsc && npm run lint:check && npm run format:check && npm run bundle",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@paperback/toolchain": "^1.0.0-alpha.57",
-    "@paperback/types": "^1.0.0-alpha.57",
+    "@paperback/toolchain": "^1.0.0-alpha.78",
+    "@paperback/types": "^1.0.0-alpha.78",
     "cheerio": "^1.1.2",
     "husky": "^9.1.7",
     "oxfmt": "^0.17.0",

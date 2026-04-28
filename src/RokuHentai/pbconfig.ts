@@ -6,10 +6,11 @@ export default {
   version: "1.0.0-alpha.3",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
-  capabilities:
-    SourceIntents.SEARCH_RESULTS_PROVIDING |
-    SourceIntents.CHAPTER_PROVIDING |
-    SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
+  capabilities: [
+    SourceIntents.SEARCH_RESULT_PROVIDING |
+      SourceIntents.CHAPTER_PROVIDING |
+      SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
+  ],
   badges: [],
   developers: [
     {

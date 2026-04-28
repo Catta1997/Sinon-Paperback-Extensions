@@ -9,7 +9,6 @@ import {
   type Extension,
   type MangaProviding,
   type PagedResults,
-  type SearchFilter,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
@@ -18,6 +17,7 @@ import {
 import { MainInterceptor } from "./network";
 import { Parser } from "./parsers";
 import { type RokuMetadata } from "./utils";
+import type { SearchMetadata } from "../EHentai/utils";
 
 export const DOMAIN = "https://rokuhentai.com/";
 const parser = new Parser();
@@ -65,12 +65,8 @@ export class RokuHentaiExtension implements RokuHentaiImplementation {
     return parser.parseChapters(sourceManga);
   }
 
-  getSearchFilters(): Promise<SearchFilter[]> {
-    return Promise.resolve(parser.getFilters());
-  }
-
   getSearchResults(
-    query: SearchQuery,
+    query: SearchQuery<SearchMetadata>,
     metadata: RokuMetadata,
   ): Promise<PagedResults<SearchResultItem>> {
     return parser.parseSearchResult(query, metadata);

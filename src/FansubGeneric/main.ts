@@ -7,7 +7,6 @@ import {
   type DiscoverSectionItem,
   DiscoverSectionType,
   type PagedResults,
-  type SearchFilter,
   type SearchQuery,
   type SearchResultItem,
   type SourceManga,
@@ -19,6 +18,7 @@ import {
 } from "@paperback/types";
 import { APIRequests, MainInterceptor } from "./network";
 import { FansubGeneralParsers } from "./parsers";
+import type { SearchMetadata } from "../EHentai/utils";
 
 export interface FansubGenericParams {
   name: string;
@@ -88,11 +88,9 @@ abstract class FansubGeneral
     return discover_section;
   }
 
-  getSearchFilters(): Promise<SearchFilter[]> {
-    return Promise.resolve([]);
-  }
-
-  async getSearchResults(query: SearchQuery): Promise<PagedResults<SearchResultItem>> {
+  async getSearchResults(
+    query: SearchQuery<SearchMetadata>,
+  ): Promise<PagedResults<SearchResultItem>> {
     return await this.parser.parseSearchResults(query, this);
   }
 }

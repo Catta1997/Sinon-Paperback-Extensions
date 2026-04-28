@@ -6,6 +6,7 @@ import {
   type Response,
 } from "@paperback/types";
 import type { ReadChapterResponse } from "./models";
+import type { SearchMetadata } from "../EHentai/utils";
 
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
@@ -31,7 +32,7 @@ export class APIRequests {
   constructor(baseUrl: string) {
     this.apiBaseUrl = baseUrl;
   }
-  async apiSearchResult(query: SearchQuery) {
+  async apiSearchResult(query: SearchQuery<SearchMetadata>) {
     const searchApi = new URL(this.apiBaseUrl);
     const path = query.title.length > 0 ? "search" : "comics";
     searchApi.addPathComponent(path);

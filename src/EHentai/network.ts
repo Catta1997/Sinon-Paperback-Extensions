@@ -8,7 +8,7 @@ import {
   CloudflareError,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { type Metadata } from "./utils";
+import { type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -74,61 +74,93 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export class Requests {
-  private applyFilters(filterIds: string[], query: SearchQuery): string {
-    const prefix = filterIds
-      .flatMap((id) => {
-        const value = query.filters.find((f) => f.id === id)?.value;
-        return typeof value === "string" && value.length
-          ? value.split(/\s*,\s*/).map((v) => {
-              const isNegated = v.startsWith("-");
-              const cleanValue = isNegated ? v.slice(1) : v;
-              return `${isNegated ? "-" : ""}${id}:"${cleanValue}$"`;
-            })
-          : [];
-      })
-      .join(" ");
-    return prefix ? `${prefix} ${query.title}`.trim() : query.title;
-  }
-
-  async searchRequest(query: SearchQuery, metadata: Metadata) {
+  async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
 
-    const getFilter = (id: string) => query.filters.find((f) => f.id === id)?.value;
+    // const getFilter = (id: string) => query.filters.find((f) => f.id === id)?.value;
 
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
-    const typeFilter = getFilter("typeFilter");
-    if (typeFilter && typeof typeFilter === "object") {
-      const ratingSum = Object.entries(typeFilter)
-        .filter(([, v]) => v === "included")
-        .reduce((sum, [k]) => sum + Number(k), 0);
+    const typeFilter = query.metadata?.type ?? [];
+    const languageFilter = query.metadata?.language ?? [];
+    const characterFilter = query.metadata?.character ?? [];
+    const femaleFilter = query.metadata?.female ?? [];
+    const maleFilter = query.metadata?.male ?? [];
+    const authorFilter = query.metadata?.author ?? [];
+    const otherFilter = query.metadata?.other ?? [];
+    const mixedFilter = query.metadata?.mixed ?? [];
+    const parodyFilter = query.metadata?.parody ?? [];
+    const rating = query.metadata?.rating ?? -1;
 
+    if (typeFilter && typeof typeFilter === "object") {
+      const ratingSum = typeFilter.reduce((totale, valore) => totale + Number(valore), 0);
       if (ratingSum > 0) {
         url.setQueryItem("f_cats", String(1023 - ratingSum));
       }
     }
-    const stringFilters: [string, string][] = [
-      ["ratingFilter", "f_srdd"],
-      ["expungedFilter", "f_sh"],
-    ];
-
-    stringFilters.forEach(([id, param]) => {
-      const value = getFilter(id);
-      if (typeof value === "string" && value.length) {
-        url.setQueryItem(param, value);
+    if (rating >= 0) {
+      url.setQueryItem("f_srdd", rating.toString());
+    }
+    characterFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-character: ${filter}`;
+      } else {
+        query.title += `character: ${filter}`;
       }
     });
-
-    query.title = this.applyFilters(
-      ["character", "language", "male", "female", "other", "parody", "author", "mixed"],
-      query,
-    );
-
+    maleFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-male: ${filter}`;
+      } else {
+        query.title += `male: ${filter}`;
+      }
+    });
+    femaleFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-female: ${filter}`;
+      } else {
+        query.title += `female: ${filter}`;
+      }
+    });
+    parodyFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-parody: ${filter}`;
+      } else {
+        query.title += `parody: ${filter}`;
+      }
+    });
+    otherFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-other: ${filter}`;
+      } else {
+        query.title += `other: ${filter}`;
+      }
+    });
+    authorFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-author: ${filter}`;
+      } else {
+        query.title += `author: ${filter}`;
+      }
+    });
+    mixedFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-mixed: ${filter}`;
+      } else {
+        query.title += `mixed: ${filter}`;
+      }
+    });
+    languageFilter.forEach((filter) => {
+      if (filter.startsWith("-")) {
+        query.title += `-language: ${filter}`;
+      } else {
+        query.title += `language: ${filter}`;
+      }
+    });
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
-
-    const min = Number(getFilter("minPagesFilter"));
-    const max = Number(getFilter("maxPagesFilter"));
+    const min = query.metadata?.minPages ?? -1;
+    const max = query.metadata?.maxPages ?? -1;
 
     if (isValid(max) && max < 10) {
       throw new Error("The page range maximum cannot be below 10");
