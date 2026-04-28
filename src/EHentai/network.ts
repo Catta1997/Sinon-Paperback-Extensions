@@ -102,58 +102,58 @@ export class Requests {
     }
     characterFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-character: ${filter}`;
+        query.title += ` -character:${filter}`;
       } else {
-        query.title += `character: ${filter}`;
+        query.title += ` character:${filter}`;
       }
     });
     maleFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-male: ${filter}`;
+        query.title += ` -male:${filter}`;
       } else {
-        query.title += `male: ${filter}`;
+        query.title += ` male:${filter}`;
       }
     });
     femaleFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-female: ${filter}`;
+        query.title += ` -female:${filter}`;
       } else {
-        query.title += `female: ${filter}`;
+        query.title += ` female:${filter}`;
       }
     });
     parodyFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-parody: ${filter}`;
+        query.title += ` -parody:${filter}`;
       } else {
-        query.title += `parody: ${filter}`;
+        query.title += ` parody:${filter}`;
       }
     });
     otherFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-other: ${filter}`;
+        query.title += ` -other:${filter}`;
       } else {
-        query.title += `other: ${filter}`;
+        query.title += ` other:${filter}`;
       }
     });
     authorFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-author: ${filter}`;
+        query.title += ` -author:${filter}`;
       } else {
-        query.title += `author: ${filter}`;
+        query.title += ` author:${filter}`;
       }
     });
     mixedFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-mixed: ${filter}`;
+        query.title += ` -mixed:${filter}`;
       } else {
-        query.title += `mixed: ${filter}`;
+        query.title += ` mixed:${filter}`;
       }
     });
     languageFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += `-language: ${filter}`;
+        query.title += ` -language:${filter}`;
       } else {
-        query.title += `language: ${filter}`;
+        query.title += ` language:${filter}`;
       }
     });
     if (query.title) {

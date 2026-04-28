@@ -75,6 +75,11 @@ export class EHentaiExtension implements EHentaiImplementation {
   async getAdvancedSearchForm(
     searchQuery: SearchQuery<SearchMetadata>,
   ): Promise<AdvancedSearchForm> {
+    if (searchQuery.metadata === undefined) {
+      searchQuery.metadata = {
+        type: (Application.getState("_type") as string[]) ?? [],
+      };
+    }
     return new EHentaiAdvancedSearchForm(searchQuery);
   }
   getSearchResults(
@@ -83,7 +88,7 @@ export class EHentaiExtension implements EHentaiImplementation {
   ): Promise<PagedResults<SearchResultItem>> {
     if (query.metadata === undefined) {
       query.metadata = {
-        language: [],
+        type: (Application.getState("_type") as string[]) ?? [],
       };
     }
     return parser.parseSearchResults(query, metadata);

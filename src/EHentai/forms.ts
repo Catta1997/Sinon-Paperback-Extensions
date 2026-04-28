@@ -15,6 +15,26 @@ import { languageFilter, type SearchMetadata, typeFilter } from "./utils";
 import { mainRateLimiter } from "./network";
 
 export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
+  onSelectLabelProxy = new Proxy(this, {
+    has(target, p) {
+      if (typeof p == "string" && p.startsWith("onSelect_")) {
+        return true;
+      } else {
+        return Object.hasOwn(target, p);
+      }
+    },
+    get(target, p) {
+      if (typeof p == "string" && p.startsWith("onSelect_")) {
+        const rowId = p.slice(9);
+        return async () => {
+          await target["onSelect"](rowId);
+        };
+      } else {
+        // @ts-ignore
+        return target[p];
+      }
+    },
+  });
   private searchMetadata: SearchMetadata;
   constructor(searchQuery: SearchQuery<SearchMetadata>) {
     super();
@@ -42,13 +62,55 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       Section("type", this.getTypeFilter()),
       Section("language", this.getLanguageFilter()),
       Section("rating", this.getRatingFilter()),
-      Section("male", this.getMaleFilter()),
-      Section("female", this.getFemaleFilter()),
-      Section("character", this.getCharacterFilter()),
-      Section("other", this.getOtherFilter()),
-      Section("parody", this.getParodyFilter()),
-      Section("author", this.getAuthorFilter()),
-      Section("mixed", this.getMixedFilter()),
+      Section(
+        {
+          id: "male",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getMaleFilter(),
+      ),
+      Section(
+        {
+          id: "female",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getFemaleFilter(),
+      ),
+      Section(
+        {
+          id: "character",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getCharacterFilter(),
+      ),
+      Section(
+        {
+          id: "other",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getOtherFilter(),
+      ),
+      Section(
+        {
+          id: "parody",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getParodyFilter(),
+      ),
+      Section(
+        {
+          id: "author",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getAuthorFilter(),
+      ),
+      Section(
+        {
+          id: "mixed",
+          footer: "Tap an added filter to remove it",
+        },
+        this.getMixedFilter(),
+      ),
       //Section("minPagesFilter", this.getMinPagesFilter()),
       //Section("maxPagesFilter", this.getMaxPagesFilter()),
     ];
@@ -94,6 +156,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`male${indice}`, {
           title: `Male Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_male`),
         }),
       ) ?? []),
     ];
@@ -112,6 +176,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`female${indice}`, {
           title: `Female Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_female`),
         }),
       ) ?? []),
     ];
@@ -130,6 +196,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`character${indice}`, {
           title: `Character Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_character`),
         }),
       ) ?? []),
     ];
@@ -145,6 +213,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`other${indice}`, {
           title: `Other Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_other`),
         }),
       ) ?? []),
     ];
@@ -163,6 +233,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`parody${indice}`, {
           title: `Parody Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_parody`),
         }),
       ) ?? []),
     ];
@@ -181,6 +253,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`author${indice}`, {
           title: `Author Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_author`),
         }),
       ) ?? []),
     ];
@@ -196,6 +270,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         LabelRow(`mixed${indice}`, {
           title: `Mixed Filter ${indice + 1}`,
           value: value,
+          // @ts-expect-error
+          onSelect: Application.Selector(this.onSelectLabelProxy, `onSelect_${indice}_mixed`),
         }),
       ) ?? []),
     ];
@@ -215,6 +291,32 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         ),
       }),
     ];
+  }
+  async onSelect(rowId: string): Promise<void> {
+    const [index, type] = rowId.split("_");
+    switch (type) {
+      case "male":
+        this.searchMetadata.male!.splice(Number(index), 1);
+        break;
+      case "female":
+        this.searchMetadata.female!.splice(Number(index), 1);
+        break;
+      case "other":
+        this.searchMetadata.other!.splice(Number(index), 1);
+        break;
+      case "parody":
+        this.searchMetadata.parody!.splice(Number(index), 1);
+        break;
+      case "character":
+        this.searchMetadata.character!.splice(Number(index), 1);
+        break;
+      case "author":
+        this.searchMetadata.author!.splice(Number(index), 1);
+        break;
+      case "mixed":
+        this.searchMetadata.mixed!.splice(Number(index), 1);
+        break;
+    }
   }
   getMinPagesFilter(): FormItemElement<unknown>[] {
     return [
