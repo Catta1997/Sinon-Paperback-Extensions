@@ -3,7 +3,6 @@ import {
   type FormItemElement,
   type FormSectionElement,
   InputRow,
-  LabelRow,
   type SearchQuery,
   Section,
   SelectRow,
@@ -12,9 +11,11 @@ import {
 import { type FilterKey, languageFilter, type SearchMetadata, typeFilter } from "../utils";
 
 export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
-  onSelectLabelProxy = new Proxy(this, {
+  onValueChangeLabelProxy = new Proxy(this, {
     has(target, p) {
-      return typeof p === "string" && p.startsWith("onSelect_") ? true : Object.hasOwn(target, p);
+      return typeof p === "string" && (p.startsWith("onSelect_") || p.startsWith("handle_"))
+        ? true
+        : Object.hasOwn(target, p);
     },
 
     get(target, p) {
@@ -22,14 +23,19 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         const rowId = p.slice("onSelect_".length);
 
         return async (value?: any) => {
-          await target.onSelect(rowId, value);
+          await target.onChange(rowId, value);
+        };
+      } else if (typeof p === "string" && p.startsWith("handle_")) {
+        const rowId = p.slice("handle_".length);
+        return async (value?: any) => {
+          await target.onHandle(rowId, value);
         };
       }
-
       // @ts-ignore
       return target[p];
     },
   });
+
   private searchMetadata: SearchMetadata;
   constructor(searchQuery: SearchQuery<SearchMetadata>) {
     super();
@@ -61,7 +67,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Male",
           id: "male",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("male"),
       ),
@@ -69,7 +75,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Female",
           id: "female",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("female"),
       ),
@@ -77,7 +83,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Character",
           id: "character",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("character"),
       ),
@@ -85,7 +91,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Other",
           id: "other",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("other"),
       ),
@@ -93,7 +99,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Parody",
           id: "parody",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("parody"),
       ),
@@ -101,7 +107,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Author",
           id: "author",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("author"),
       ),
@@ -109,7 +115,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Mixed",
           id: "mixed",
-          footer: "Add - before the filter to exclude it",
+          footer: "Add '-' before the filter to exclude it",
         },
         this.getInputFilter("mixed"),
       ),
@@ -153,17 +159,17 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         title: `Add ${type} filter`,
         value: "",
         onValueChange: Application.Selector(
-          this as EHentaiAdvancedSearchForm,
+          this.onValueChangeLabelProxy,
           // @ts-expect-error
-          `handle${type[0].toUpperCase() + type.slice(1)}Change`,
+          `handle_${type}`,
         ),
       }),
       ...(values?.map((value, index) =>
         InputRow(`${type}${index}`, {
           title: `${type} Filter ${index + 1}`,
-          value,
+          value: value,
           onValueChange: Application.Selector(
-            this.onSelectLabelProxy,
+            this.onValueChangeLabelProxy,
             // @ts-expect-error
             `onSelect_${index}_${type}`,
           ),
@@ -221,104 +227,26 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
-  async onSelect(rowId: string, value: string): Promise<void> {
+  async onHandle(type: string, value: string): Promise<void> {
+    const key = type as FilterKey;
+    const current = this.searchMetadata[key] ?? [];
+    this.searchMetadata[key] = [...current, value];
+  }
+  async onChange(rowId: string, value: string): Promise<void> {
     const [indexStr, type] = rowId.split("_");
     if (!indexStr || !type) {
       return;
     }
     const index = Number(indexStr);
-    switch (type) {
-      case "male":
-        if (this.searchMetadata.male && this.searchMetadata.male[index]) {
-          value.length > 0
-            ? (this.searchMetadata.male[index] = value)
-            : this.searchMetadata.male.splice(index, 1);
-        }
-        break;
-      case "female":
-        if (this.searchMetadata.female && this.searchMetadata.female[index]) {
-          value.length > 0
-            ? (this.searchMetadata.female[index] = value)
-            : this.searchMetadata.female.splice(index, 1);
-        }
-        break;
-      case "other":
-        if (this.searchMetadata.other && this.searchMetadata.other[index]) {
-          value.length > 0
-            ? (this.searchMetadata.other[index] = value)
-            : this.searchMetadata.other.splice(index, 1);
-        }
-        break;
-      case "parody":
-        if (this.searchMetadata.parody && this.searchMetadata.parody[index]) {
-          value.length > 0
-            ? (this.searchMetadata.parody[index] = value)
-            : this.searchMetadata.parody.splice(index, 1);
-        }
-        break;
-      case "character":
-        if (this.searchMetadata.character && this.searchMetadata.character[index]) {
-          value.length > 0
-            ? (this.searchMetadata.character[index] = value)
-            : this.searchMetadata.character.splice(index, 1);
-        }
-        break;
-      case "author":
-        if (this.searchMetadata.author && this.searchMetadata.author[index]) {
-          value.length > 0
-            ? (this.searchMetadata.author[index] = value)
-            : this.searchMetadata.author.splice(index, 1);
-        }
-        break;
-      case "mixed":
-        if (this.searchMetadata.mixed && this.searchMetadata.mixed[index]) {
-          value.length > 0
-            ? (this.searchMetadata.mixed[index] = value)
-            : this.searchMetadata.mixed.splice(index, 1);
-        }
-        break;
-    }
+    const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
+    if (!arr) return;
+    value.length ? (arr[index] = value) : arr.splice(index, 1);
   }
   async handleTypeChange(value: string[]): Promise<void> {
     this.searchMetadata.type = value;
   }
   async handleLanguagesChange(value: string[]): Promise<void> {
     this.searchMetadata.language = value;
-  }
-  async handleMaleChange(value: string): Promise<void> {
-    let males = this.searchMetadata.male ?? [];
-    males.push(value);
-    this.searchMetadata.male = males;
-  }
-  async handleFemaleChange(value: string): Promise<void> {
-    let females = this.searchMetadata.female ?? [];
-    females.push(value);
-    this.searchMetadata.female = females;
-  }
-  async handleCharacterChange(value: string): Promise<void> {
-    let characters = this.searchMetadata.character ?? [];
-    characters.push(value);
-    this.searchMetadata.character = characters;
-  }
-  async handleOtherChange(value: string): Promise<void> {
-    let others = this.searchMetadata.other ?? [];
-    others.push(value);
-    this.searchMetadata.other = others;
-  }
-  async handleParodyChange(value: string): Promise<void> {
-    let parody = this.searchMetadata.parody ?? [];
-    parody.push(value);
-    this.searchMetadata.parody = parody;
-  }
-  async handleAuthorChange(value: string): Promise<void> {
-    let author = this.searchMetadata.author ?? [];
-    author.push(value);
-    this.searchMetadata.author = author;
-  }
-  async handleMixedChange(value: string): Promise<void> {
-    let mixed = this.searchMetadata.mixed ?? [];
-    mixed.push(value);
-    this.searchMetadata.mixed = mixed;
   }
   async handleRatingChange(value: number): Promise<void> {
     this.searchMetadata.rating = value;
