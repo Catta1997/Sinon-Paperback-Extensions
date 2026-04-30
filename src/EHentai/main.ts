@@ -17,7 +17,8 @@ import {
   type SourceManga,
   type AdvancedSearchForm,
 } from "@paperback/types";
-import { EHentaiAdvancedSearchForm, Forms } from "./forms";
+import { EHentaiAdvancedSearchForm } from "./forms/search";
+import { SettingsForm } from "./forms/settings";
 import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
 import { type Metadata, type SearchMetadata } from "./utils";
@@ -33,7 +34,7 @@ const parser = new Parser();
 export const BASE_URL = "https://e-hentai.org";
 export class EHentaiExtension implements EHentaiImplementation {
   async getSettingsForm(): Promise<Form> {
-    return new Forms();
+    return new SettingsForm();
   }
 
   async getDiscoverSections(): Promise<DiscoverSection[]> {

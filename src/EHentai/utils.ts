@@ -107,3 +107,4 @@ export interface SearchMetadata extends JSONObject {
   minPages?: number;
   maxPages?: number;
 }
+export type FilterKey = "other" | "female" | "male" | "character" | "parody" | "author" | "mixed";
