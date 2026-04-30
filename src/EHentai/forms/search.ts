@@ -61,7 +61,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Male",
           id: "male",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("male"),
       ),
@@ -69,7 +69,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Female",
           id: "female",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("female"),
       ),
@@ -77,7 +77,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Character",
           id: "character",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("character"),
       ),
@@ -85,7 +85,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Other",
           id: "other",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("other"),
       ),
@@ -93,7 +93,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Parody",
           id: "parody",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("parody"),
       ),
@@ -101,7 +101,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Author",
           id: "author",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("author"),
       ),
@@ -109,7 +109,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         {
           header: "Mixed",
           id: "mixed",
-          footer: "Tap an added filter to remove it, - to exclude",
+          footer: "Add - before the filter to exclude it",
         },
         this.getInputFilter("mixed"),
       ),
