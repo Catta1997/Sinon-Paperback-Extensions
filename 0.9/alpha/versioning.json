@@ -1,8 +1,8 @@
 {
-  "buildTime": "2026-04-30T10:21:13.929Z",
+  "buildTime": "2026-05-02T19:12:03.098Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.78",
-    "types": "1.0.0-alpha.78"
+    "toolchain": "1.0.0-alpha.79",
+    "types": "1.0.0-alpha.79"
   },
   "repository": {
     "name": "sinon-extensions",
