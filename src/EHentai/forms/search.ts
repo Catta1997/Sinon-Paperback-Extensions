@@ -8,7 +8,13 @@ import {
   SelectRow,
   StepperRow,
 } from "@paperback/types";
-import { type FilterKey, languageFilter, type SearchMetadata, typeFilter } from "../utils";
+import {
+  type FilterKey,
+  filterKeys,
+  languageFilter,
+  type SearchMetadata,
+  typeFilter,
+} from "../utils";
 
 export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   onValueChangeLabelProxy = new Proxy(this, {
@@ -49,7 +55,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         character: [],
         other: [],
         parody: [],
-        author: [],
+        artist: [],
         mixed: [],
       };
     }
@@ -59,66 +65,21 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     return this.searchMetadata;
   }
   override getSections(): FormSectionElement<unknown>[] {
+    const inputSections = filterKeys.map((filter) =>
+      Section(
+        {
+          header: filter.charAt(0).toUpperCase() + filter.slice(1),
+          id: filter.toString(),
+          footer: "Add '-' before the filter to exclude it",
+        },
+        this.getInputFilter(filter),
+      ),
+    );
     return [
       Section("type", this.getTypeFilter()),
       Section("language", this.getLanguageFilter()),
       Section("rating", this.getRatingFilter()),
-      Section(
-        {
-          header: "Male",
-          id: "male",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("male"),
-      ),
-      Section(
-        {
-          header: "Female",
-          id: "female",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("female"),
-      ),
-      Section(
-        {
-          header: "Character",
-          id: "character",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("character"),
-      ),
-      Section(
-        {
-          header: "Other",
-          id: "other",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("other"),
-      ),
-      Section(
-        {
-          header: "Parody",
-          id: "parody",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("parody"),
-      ),
-      Section(
-        {
-          header: "Author",
-          id: "author",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("author"),
-      ),
-      Section(
-        {
-          header: "Mixed",
-          id: "mixed",
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter("mixed"),
-      ),
+      ...inputSections,
       Section("minPagesFilter", this.getMinPagesFilter()),
       Section("maxPagesFilter", this.getMaxPagesFilter()),
     ];
@@ -241,6 +202,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
     if (!arr) return;
     value.length ? (arr[index] = value) : arr.splice(index, 1);
+    return;
   }
   async handleTypeChange(value: string[]): Promise<void> {
     this.searchMetadata.type = value;

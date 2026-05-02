@@ -1,5 +1,3 @@
-import type { JSONObject } from "@paperback/types";
-
 export type Metadata = { page: string };
 
 export const typeFilter: {
@@ -92,19 +90,25 @@ export interface GalleryInfo {
     average: number;
   };
 }
-
-export interface SearchMetadata extends JSONObject {
+type BaseMetadata = {
   type?: string[];
   language?: string[];
-  male?: string[];
-  female?: string[];
-  character?: string[];
-  other?: string[];
-  parody?: string[];
-  author?: string[];
-  mixed?: string[];
   rating?: number;
   minPages?: number;
   maxPages?: number;
-}
-export type FilterKey = "other" | "female" | "male" | "character" | "parody" | "author" | "mixed";
+};
+type FilterMetadata = Partial<Record<FilterKey, string[]>>;
+export type SearchMetadata = BaseMetadata & FilterMetadata;
+
+export type FilterKey = (typeof filterKeys)[number];
+export const filterKeys = [
+  "other",
+  "female",
+  "male",
+  "character",
+  "parody",
+  "artist",
+  "mixed",
+  "cosplayer",
+  "group",
+] as const;

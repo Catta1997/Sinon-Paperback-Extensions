@@ -85,7 +85,7 @@ export class Requests {
     const characterFilter = query.metadata?.character ?? [];
     const femaleFilter = query.metadata?.female ?? [];
     const maleFilter = query.metadata?.male ?? [];
-    const authorFilter = query.metadata?.author ?? [];
+    const artistFilter = query.metadata?.artist ?? [];
     const otherFilter = query.metadata?.other ?? [];
     const mixedFilter = query.metadata?.mixed ?? [];
     const parodyFilter = query.metadata?.parody ?? [];
@@ -135,11 +135,11 @@ export class Requests {
         query.title += ` other:${filter}`;
       }
     });
-    authorFilter.forEach((filter) => {
+    artistFilter.forEach((filter) => {
       if (filter.startsWith("-")) {
-        query.title += ` -author:${filter}`;
+        query.title += ` -artist:${filter}`;
       } else {
-        query.title += ` author:${filter}`;
+        query.title += ` artist:${filter}`;
       }
     });
     mixedFilter.forEach((filter) => {

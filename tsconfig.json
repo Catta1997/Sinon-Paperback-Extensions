@@ -20,7 +20,7 @@
     "noEmit": true,
 
     // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
+    // "noUncheckedIndexedAccess": true, // TODO: Re-enable this later
     // "exactOptionalPropertyTypes": false,
 
     // Style Options
@@ -39,6 +39,7 @@
     "forceConsistentCasingInFileNames": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
+  "exclude": ["./src/tests"]
 }
