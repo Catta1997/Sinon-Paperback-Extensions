@@ -3,6 +3,7 @@ import {
   type FormItemElement,
   type FormSectionElement,
   InputRow,
+  LabelRow,
   type SearchQuery,
   Section,
   SelectRow,
@@ -16,7 +17,7 @@ import {
   typeFilter,
 } from "../utils";
 
-export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
+class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   onValueChangeLabelProxy = new Proxy(this, {
     has(target, p) {
       return typeof p === "string" && (p.startsWith("onSelect_") || p.startsWith("handle_"))
@@ -49,20 +50,29 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       this.searchMetadata = searchQuery.metadata;
     } else {
       this.searchMetadata = {
-        language: [],
-        male: [],
-        female: [],
-        character: [],
-        other: [],
-        parody: [],
-        artist: [],
-        mixed: [],
+        type: (Application.getState("_type") as string[]) ?? [],
       };
     }
   }
 
   override getSearchQueryMetadata(): SearchMetadata {
     return this.searchMetadata;
+  }
+
+  override async formDidSubmit(): Promise<void> {
+    if (this.searchMetadata.maxPages && this.searchMetadata.maxPages < 10) {
+      throw new Error("Invalid maximum page value: The maximum number of pages cannot be below 10");
+    }
+
+    if (
+      this.searchMetadata.minPages &&
+      this.searchMetadata.maxPages &&
+      this.searchMetadata.maxPages - this.searchMetadata.minPages < 20
+    ) {
+      throw new Error(
+        "Invalid page range: the maximum number of pages must be at least 20 greater than the minimum.",
+      );
+    }
   }
   override getSections(): FormSectionElement<unknown>[] {
     const inputSections = filterKeys.map((filter) =>
@@ -104,7 +114,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         subtitle: "Select the genre(s) to include in search results",
         value: this.searchMetadata.language ?? [],
         minItemCount: 0,
-        maxItemCount: 1,
+        maxItemCount: languageFilter.length,
         options: languageFilter.map((x) => ({ id: x.id, title: x.value })),
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
@@ -159,9 +169,8 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       StepperRow(`minPages`, {
         title: "Min Pages",
         value: this.searchMetadata.minPages ?? 0,
-        subtitle: "Minimum Value: 10",
-        minValue: 10,
-        maxValue: this.searchMetadata.maxPages ? this.searchMetadata.maxPages : 1000,
+        minValue: 0,
+        maxValue: this.searchMetadata.maxPages ? this.searchMetadata.maxPages - 20 : 999,
         stepValue: 1,
         loopOver: false,
         onValueChange: Application.Selector(
@@ -172,19 +181,30 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     ];
   }
   getMaxPagesFilter(): FormItemElement<unknown>[] {
+    const max = this.searchMetadata.maxPages ?? 0;
+    const min = this.searchMetadata.minPages ?? 0;
+    const range = min != 0 && max - min < 20;
+    const minMaxVale = min != 0 && max < 10;
     return [
       StepperRow(`maxPages`, {
         title: "Max Pages",
         value: this.searchMetadata.maxPages ?? 0,
-        subtitle: "Minimum Value: minimum pages + 20",
         minValue: 0,
-        maxValue: 200,
+        maxValue: 999,
         stepValue: 1,
         loopOver: false,
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleMaxPagesChange",
         ),
+      }),
+      LabelRow("error", {
+        title: "Error",
+        value: range
+          ? "Invalid page range: the maximum number " +
+            "of pages must be at least 20 greater than the minimum."
+          : "Invalid maximum page value: The maximum" + "number of pages cannot be below 10",
+        isHidden: !range && !minMaxVale,
       }),
     ];
   }
@@ -200,7 +220,7 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     }
     const index = Number(indexStr);
     const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
-    if (!arr) return;
+    if (!arr || isNaN(index)) return;
     value.length ? (arr[index] = value) : arr.splice(index, 1);
     return;
   }
@@ -220,3 +240,5 @@ export class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     this.searchMetadata.minPages = value;
   }
 }
+
+export default EHentaiAdvancedSearchForm;

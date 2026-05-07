@@ -17,7 +17,7 @@ import {
   type SourceManga,
   type AdvancedSearchForm,
 } from "@paperback/types";
-import { EHentaiAdvancedSearchForm } from "./forms/search";
+import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
 import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
@@ -76,11 +76,6 @@ export class EHentaiExtension implements EHentaiImplementation {
   async getAdvancedSearchForm(
     searchQuery: SearchQuery<SearchMetadata>,
   ): Promise<AdvancedSearchForm> {
-    if (searchQuery.metadata === undefined) {
-      searchQuery.metadata = {
-        type: (Application.getState("_type") as string[]) ?? [],
-      };
-    }
     return new EHentaiAdvancedSearchForm(searchQuery);
   }
   getSearchResults(

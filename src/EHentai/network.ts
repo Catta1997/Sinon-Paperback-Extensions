@@ -74,11 +74,22 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export class Requests {
+  buildFilter(query: string, filter: { id: string; value: string[] }) {
+    filter.value.forEach((filterValue) => {
+      if (filterValue.startsWith("-")) {
+        query += ` -${filter.id}:${filterValue.split("-")[1]}`;
+      } else {
+        if (filter.id === "language" && filter.value.length > 0) {
+          query += ` ~${filter.id}:${filterValue}`;
+        } else {
+          query += ` ${filter.id}:${filterValue}`;
+        }
+      }
+    });
+    return query;
+  }
   async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
-
-    // const getFilter = (id: string) => query.filters.find((f) => f.id === id)?.value;
-
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
     const typeFilter = query.metadata?.type ?? [];
     const languageFilter = query.metadata?.language ?? [];
@@ -97,82 +108,53 @@ export class Requests {
         url.setQueryItem("f_cats", String(1023 - ratingSum));
       }
     }
+    const filterMap = [
+      {
+        id: "language",
+        value: languageFilter,
+      },
+      {
+        id: "character",
+        value: characterFilter,
+      },
+      {
+        id: "female",
+        value: femaleFilter,
+      },
+      {
+        id: "male",
+        value: maleFilter,
+      },
+      {
+        id: "artist",
+        value: artistFilter,
+      },
+      {
+        id: "other",
+        value: otherFilter,
+      },
+      {
+        id: "mixed",
+        value: mixedFilter,
+      },
+      {
+        id: "parody",
+        value: parodyFilter,
+      },
+    ];
     if (rating >= 0) {
       url.setQueryItem("f_srdd", rating.toString());
     }
-    characterFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -character:${filter}`;
-      } else {
-        query.title += ` character:${filter}`;
-      }
-    });
-    maleFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -male:${filter}`;
-      } else {
-        query.title += ` male:${filter}`;
-      }
-    });
-    femaleFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -female:${filter}`;
-      } else {
-        query.title += ` female:${filter}`;
-      }
-    });
-    parodyFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -parody:${filter}`;
-      } else {
-        query.title += ` parody:${filter}`;
-      }
-    });
-    otherFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -other:${filter}`;
-      } else {
-        query.title += ` other:${filter}`;
-      }
-    });
-    artistFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -artist:${filter}`;
-      } else {
-        query.title += ` artist:${filter}`;
-      }
-    });
-    mixedFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -mixed:${filter}`;
-      } else {
-        query.title += ` mixed:${filter}`;
-      }
-    });
-    languageFilter.forEach((filter) => {
-      if (filter.startsWith("-")) {
-        query.title += ` -language:${filter}`;
-      } else {
-        query.title += ` language:${filter}`;
-      }
+    filterMap.forEach((filter) => {
+      query.title = this.buildFilter(query.title, filter);
     });
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
-    const min = query.metadata?.minPages ?? -1;
-    const max = query.metadata?.maxPages ?? -1;
-
-    if (isValid(max) && max < 10) {
-      throw new Error("The page range maximum cannot be below 10");
-    }
-
-    if (isValid(min) && isValid(max) && max - min < 20) {
-      throw new Error("Your page range filter is too narrow");
-    }
-
+    const min = query.metadata?.minPages ?? 0;
+    const max = query.metadata?.maxPages ?? 0;
     if (isValid(min)) url.setQueryItem("f_spf", String(min));
     if (isValid(max)) url.setQueryItem("f_spt", String(max));
-
     if (metadata?.page) {
       url.setQueryItem("next", metadata.page);
     }

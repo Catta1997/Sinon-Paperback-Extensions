@@ -1,8 +1,7 @@
 {
   "name": "sinon-extensions",
-  "repositoryName": "Sinon's Extensions (0.9)",
-  "description": "Some Paperback Extensions",
   "private": true,
+  "description": "Some Paperback Extensions",
   "type": "module",
   "scripts": {
     "lint": "oxlint --type-aware --fix",
@@ -18,8 +17,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@paperback/toolchain": "^1.0.0-alpha.78",
-    "@paperback/types": "^1.0.0-alpha.78",
+    "@paperback/toolchain": "^1.0.0-alpha.85",
+    "@paperback/types": "^1.0.0-alpha.85",
     "@types/chai": "^5.2.3",
     "@types/upng-js": "^2.1.5",
     "chai": "^6.2.2",
@@ -33,5 +32,6 @@
     "stemmer": "^2.0.1",
     "typescript": "^6.0.3",
     "upng-js": "^2.1.0"
-  }
+  },
+  "repositoryName": "Sinon's Extensions (0.9)"
 }
