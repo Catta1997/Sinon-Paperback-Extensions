@@ -8,6 +8,7 @@ import {
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
 import { DOMAIN } from "./main";
+import type { SearchMetadata } from "../EHentai/utils";
 
 export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
@@ -36,8 +37,8 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export class Requests {
-  async requestSearchResults(query: SearchQuery, metadata: RokuMetadata) {
-    const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
+  async requestSearchResults(query: SearchQuery<SearchMetadata>, metadata: RokuMetadata) {
+    /*  const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
     const languageFilter: string[] = [];
     const tagFilter: string[] = [];
 
@@ -53,7 +54,7 @@ export class Requests {
       for (const tag of Object.entries(tags)) {
         if (tag[1] == "included") tagFilter.push(tag[0]);
       }
-    }
+    }*/
     const page = metadata?.page ?? "";
     const keyword = query.title;
     const baseURL: URL = new URL(`${DOMAIN}_search`);
@@ -61,7 +62,7 @@ export class Requests {
       baseURL.setQueryItem("q", keyword);
     }
     let url = baseURL.toString();
-    if (tagFilter.length > 0) {
+    /* if (tagFilter.length > 0) {
       tagFilter.forEach((filter) => {
         url = `${url}+tag:${filter}`;
       });
@@ -70,7 +71,7 @@ export class Requests {
       languageFilter.forEach((filter) => {
         url = `${url}+language:${filter}`;
       });
-    }
+    }*/
     const data = await Application.scheduleRequest({
       url: page.length > 0 ? page : url,
       method: "GET",

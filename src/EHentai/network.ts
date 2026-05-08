@@ -8,7 +8,7 @@ import {
   CloudflareError,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { type Metadata } from "./utils";
+import { type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -74,73 +74,87 @@ export class MainInterceptor extends PaperbackInterceptor {
 }
 
 export class Requests {
-  private applyFilters(filterIds: string[], query: SearchQuery): string {
-    const prefix = filterIds
-      .flatMap((id) => {
-        const value = query.filters.find((f) => f.id === id)?.value;
-        return typeof value === "string" && value.length
-          ? value.split(/\s*,\s*/).map((v) => {
-              const isNegated = v.startsWith("-");
-              const cleanValue = isNegated ? v.slice(1) : v;
-              return `${isNegated ? "-" : ""}${id}:"${cleanValue}$"`;
-            })
-          : [];
-      })
-      .join(" ");
-    return prefix ? `${prefix} ${query.title}`.trim() : query.title;
+  buildFilter(query: string, filter: { id: string; value: string[] }) {
+    filter.value.forEach((filterValue) => {
+      if (filterValue.startsWith("-")) {
+        query += ` -${filter.id}:${filterValue.split("-")[1]}`;
+      } else {
+        if (filter.id === "language" && filter.value.length > 0) {
+          query += ` ~${filter.id}:${filterValue}`;
+        } else {
+          query += ` ${filter.id}:${filterValue}`;
+        }
+      }
+    });
+    return query;
   }
-
-  async searchRequest(query: SearchQuery, metadata: Metadata) {
+  async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
-
-    const getFilter = (id: string) => query.filters.find((f) => f.id === id)?.value;
-
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
-    const typeFilter = getFilter("typeFilter");
-    if (typeFilter && typeof typeFilter === "object") {
-      const ratingSum = Object.entries(typeFilter)
-        .filter(([, v]) => v === "included")
-        .reduce((sum, [k]) => sum + Number(k), 0);
+    const typeFilter = query.metadata?.type ?? [];
+    const languageFilter = query.metadata?.language ?? [];
+    const characterFilter = query.metadata?.character ?? [];
+    const femaleFilter = query.metadata?.female ?? [];
+    const maleFilter = query.metadata?.male ?? [];
+    const artistFilter = query.metadata?.artist ?? [];
+    const otherFilter = query.metadata?.other ?? [];
+    const mixedFilter = query.metadata?.mixed ?? [];
+    const parodyFilter = query.metadata?.parody ?? [];
+    const rating = query.metadata?.rating ?? -1;
 
+    if (typeFilter && typeof typeFilter === "object") {
+      const ratingSum = typeFilter.reduce((totale, valore) => totale + Number(valore), 0);
       if (ratingSum > 0) {
         url.setQueryItem("f_cats", String(1023 - ratingSum));
       }
     }
-    const stringFilters: [string, string][] = [
-      ["ratingFilter", "f_srdd"],
-      ["expungedFilter", "f_sh"],
+    const filterMap = [
+      {
+        id: "language",
+        value: languageFilter,
+      },
+      {
+        id: "character",
+        value: characterFilter,
+      },
+      {
+        id: "female",
+        value: femaleFilter,
+      },
+      {
+        id: "male",
+        value: maleFilter,
+      },
+      {
+        id: "artist",
+        value: artistFilter,
+      },
+      {
+        id: "other",
+        value: otherFilter,
+      },
+      {
+        id: "mixed",
+        value: mixedFilter,
+      },
+      {
+        id: "parody",
+        value: parodyFilter,
+      },
     ];
-
-    stringFilters.forEach(([id, param]) => {
-      const value = getFilter(id);
-      if (typeof value === "string" && value.length) {
-        url.setQueryItem(param, value);
-      }
+    if (rating >= 0) {
+      url.setQueryItem("f_srdd", rating.toString());
+    }
+    filterMap.forEach((filter) => {
+      query.title = this.buildFilter(query.title, filter);
     });
-
-    query.title = this.applyFilters(
-      ["character", "language", "male", "female", "other", "parody", "author", "mixed"],
-      query,
-    );
-
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
-
-    const min = Number(getFilter("minPagesFilter"));
-    const max = Number(getFilter("maxPagesFilter"));
-
-    if (isValid(max) && max < 10) {
-      throw new Error("The page range maximum cannot be below 10");
-    }
-
-    if (isValid(min) && isValid(max) && max - min < 20) {
-      throw new Error("Your page range filter is too narrow");
-    }
-
+    const min = query.metadata?.minPages ?? 0;
+    const max = query.metadata?.maxPages ?? 0;
     if (isValid(min)) url.setQueryItem("f_spf", String(min));
     if (isValid(max)) url.setQueryItem("f_spt", String(max));
-
     if (metadata?.page) {
       url.setQueryItem("next", metadata.page);
     }

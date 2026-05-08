@@ -13,7 +13,7 @@ import {
 import * as cheerio from "cheerio";
 import { type CheerioAPI } from "cheerio";
 import { Requests } from "./network";
-import { type GalleryInfo, getLangFlag, type Metadata } from "./utils";
+import { type GalleryInfo, getLangFlag, type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
 
 const network = new Requests();
@@ -84,7 +84,7 @@ export class Parser {
   }
 
   async parseSearchResults(
-    query: SearchQuery,
+    query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
     const html = await network.searchRequest(query, metadata);

@@ -9,16 +9,14 @@ import {
   type Extension,
   type MangaProviding,
   type PagedResults,
-  type SearchFilter,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
-  type SortingOption,
   type SourceManga,
 } from "@paperback/types";
-import type { Metadata } from "./models";
 import { MainInterceptor } from "./network";
 import { globalFilters, JsonParser } from "./parsers";
+import type { SearchMetadata } from "../EHentai/utils";
 
 const parse = new JsonParser();
 export const filter = new globalFilters();
@@ -51,18 +49,9 @@ export class HentaiHandExtension implements HentaiHandImplementation {
       }
     }
   }
-  async getSearchFilters(): Promise<SearchFilter[]> {
-    return filter.getFilters();
-  }
 
-  getSearchResults(
-    query: SearchQuery,
-    metadata: Metadata | undefined,
-  ): Promise<PagedResults<SearchResultItem>> {
-    return parse.parseSearchResults(query, metadata);
-  }
-  async getSortingOptions(): Promise<SortingOption[]> {
-    return [];
+  getSearchResults(query: SearchQuery<SearchMetadata>): Promise<PagedResults<SearchResultItem>> {
+    return parse.parseSearchResults(query);
   }
 
   getMangaDetails(mangaId: string): Promise<SourceManga> {

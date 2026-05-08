@@ -10,17 +10,18 @@ import {
   type Extension,
   type MangaProviding,
   type PagedResults,
-  type SearchFilter,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
   type SettingsFormProviding,
   type SourceManga,
+  type AdvancedSearchForm,
 } from "@paperback/types";
-import { Forms } from "./forms";
+import EHentaiAdvancedSearchForm from "./forms/search";
+import { SettingsForm } from "./forms/settings";
 import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
-import { getLanguageFilter, type Metadata, ratingFilter, typeFilter } from "./utils";
+import { type Metadata, type SearchMetadata } from "./utils";
 
 type EHentaiImplementation = SettingsFormProviding &
   DiscoverSectionProviding &
@@ -33,7 +34,7 @@ const parser = new Parser();
 export const BASE_URL = "https://e-hentai.org";
 export class EHentaiExtension implements EHentaiImplementation {
   async getSettingsForm(): Promise<Form> {
-    return new Forms();
+    return new SettingsForm();
   }
 
   async getDiscoverSections(): Promise<DiscoverSection[]> {
@@ -72,123 +73,20 @@ export class EHentaiExtension implements EHentaiImplementation {
     return parser.parseMangaDetail(mangaId);
   }
 
-  async getSearchFilters(): Promise<SearchFilter[]> {
-    const filters: SearchFilter[] = [];
-    const filterValue = (Application.getState("_type") as string[]) ?? [];
-    const fullList = typeFilter.map((item) => item.id);
-    const getCategoryFilter = Object.fromEntries(
-      (filterValue.length > 0 ? filterValue : fullList).map((item) => [item, "included" as const]),
-    ) as Record<string, "included" | "excluded">;
-    filters.push({
-      allowExclusion: false,
-      maximum: typeFilter.length,
-      type: "multiselect",
-      id: "typeFilter",
-      title: "Type",
-      options: typeFilter,
-      value: getCategoryFilter,
-      allowEmptySelection: false,
-    });
-    filters.push({
-      type: "dropdown",
-      id: "language",
-      title: "Language",
-      options: getLanguageFilter(),
-      value: "",
-    });
-    filters.push({
-      type: "dropdown",
-      id: "f_srdd",
-      title: "Rating",
-      options: ratingFilter,
-      value: "",
-    });
-    filters.push({
-      type: "dropdown",
-      id: "expungedFilter",
-      title: "Browse Expunged Galleries",
-      options: [
-        {
-          id: "on",
-          value: "Yes",
-        },
-        {
-          id: "",
-          value: "No",
-        },
-      ],
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "character",
-      title: "Character",
-      placeholder: "You can separate them with ',' and exclude it with '-'",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "female",
-      title: "Female",
-      placeholder: "You can separate them with ',' and exclude it with '-'",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "male",
-      title: "Male",
-      placeholder: "You can separate them with ',' and exclude it with '-'",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "parody",
-      title: "Series",
-      placeholder: "",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "other",
-      title: "Other",
-      placeholder: "You can separate them with ',' and exclude it with '-'",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "minPagesFilter",
-      title: "Minimum pages",
-      placeholder: "",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "maxPagesFilter",
-      title: "Maximum pages",
-      placeholder: "",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "artist",
-      title: "Artist",
-      placeholder: "",
-      value: "",
-    });
-    filters.push({
-      type: "input",
-      id: "mixed",
-      title: "Mixed",
-      placeholder: "You can separate them with ',' and exclude it with '-'",
-      value: "",
-    });
-    return filters;
+  async getAdvancedSearchForm(
+    searchQuery: SearchQuery<SearchMetadata>,
+  ): Promise<AdvancedSearchForm> {
+    return new EHentaiAdvancedSearchForm(searchQuery);
   }
-
   getSearchResults(
-    query: SearchQuery,
+    query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
+    if (query.metadata === undefined) {
+      query.metadata = {
+        type: (Application.getState("_type") as string[]) ?? [],
+      };
+    }
     return parser.parseSearchResults(query, metadata);
   }
 

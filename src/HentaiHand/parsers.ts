@@ -1,7 +1,6 @@
 import {
   ContentRating,
   type MangaInfo,
-  type SearchFilter,
   type Chapter,
   type ChapterDetails,
   type PagedResults,
@@ -11,8 +10,8 @@ import {
   type Tag,
   type TagSection,
 } from "@paperback/types";
-import type { Metadata } from "./models";
 import { ApiMaker } from "./network";
+import type { SearchMetadata } from "../EHentai/utils";
 
 const api = new ApiMaker();
 export class JsonParser {
@@ -79,12 +78,11 @@ export class JsonParser {
   }
 
   async parseSearchResults(
-    query: SearchQuery,
-    metadata: Metadata | undefined,
+    query: SearchQuery<SearchMetadata>,
   ): Promise<PagedResults<SearchResultItem>> {
-    const page = metadata?.page ?? 1;
+    // const page = metadata?.page ?? 1;
 
-    const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
+    /*   const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
     const category: string | Record<string, "included" | "excluded"> =
       getFilterValue("category") ?? "";
     const language: string | Record<string, "included" | "excluded"> =
@@ -100,8 +98,8 @@ export class JsonParser {
       for (const tag of Object.entries(language)) {
         if (tag[1] == "included") langFilter.push(tag[0]);
       }
-    }
-    const search = await api.getJsonSearchApi(query.title, page, langFilter, categoryFilter);
+    }*/
+    const search = await api.getJsonSearchApi(query.title, 1, [], []);
     const items: SearchResultItem[] = [];
     search.data.forEach((item) => {
       items.push({
@@ -113,14 +111,14 @@ export class JsonParser {
     });
     return {
       items: items,
-      metadata: search.data.length > 0 ? { page: page + 1 } : undefined,
+      metadata: undefined,
     };
   }
 }
 
 export class globalFilters {
   themes = [];
-
+  /*
   async getFilters() {
     const filters: SearchFilter[] = [];
     const lang = await api.getJSONFilters("languages");
@@ -155,4 +153,5 @@ export class globalFilters {
     });
     return filters;
   }
+*/
 }

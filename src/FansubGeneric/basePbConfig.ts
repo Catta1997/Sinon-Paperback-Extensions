@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export const basePbConfig = {
   name: "",
   description: "",
-  version: "1.0.0-alpha.2",
+  version: "1.0.2",
   icon: "",
   language: "",
   capabilities: [

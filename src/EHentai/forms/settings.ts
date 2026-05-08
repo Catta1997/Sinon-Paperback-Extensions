@@ -1,16 +1,9 @@
-import {
-  Form,
-  Section,
-  SelectRow,
-  type FormSectionElement,
-  StepperRow,
-  ToggleRow,
-} from "@paperback/types";
-import { typeFilter } from "./utils";
-import { mainRateLimiter } from "./network";
+import { typeFilter } from "../utils";
+import { Form, Section, SelectRow, StepperRow, ToggleRow } from "@paperback/types";
+import { mainRateLimiter } from "../network";
 
-export class Forms extends Form {
-  override getSections(): FormSectionElement[] {
+export class SettingsForm extends Form {
+  override getSections() {
     const types: { id: string; title: string }[] = typeFilter.map((tag) => ({
       id: tag.id,
       title: tag.value,
@@ -30,7 +23,7 @@ export class Forms extends Form {
             options: types,
             minItemCount: 1,
             maxItemCount: types.length,
-            onValueChange: Application.Selector(this as Forms, "handleHideTypeStatusChange"),
+            onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
           }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
@@ -40,14 +33,14 @@ export class Forms extends Form {
             maxValue: 100,
             stepValue: 1,
             loopOver: true,
-            onValueChange: Application.Selector(this as Forms, "handleRateStatusChange"),
+            onValueChange: Application.Selector(this as SettingsForm, "handleRateStatusChange"),
           }),
           ToggleRow("tl_link", {
             title: "Use Secondary Image Link",
             subtitle:
               "Use every time the second available image link (chapter image load will be slower)",
             value: this.getRateNLValue(),
-            onValueChange: Application.Selector(this as Forms, "handleNLStatusChange"),
+            onValueChange: Application.Selector(this as SettingsForm, "handleNLStatusChange"),
           }),
         ],
       ),
@@ -64,7 +57,7 @@ export class Forms extends Form {
 
   async handleHideTypeStatusChange(value: string[]): Promise<void> {
     await this.updateValue(value, "_type");
-    Application.invalidateSearchFilters();
+    // Application.invalidateSearchFilters();
   }
 
   getRateFormsValue(): number {

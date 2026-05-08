@@ -3,14 +3,15 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "EHentai",
   description: "Extension that pulls content from E-Hentai.",
-  version: "1.0.2",
+  version: "1.0.4",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
-  capabilities:
+  capabilities: [
     SourceIntents.SETTINGS_FORM_PROVIDING |
-    SourceIntents.DISCOVER_SECIONS_PROVIDING |
-    SourceIntents.SEARCH_RESULTS_PROVIDING |
-    SourceIntents.CHAPTER_PROVIDING,
+      SourceIntents.DISCOVER_SECTION_PROVIDING |
+      SourceIntents.SEARCH_RESULT_PROVIDING |
+      SourceIntents.CHAPTER_PROVIDING,
+  ],
   badges: [],
   developers: [
     {

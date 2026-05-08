@@ -8,18 +8,18 @@ import {
   type SearchResultItem,
   type SourceManga,
   type Tag,
-  type SearchFilter,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
 import { filter_lang, filter_tags, type MangaCardInfo, type RokuMetadata } from "./utils";
 import { DOMAIN } from "./main";
+import type { SearchMetadata } from "../EHentai/utils";
 
 const requestMaker = new Requests();
 
 export class Parser {
   async parseSearchResult(
-    query: SearchQuery,
+    query: SearchQuery<SearchMetadata>,
     metadata: RokuMetadata,
   ): Promise<PagedResults<SearchResultItem>> {
     const items: SearchResultItem[] = [];
@@ -117,7 +117,7 @@ export class Parser {
   }
 
   getFilters() {
-    const filters: SearchFilter[] = [];
+    const filters = [];
     filters.push({
       type: "multiselect",
       id: "languages",

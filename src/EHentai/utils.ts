@@ -74,32 +74,6 @@ export const languageFilter = [
   { id: "vietnamese", value: "Vietnamese", flag: "🇻🇳" },
 ];
 
-export const ratingFilter: {
-  id: string;
-  value: string;
-}[] = [
-  {
-    id: "",
-    value: "Any Rating",
-  },
-  {
-    id: "2",
-    value: "2 Stars",
-  },
-  {
-    id: "3",
-    value: "3 Stars",
-  },
-  {
-    id: "4",
-    value: "4 Stars",
-  },
-  {
-    id: "5",
-    value: "5 Stars",
-  },
-];
-
 export interface GalleryInfo {
   category: string;
   uploader: {
@@ -116,3 +90,25 @@ export interface GalleryInfo {
     average: number;
   };
 }
+type BaseMetadata = {
+  type?: string[];
+  language?: string[];
+  rating?: number;
+  minPages?: number;
+  maxPages?: number;
+};
+type FilterMetadata = Partial<Record<FilterKey, string[]>>;
+export type SearchMetadata = BaseMetadata & FilterMetadata;
+
+export type FilterKey = (typeof filterKeys)[number];
+export const filterKeys = [
+  "other",
+  "female",
+  "male",
+  "character",
+  "parody",
+  "artist",
+  "mixed",
+  "cosplayer",
+  "group",
+] as const;
