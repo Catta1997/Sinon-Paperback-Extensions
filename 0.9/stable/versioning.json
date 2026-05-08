@@ -1,21 +1,23 @@
 {
-  "buildTime": "2026-04-05T18:36:35.830Z",
+  "buildTime": "2026-05-08T17:31:05.753Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.57",
-    "types": "1.0.0-alpha.57"
+    "toolchain": "1.0.0-alpha.85",
+    "types": "1.0.0-alpha.85"
   },
   "repository": {
-    "name": "Sinon's Extensions (0.9)",
+    "name": "sinon-extensions",
     "description": "Some Paperback Extensions"
   },
   "sources": [
     {
       "name": "EHentai",
       "description": "Extension that pulls content from E-Hentai.",
-      "version": "1.0.2",
+      "version": "1.0.4",
       "icon": "icon.png",
       "contentRating": "ADULT",
-      "capabilities": 101,
+      "capabilities": [
+        101
+      ],
       "badges": [],
       "developers": [
         {
@@ -28,7 +30,7 @@
     {
       "name": "GTOTheGreatSite",
       "description": "Extension that pulls manga from GTOTheGreatSite.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
@@ -55,7 +57,7 @@
     {
       "name": "HastaTeam",
       "description": "Extension that pulls manga from HastaTeam.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
@@ -82,7 +84,7 @@
     {
       "name": "HastaTeamDDT",
       "description": "Extension that pulls manga from HastaTeamDDT.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
@@ -109,11 +111,13 @@
     {
       "name": "HentaiHand",
       "description": "Extension that pulls content from HentaiHand",
-      "version": "1.0.0-alpha.3",
+      "version": "1.0.0-alpha.4",
       "icon": "icon.png",
       "language": "en",
       "contentRating": "ADULT",
-      "capabilities": 85,
+      "capabilities": [
+        85
+      ],
       "badges": [],
       "developers": [
         {
@@ -126,7 +130,7 @@
     {
       "name": "LupiTeam",
       "description": "Extension that pulls manga from LupiTeam.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
@@ -153,7 +157,7 @@
     {
       "name": "PhoenixScans",
       "description": "Extension that pulls manga from PhoenixScans.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
@@ -180,10 +184,12 @@
     {
       "name": "RokuHentai",
       "description": "Extension that pulls content from RokuHentai.com",
-      "version": "1.0.0-alpha.3",
+      "version": "1.0.0-alpha.4",
       "icon": "icon.png",
       "contentRating": "ADULT",
-      "capabilities": 81,
+      "capabilities": [
+        81
+      ],
       "badges": [],
       "developers": [
         {
@@ -196,7 +202,7 @@
     {
       "name": "TuttoAnimeManga",
       "description": "Extension that pulls manga from TuttoAnimeManga.",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.2",
       "icon": "icon.png",
       "language": "it",
       "capabilities": [
