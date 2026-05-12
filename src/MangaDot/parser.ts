@@ -16,6 +16,7 @@ import {
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
+import {normalizeId} from "./utils";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -39,7 +40,7 @@ export class Parser {
             id: "genres",
             title: "Genres",
             tags: mangaInfo.genres.map((genre) => ({
-              id: genre,
+              id: normalizeId(genre),
               title: genre,
             })),
           },

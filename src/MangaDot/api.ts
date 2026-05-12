@@ -10,6 +10,7 @@ import {
   type SearchInfoAPI,
 } from "./models";
 import { URL, type Request, type SearchQuery, type Metadata } from "@paperback/types";
+import {deNormalizeId, normalizeId} from "./utils";
 
 export class MangaDotApi {
   apiLink = "";
@@ -108,7 +109,7 @@ export class MangaDotApi {
   async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number) {
     let genres = query.metadata?.genres ?? [];
     const formattedGenres = Object.entries(genres).map(([genre, state]) => {
-      const normalized = genre.replaceAll("@", "-").replaceAll("&", "'").replaceAll("#", " ");
+      const normalized = deNormalizeId(genre)
       return state === "excluded" ? `-${normalized}` : normalized;
     });
     let statuses = query.metadata?.status ?? [];
