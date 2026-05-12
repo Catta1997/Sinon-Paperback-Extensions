@@ -90,26 +90,31 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
       }
     }
   }
-  getSettingsForm(): Promise<Form> {
-    throw new Error("Method not implemented.");
-  }
   async getAdvancedSearchForm(searchQuery: SearchQuery<BaseMetadata>): Promise<AdvancedSearchForm> {
-    // this.filters.setGenre(await this.api.getFilters());
     const filters = await this.api.getFilters();
     return new MangaDotAdvancedSearchForm(searchQuery, filters);
   }
   async getSearchResults(
     query: SearchQuery<BaseMetadata>,
     metadata: MangaDotMetadata | undefined,
-    sortingOption: SortingOption | undefined,
+    sortingOption: SortingOption,
   ): Promise<PagedResults<SearchResultItem>> {
     const page = metadata?.page ?? 1;
-    const search = await this.api.getJsonSearchApi(query, page);
+    const search = await this.api.getJsonSearchApi(query, page,sortingOption);
     return this.parser.parseSearch(search, metadata);
   }
-
+  async getSortingOptions(_query: SearchQuery<BaseMetadata>): Promise<SortingOption[]> {
+    return [
+      {id: "latest", label: "Latest"},
+      {id: "alphabetical", label: "A-Z"},
+      {id: "chapters", label: "Chapters"},
+      {id: "views", label: "Most Viewed"},
+      {id: "tracked", label: "Most tracked"},
+      {id: "rating", label: "Top Rated"},
+    ]
+  }
   globalRateLimiter = new BasicRateLimiter("rateLimiter", {
-    numberOfRequests: 5,
+    numberOfRequests: 2,
     bufferInterval: 1,
     ignoreImages: true,
   });

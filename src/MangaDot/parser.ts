@@ -34,7 +34,7 @@ export class Parser {
         artist: Array.isArray(mangaInfo.artists) ? mangaInfo.artists.join(",") : mangaInfo.artists,
         author: Array.isArray(mangaInfo.authors) ? mangaInfo.authors.join(",") : mangaInfo.authors,
         bannerUrl: `${DOMAIN}${mangaInfo.photo}`,
-        rating: mangaInfo.avg_rating,
+        rating: mangaInfo.avg_rating/10,
         tagGroups: [
           {
             id: "genres",

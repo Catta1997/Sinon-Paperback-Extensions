@@ -9,7 +9,7 @@ import {
   type MangaSectionAPI,
   type SearchInfoAPI,
 } from "./models";
-import { URL, type Request, type SearchQuery, type Metadata } from "@paperback/types";
+import {URL, type Request, type SearchQuery, type Metadata, type SortingOption} from "@paperback/types";
 import {deNormalizeId, normalizeId} from "./utils";
 
 export class MangaDotApi {
@@ -106,7 +106,7 @@ export class MangaDotApi {
     });
   }
 
-  async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number) {
+  async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number, sorting:SortingOption) {
     let genres = query.metadata?.genres ?? [];
     const formattedGenres = Object.entries(genres).map(([genre, state]) => {
       const normalized = deNormalizeId(genre)
@@ -128,6 +128,7 @@ export class MangaDotApi {
         genres: formattedGenres.join(","),
         origin: formattedOrigin.join(","),
         status: formattedStatus.join(","),
+        sortBy: sorting.id
       },
     });
   }
