@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-05-08T17:31:05.753Z",
+  "buildTime": "2026-05-12T12:37:16.201Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.85",
     "types": "1.0.0-alpha.85"
@@ -153,6 +153,29 @@
       ],
       "contentRating": "SAFE",
       "id": "LupiTeam"
+    },
+    {
+      "name": "MangaDot",
+      "description": "Extension that pulls content from MangaDot.net",
+      "version": "1.0.0-alpha.1",
+      "icon": "icon.svg",
+      "language": "en",
+      "contentRating": "SAFE",
+      "capabilities": [
+        1,
+        16,
+        4,
+        64,
+        32
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "MangaDot"
     },
     {
       "name": "PhoenixScans",
