@@ -1,16 +1,16 @@
 import {
   API,
   type ApiRequestConfig,
-  type BaseMetadata,
   type ChapterPagesAPI,
   DOMAIN,
   type MangaChapterListAPI,
   type MangaInfoAPI,
   type MangaSectionAPI,
   type SearchInfoAPI,
+  type SearchSuggestionsAPI,
 } from "./models";
-import {URL, type Request, type SearchQuery, type Metadata, type SortingOption} from "@paperback/types";
-import {deNormalizeId, normalizeId} from "./utils";
+import { URL, type Request, type SearchQuery, type SortingOption } from "@paperback/types";
+import { deNormalizeId, type BaseMetadata } from "./utils";
 
 export class MangaDotApi {
   apiLink = "";
@@ -39,19 +39,6 @@ export class MangaDotApi {
     }
     const data = await Application.scheduleRequest(request);
     return Application.arrayBufferToUTF8String(data[1]);
-  }
-  private buildApiPath(api: ApiRequestConfig): string {
-    const parts = (Array.isArray(api.path) ? api.path : [api.path]).join("/");
-    const qs = api.query
-      ? Object.entries(api.query)
-          .flatMap(([k, v]) =>
-            (Array.isArray(v) ? v : [v]).map(
-              (x) => `${encodeURIComponent(k)}=${encodeURIComponent(x)}`,
-            ),
-          )
-          .join("&")
-      : "";
-    return "/" + parts + (qs ? "?" + qs : "");
   }
   async getJsonSectionApi(section: string): Promise<MangaSectionAPI> {
     const sections: Record<string, ApiRequestConfig> = {
@@ -106,10 +93,10 @@ export class MangaDotApi {
     });
   }
 
-  async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number, sorting:SortingOption) {
+  async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number, sorting: SortingOption) {
     let genres = query.metadata?.genres ?? [];
     const formattedGenres = Object.entries(genres).map(([genre, state]) => {
-      const normalized = deNormalizeId(genre)
+      const normalized = deNormalizeId(genre);
       return state === "excluded" ? `-${normalized}` : normalized;
     });
     let statuses = query.metadata?.status ?? [];
@@ -120,6 +107,7 @@ export class MangaDotApi {
     const formattedOrigin = Object.entries(origins).map(([origin, state]) => {
       return state === "excluded" ? `-${origin}` : origin;
     });
+    let authors = query.metadata?.author ?? [];
     return this.APIJson<SearchInfoAPI>({
       path: ["search"],
       query: {
@@ -128,7 +116,8 @@ export class MangaDotApi {
         genres: formattedGenres.join(","),
         origin: formattedOrigin.join(","),
         status: formattedStatus.join(","),
-        sortBy: sorting.id
+        author: authors.join(","),
+        sortBy: sorting.id,
       },
     });
   }
@@ -145,6 +134,20 @@ export class MangaDotApi {
     return this.APIJson<string[]>({
       path: ["manga", "genres"],
       query: {},
+    });
+  }
+
+  async getAuthor(value: string) {
+    return this.APIJson<SearchSuggestionsAPI>({
+      path: ["manga", "people-suggest"],
+      query: { kind: "author", q: value },
+    });
+  }
+
+  async getArtist(value: string) {
+    return this.APIJson<SearchSuggestionsAPI>({
+      path: ["manga", "people-suggest"],
+      query: { kind: "artist", q: value },
     });
   }
 }

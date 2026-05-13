@@ -2,7 +2,6 @@ import {
   type ChapterPagesAPI,
   DOMAIN,
   type MangaChapterListAPI,
-  type MangaDotMetadata,
   type MangaInfoAPI,
   type MangaSectionAPI,
   type SearchInfoAPI,
@@ -16,7 +15,7 @@ import {
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
-import {normalizeId} from "./utils";
+import { normalizeId, type MangaDotMetadata } from "./utils";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -34,7 +33,7 @@ export class Parser {
         artist: Array.isArray(mangaInfo.artists) ? mangaInfo.artists.join(",") : mangaInfo.artists,
         author: Array.isArray(mangaInfo.authors) ? mangaInfo.authors.join(",") : mangaInfo.authors,
         bannerUrl: `${DOMAIN}${mangaInfo.photo}`,
-        rating: mangaInfo.avg_rating/10,
+        rating: mangaInfo.avg_rating / 10,
         tagGroups: [
           {
             id: "genres",

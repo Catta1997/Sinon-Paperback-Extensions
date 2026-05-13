@@ -9,8 +9,6 @@ import {
   type DiscoverSectionItem,
   DiscoverSectionType,
   type ExtensionImpl,
-  Form,
-  type Metadata,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
@@ -21,9 +19,8 @@ import { MangaDotApi } from "./api";
 import { MangaDotInterceptor } from "./network";
 import MangaDotConfig from "./pbconfig";
 import { Parser } from "./parser";
-import type { BaseMetadata, MangaDotMetadata } from "./models";
-import MangaDotAdvancedSearchForm from "./searchFilters";
-import { MangaDotFilters } from "./filters";
+import { type BaseMetadata, type MangaDotMetadata, MangaDotFilters } from "./utils";
+import MangaDotAdvancedSearchForm from "./forms/search";
 
 export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async initialise(): Promise<void> {
@@ -100,18 +97,18 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     sortingOption: SortingOption,
   ): Promise<PagedResults<SearchResultItem>> {
     const page = metadata?.page ?? 1;
-    const search = await this.api.getJsonSearchApi(query, page,sortingOption);
+    const search = await this.api.getJsonSearchApi(query, page, sortingOption);
     return this.parser.parseSearch(search, metadata);
   }
   async getSortingOptions(_query: SearchQuery<BaseMetadata>): Promise<SortingOption[]> {
     return [
-      {id: "latest", label: "Latest"},
-      {id: "alphabetical", label: "A-Z"},
-      {id: "chapters", label: "Chapters"},
-      {id: "views", label: "Most Viewed"},
-      {id: "tracked", label: "Most tracked"},
-      {id: "rating", label: "Top Rated"},
-    ]
+      { id: "latest", label: "Latest" },
+      { id: "alphabetical", label: "A-Z" },
+      { id: "chapters", label: "Chapters" },
+      { id: "views", label: "Most Viewed" },
+      { id: "tracked", label: "Most tracked" },
+      { id: "rating", label: "Top Rated" },
+    ];
   }
   globalRateLimiter = new BasicRateLimiter("rateLimiter", {
     numberOfRequests: 2,
