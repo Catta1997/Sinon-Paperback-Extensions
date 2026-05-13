@@ -59,8 +59,8 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleGenres"),
         items: this.genreFilter.map((elem) => ({
-          id: elem.replaceAll(" ", "#").replaceAll("-", "@").replaceAll("'", "&"),
-          title: elem,
+          id: normalizeId(elem),
+          title: deNormalizeId(elem),
         })),
         subtitle: "",
         value: this.searchMetadata.genres ?? {},
