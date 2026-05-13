@@ -12,7 +12,14 @@ import {
   TriStateSelectRow,
 } from "@paperback/types";
 import { MangaDot } from "../main";
-import {deNormalizeId, normalizeId, type BaseMetadata, type TagMap, getGenresHidden, defaultMetadata} from "../utils";
+import {
+  deNormalizeId,
+  normalizeId,
+  type BaseMetadata,
+  type TagMap,
+  getGenresHidden,
+  defaultMetadata,
+} from "../utils";
 
 class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
   override getSearchQueryMetadata(): BaseMetadata {
@@ -25,7 +32,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
     if (searchQuery.metadata !== undefined) {
       this.searchMetadata = searchQuery.metadata;
     } else {
-      this.searchMetadata = defaultMetadata()
+      this.searchMetadata = defaultMetadata();
     }
     this.genreFilter = filters;
   }

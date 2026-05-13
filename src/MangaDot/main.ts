@@ -20,7 +20,12 @@ import { MangaDotApi } from "./api";
 import { MangaDotInterceptor } from "./network";
 import MangaDotConfig from "./pbconfig";
 import { Parser } from "./parser";
-import {type BaseMetadata, type MangaDotMetadata, MangaDotFilters, defaultMetadata} from "./utils";
+import {
+  type BaseMetadata,
+  type MangaDotMetadata,
+  MangaDotFilters,
+  defaultMetadata,
+} from "./utils";
 import MangaDotAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
 
@@ -106,21 +111,27 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     sortingOption: SortingOption,
   ): Promise<PagedResults<SearchResultItem>> {
     const page = metadata?.page ?? 1;
-    if (query.metadata === undefined){
-      console.log("UNDEF")
-      query.metadata = defaultMetadata()
+    if (query.metadata === undefined) {
+      query.metadata = defaultMetadata();
     }
     const search = await this.api.getJsonSearchApi(query, page, sortingOption);
     return this.parser.parseSearch(search, metadata);
   }
   async getSortingOptions(_query: SearchQuery<BaseMetadata>): Promise<SortingOption[]> {
     return [
-      { id: "latest", label: "Latest" },
-      { id: "alphabetical", label: "A-Z" },
-      { id: "chapters", label: "Chapters" },
-      { id: "views", label: "Most Viewed" },
-      { id: "tracked", label: "Most tracked" },
-      { id: "rating", label: "Top Rated" },
+      { id: "relevance", label: "Relevance" },
+      { id: "latest$asc", label: "Latest ↑" },
+      { id: "latest$desc", label: "Latest ↓" },
+      { id: "alphabetical$asc", label: "A-Z ↑" },
+      { id: "alphabetical$desc", label: "A-Z ↓" },
+      { id: "chapters$asc", label: "Chapters ↑" },
+      { id: "chapters$desc", label: "Chapters ↓" },
+      { id: "views$asc", label: "Most Viewed ↑" },
+      { id: "views$desc", label: "Most Viewed ↓" },
+      { id: "tracked$asc", label: "Most tracked ↑" },
+      { id: "tracked$desc", label: "Most tracked ↓" },
+      { id: "rating$asc", label: "Top Rated ↑" },
+      { id: "rating$desc", label: "Top Rated ↓" },
     ];
   }
   globalRateLimiter = new BasicRateLimiter("rateLimiter", {

@@ -85,8 +85,6 @@ export function getGenresHidden() {
 
 export function defaultMetadata(): BaseMetadata {
   return {
-    genres: Object.fromEntries(
-        getGenresHidden().map((item) => [item, "excluded" as const])
-    ),
+    genres: Object.fromEntries(getGenresHidden().map((item) => [item, "excluded" as const])),
   };
 }

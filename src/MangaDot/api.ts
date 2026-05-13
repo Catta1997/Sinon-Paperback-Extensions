@@ -108,6 +108,7 @@ export class MangaDotApi {
       return state === "excluded" ? `-${origin}` : origin;
     });
     let authors = query.metadata?.author ?? [];
+    const [sort, order] = sorting.id.split("$");
     return this.APIJson<SearchInfoAPI>({
       path: ["search"],
       query: {
@@ -117,7 +118,8 @@ export class MangaDotApi {
         origin: formattedOrigin.join(","),
         status: formattedStatus.join(","),
         author: authors.join(","),
-        sortBy: sorting.id,
+        sortBy: sort,
+        sortOrder: order ? order : "",
       },
     });
   }
