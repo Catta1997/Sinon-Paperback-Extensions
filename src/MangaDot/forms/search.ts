@@ -12,22 +12,20 @@ import {
   TriStateSelectRow,
 } from "@paperback/types";
 import { MangaDot } from "../main";
-import { deNormalizeId, normalizeId, type BaseMetadata, type TagMap } from "../utils";
+import {deNormalizeId, normalizeId, type BaseMetadata, type TagMap, getGenresHidden, defaultMetadata} from "../utils";
 
 class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
   override getSearchQueryMetadata(): BaseMetadata {
     return this.searchMetadata;
   }
-  private genreFilter: string[];
+  private genreFilter: { id: string; title: string }[];
   private searchMetadata: BaseMetadata;
-  constructor(searchQuery: SearchQuery<BaseMetadata>, filters: string[]) {
+  constructor(searchQuery: SearchQuery<BaseMetadata>, filters: { id: string; title: string }[]) {
     super();
     if (searchQuery.metadata !== undefined) {
       this.searchMetadata = searchQuery.metadata;
     } else {
-      this.searchMetadata = {
-        genres: {},
-      };
+      this.searchMetadata = defaultMetadata()
     }
     this.genreFilter = filters;
   }
@@ -58,10 +56,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         title: "Genres",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleGenres"),
-        items: this.genreFilter.map((elem) => ({
-          id: normalizeId(elem),
-          title: deNormalizeId(elem),
-        })),
+        items: this.genreFilter,
         subtitle: "",
         value: this.searchMetadata.genres ?? {},
         allowEmptySelection: true,
@@ -76,7 +71,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         title: "Status",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleStatus"),
-        items: MangaDot.filters.status,
+        items: MangaDot.filters?.status ?? [],
         subtitle: "",
         value: this.searchMetadata.status ?? {},
         allowEmptySelection: true,
@@ -92,7 +87,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         title: "Origin",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleOrigin"),
-        items: MangaDot.filters.origin,
+        items: MangaDot.filters?.origin ?? [],
         subtitle: "",
         value: this.searchMetadata.origin ?? {},
         allowEmptySelection: true,

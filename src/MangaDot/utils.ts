@@ -1,4 +1,5 @@
 import type { JSONObject } from "@paperback/types";
+import { MangaDot } from "./main";
 
 export function normalizeId(id: string): string {
   return id.replaceAll("-", "@#@").replaceAll("'", "&#@").replaceAll(" ", "#@&");
@@ -21,10 +22,26 @@ export type BaseMetadata = {
 export interface MangaDotMetadata extends JSONObject {
   page: number;
 }
+type Tag = {
+  id: string;
+  title: string;
+};
 
 export class MangaDotFilters {
-  genres: string[] = [];
-  status: { id: string; title: string }[] = [
+  private constructor(genres: string[]) {
+    this.genres = genres.map((elem) => ({
+      id: normalizeId(elem),
+      title: deNormalizeId(elem),
+    }));
+  }
+
+  static async create(): Promise<MangaDotFilters> {
+    const genres = await MangaDot.api.getFilters();
+
+    return new MangaDotFilters(genres);
+  }
+  genres: Tag[];
+  status: Tag[] = [
     {
       id: "",
       title: "Any",
@@ -42,7 +59,7 @@ export class MangaDotFilters {
       title: "Interrupted",
     },
   ];
-  origin: { id: string; title: string }[] = [
+  origin: Tag[] = [
     {
       id: "JP",
       title: "Manga",
@@ -52,8 +69,24 @@ export class MangaDotFilters {
       title: "Manhwa",
     },
     {
-      id: "CN",
+      id: "CN&TW",
       title: "Manhua",
     },
   ];
+}
+
+export function getContentTypes() {
+  return (Application.getState("_type") as string[] | undefined) ?? ["JP", "CN&TW", "KR"];
+}
+
+export function getGenresHidden() {
+  return (Application.getState("_genres") as string[] | undefined) ?? [];
+}
+
+export function defaultMetadata(): BaseMetadata {
+  return {
+    genres: Object.fromEntries(
+        getGenresHidden().map((item) => [item, "excluded" as const])
+    ),
+  };
 }

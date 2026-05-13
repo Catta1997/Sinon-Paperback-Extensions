@@ -10,7 +10,7 @@ import {
   type SearchSuggestionsAPI,
 } from "./models";
 import { URL, type Request, type SearchQuery, type SortingOption } from "@paperback/types";
-import { deNormalizeId, type BaseMetadata } from "./utils";
+import { deNormalizeId, type BaseMetadata, getContentTypes } from "./utils";
 
 export class MangaDotApi {
   apiLink = "";
@@ -46,7 +46,7 @@ export class MangaDotApi {
         path: ["manga", "section"],
         query: {
           id: "latest_updates",
-          origin: "KR,CN,TW",
+          origin: getContentTypes().join(",").replaceAll("&", ","),
           adult: "0",
         },
       },
@@ -54,7 +54,7 @@ export class MangaDotApi {
         path: ["manga", "section"],
         query: {
           id: "recently_added",
-          origin: "KR,CN,TW",
+          origin: getContentTypes().join(",").replaceAll("&", ","),
           adult: "0",
         },
       },
@@ -62,7 +62,7 @@ export class MangaDotApi {
         path: ["manga", "section"],
         query: {
           id: "most_tracked",
-          origin: "KR,CN,TW",
+          origin: getContentTypes().join(",").replaceAll("&", ","),
           adult: "0",
         },
       },
@@ -70,7 +70,7 @@ export class MangaDotApi {
         path: ["manga", "section"],
         query: {
           id: "top_rated",
-          origin: "KR,CN,TW",
+          origin: getContentTypes().join(",").replaceAll("&", ","),
           adult: "0",
         },
       },
