@@ -9,6 +9,7 @@ class HNIExtension extends FansubGeneral {
       domain: DOMAIN,
       name: pbconfig.name,
       contentRating: pbconfig.contentRating,
+      english: true
     });
   }
 }
