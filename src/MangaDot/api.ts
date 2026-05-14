@@ -115,7 +115,7 @@ export class MangaDotApi {
         search: query.title,
         page: page.toString(),
         genres: formattedGenres.join(","),
-        origin: formattedOrigin.join(","),
+        origin: formattedOrigin.join(",").replaceAll("&", ","),
         status: formattedStatus.join(","),
         author: authors.join(","),
         sortBy: sort,
