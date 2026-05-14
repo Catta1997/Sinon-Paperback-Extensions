@@ -60,6 +60,8 @@ export class Parser {
         version: chapter.scanlator_name,
         volume: Number(chapter.volume_number) ?? 0,
         sortingIndex: Number(chapter.chapter_number) ?? 0,
+        publishDate: new Date(chapter.date_added.replace(" ", "T")),
+        creationDate: new Date(chapter.date_added.replace(" ", "T")),
       });
     });
     return chapters;
@@ -110,19 +112,3 @@ export class Parser {
     return { items: results, metadata: undefined };
   }
 }
-
-/*
-
-
-const sections: TagSection[] = [
-  {
-    id: "genres",
-    title: "Genres",
-    tags: genres.map(genre => ({
-      id: genre,
-      title: genre
-    }))
-  }
-]
-
- */
