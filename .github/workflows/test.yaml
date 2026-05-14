@@ -17,11 +17,11 @@ jobs:
       - name: Show npm version
         run: npm -v
       - name: Checkout Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Node.js Environment
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - name: Delete old modules
         run: rm -rf node_modules
