@@ -65,14 +65,6 @@ export interface MangaChapterListAPI {
   scanlator_name: string;
 }
 
-export interface MangaDotMetadata extends JSONObject {
-  page: number;
+export interface SearchSuggestionsAPI {
+  suggestions: string[];
 }
-
-type FilterValue = "included" | "excluded";
-export type TagMap = Record<string, FilterValue>;
-export type BaseMetadata = {
-  genres?: TagMap;
-  status?: TagMap;
-  origin?: TagMap;
-};

@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "MangaDot",
   description: "Extension that pulls content from MangaDot.net",
-  version: "1.0.0-alpha.4",
+  version: "1.0.0-alpha.5",
   icon: "icon.png",
   language: "en",
   contentRating: ContentRating.EVERYONE,
@@ -12,6 +12,7 @@ export default {
     SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
     SourceIntents.DISCOVER_SECTION_PROVIDING,
     SourceIntents.SEARCH_RESULT_PROVIDING,
+    SourceIntents.SETTINGS_FORM_PROVIDING,
   ],
   badges: [],
   developers: [
