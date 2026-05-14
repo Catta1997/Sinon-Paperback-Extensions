@@ -63,3 +63,4 @@ export interface ReadChapterResponse {
 export interface ComicReadDetailChapter {
   pages: string[];
 }
+export type BaseMetadata = {};
