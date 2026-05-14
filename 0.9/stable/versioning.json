@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-05-12T13:10:15.414Z",
+  "buildTime": "2026-05-14T09:23:58.131Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.85",
     "types": "1.0.0-alpha.85"
@@ -9,6 +9,33 @@
     "description": "Some Paperback Extensions"
   },
   "sources": [
+    {
+      "name": "BlueSolo",
+      "description": "Extension that pulls manga from BlueSolo.",
+      "version": "1.0.2",
+      "icon": "icon.png",
+      "language": "fr",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "French 🇫🇷",
+          "textColor": "#ffffff",
+          "backgroundColor": "#2865ea"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "BlueSolo"
+    },
     {
       "name": "EHentai",
       "description": "Extension that pulls content from E-Hentai.",
@@ -26,6 +53,33 @@
         }
       ],
       "id": "EHentai"
+    },
+    {
+      "name": "FMTeam",
+      "description": "Extension that pulls manga from FMTeam.",
+      "version": "1.0.2",
+      "icon": "icon.png",
+      "language": "fr",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "French 🇫🇷",
+          "textColor": "#ffffff",
+          "backgroundColor": "#2865ea"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "FMTeam"
     },
     {
       "name": "GTOTheGreatSite",
@@ -53,6 +107,27 @@
       ],
       "contentRating": "SAFE",
       "id": "GTOTheGreatSite"
+    },
+    {
+      "name": "HNI-scantrad",
+      "description": "Extension that pulls manga from HNI-scantrad.",
+      "version": "1.0.2",
+      "icon": "icon.png",
+      "language": "en",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "HNI-scantrad"
     },
     {
       "name": "HastaTeam",
