@@ -15,6 +15,10 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 - PhoenixScans (🇮🇹)
 - RokuHentai (🔞 | Multi-Language)
 - TuttoAnimeManga (🇮🇹)
+- MangaDot (ENG)
+- BlueSolo (🇫🇷)
+- FMTeam (🇫🇷)
+- HNIScanTrad (Multi-Language)
 
 ## 🚀 Install
 
