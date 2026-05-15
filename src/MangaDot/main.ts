@@ -63,23 +63,23 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return [
       {
-        id: "latest_updates",
-        title: "Latest updates",
-        type: DiscoverSectionType.simpleCarousel,
+        id: "top_rated",
+        title: "Top Rated",
+        type: DiscoverSectionType.featured,
       },
       {
         id: "recently_added",
         title: "Recently Added",
-        type: DiscoverSectionType.simpleCarousel,
+        type: DiscoverSectionType.prominentCarousel,
+      },
+      {
+        id: "latest_updates",
+        title: "Latest updates",
+        type: DiscoverSectionType.chapterUpdates,
       },
       {
         id: "most_tracked",
         title: "Most Tracked Comics",
-        type: DiscoverSectionType.simpleCarousel,
-      },
-      {
-        id: "top_rated",
-        title: "Top Rated",
         type: DiscoverSectionType.simpleCarousel,
       },
     ];
@@ -89,7 +89,23 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     section: DiscoverSection,
   ): Promise<PagedResults<DiscoverSectionItem>> {
     const sectionElements = await this.api.getJsonSectionApi(section.id);
-    return this.parser.parseSection(sectionElements);
+    switch (section.id) {
+      case "latest_updates": {
+        return this.parser.parseLatestSection(sectionElements);
+      }
+      case "most_tracked": {
+        return this.parser.parseSection(sectionElements);
+      }
+      case "recently_added": {
+        return this.parser.parseProminentSection(sectionElements);
+      }
+      case "top_rated": {
+        return this.parser.parseFeaturedSection(sectionElements);
+      }
+      default: {
+        return this.parser.parseSection(sectionElements);
+      }
+    }
   }
   async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
     for (const cookie of cookies) {

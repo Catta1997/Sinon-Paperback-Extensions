@@ -15,7 +15,13 @@ import {
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
-import { normalizeId, type MangaDotMetadata } from "./utils";
+import {
+  normalizeId,
+  type MangaDotMetadata,
+  getArrayArtists,
+  getArrayAuthor,
+  getArrayTitles,
+} from "./utils";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -26,12 +32,12 @@ export class Parser {
         thumbnailUrl: `${DOMAIN}${mangaInfo.photo}`,
         synopsis: mangaInfo.description,
         primaryTitle: mangaInfo.title,
-        secondaryTitles: mangaInfo.alt_titles,
+        secondaryTitles: getArrayTitles(mangaInfo),
         contentRating:
           mangaInfo.is_adult || mangaInfo.is_hot ? ContentRating.ADULT : ContentRating.EVERYONE,
         status: mangaInfo.status,
-        artist: Array.isArray(mangaInfo.artists) ? mangaInfo.artists.join(",") : mangaInfo.artists,
-        author: Array.isArray(mangaInfo.authors) ? mangaInfo.authors.join(",") : mangaInfo.authors,
+        artist: getArrayArtists(mangaInfo),
+        author: getArrayAuthor(mangaInfo),
         bannerUrl: `${DOMAIN}${mangaInfo.photo}`,
         rating: mangaInfo.avg_rating / 10,
         tagGroups: [
@@ -77,10 +83,12 @@ export class Parser {
       searchResults.push({
         mangaId: result.id.toString(),
         title: result.title,
-        subtitle: Array.isArray(result.authors) ? result.authors.join(",") : result.authors,
+        subtitle: getArrayAuthor(result),
         imageUrl: `${DOMAIN}${result.photo}`,
         contentRating:
-          result.is_hot || result.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
+          result.is_hot || result.is_adult || result.is_blurworthy
+            ? ContentRating.ADULT
+            : ContentRating.EVERYONE,
       });
     });
     return {
@@ -101,12 +109,57 @@ export class Parser {
     const results: DiscoverSectionItem[] = [];
     sectionElements.items.forEach((item) => {
       results.push({
+        title: item.title,
+        subtitle: item.status,
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
+        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+      });
+    });
+    return { items: results, metadata: undefined };
+  }
+
+  parseLatestSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.items.forEach((item) => {
+      results.push({
         title: item.title,
         subtitle: item.status,
-        contentRating: item.is_blurworthy ? ContentRating.MATURE : ContentRating.EVERYONE,
+        type: "chapterUpdatesCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        chapterId: "",
+        publishDate: new Date(item.last_chapter_date.replaceAll(" ", "T")),
+        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+      });
+    });
+    return { items: results, metadata: undefined };
+  }
+  parseProminentSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.items.forEach((item) => {
+      results.push({
+        title: item.title,
+        subtitle: item.status,
+        type: "prominentCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+      });
+    });
+    return { items: results, metadata: undefined };
+  }
+  parseFeaturedSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.items.forEach((item) => {
+      results.push({
+        supertitle: item.title,
+        title: item.status,
+        type: "featuredCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
     return { items: results, metadata: undefined };

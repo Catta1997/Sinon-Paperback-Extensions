@@ -17,7 +17,6 @@ import {
   normalizeId,
   type BaseMetadata,
   type TagMap,
-  getGenresHidden,
   defaultMetadata,
 } from "../utils";
 
@@ -64,7 +63,6 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleGenres"),
         items: this.genreFilter,
-        subtitle: "",
         value: this.searchMetadata.genres ?? {},
         allowEmptySelection: true,
         allowExclusion: true,
@@ -79,7 +77,6 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleStatus"),
         items: MangaDot.filters?.status ?? [],
-        subtitle: "",
         value: this.searchMetadata.status ?? {},
         allowEmptySelection: true,
         allowExclusion: true,
@@ -95,7 +92,6 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleOrigin"),
         items: MangaDot.filters?.origin ?? [],
-        subtitle: "",
         value: this.searchMetadata.origin ?? {},
         allowEmptySelection: true,
         allowExclusion: true,

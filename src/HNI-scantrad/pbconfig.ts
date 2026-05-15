@@ -8,6 +8,6 @@ pbConfig.description = "Extension that pulls manga from HNI-scantrad.";
 pbConfig.language = "en";
 pbConfig.icon = "icon.png";
 pbConfig.contentRating = ContentRating.EVERYONE;
-pbConfig.badges = []
+pbConfig.badges = [];
 
 export default pbConfig;

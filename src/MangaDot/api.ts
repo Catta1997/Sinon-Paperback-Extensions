@@ -10,7 +10,13 @@ import {
   type SearchSuggestionsAPI,
 } from "./models";
 import { URL, type Request, type SearchQuery, type SortingOption } from "@paperback/types";
-import { deNormalizeId, type BaseMetadata, getContentTypes } from "./utils";
+import {
+  deNormalizeId,
+  type BaseMetadata,
+  getContentTypes,
+  getShowAdultStatus,
+  getSectionContentTypes,
+} from "./utils";
 
 export class MangaDotApi {
   apiLink = "";
@@ -46,32 +52,32 @@ export class MangaDotApi {
         path: ["manga", "section"],
         query: {
           id: "latest_updates",
-          origin: getContentTypes().join(",").replaceAll("&", ","),
-          adult: "0",
+          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
+          adult: getShowAdultStatus() ? "both" : "0",
         },
       },
       recently_added: {
         path: ["manga", "section"],
         query: {
           id: "recently_added",
-          origin: getContentTypes().join(",").replaceAll("&", ","),
-          adult: "0",
+          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
+          adult: getShowAdultStatus() ? "both" : "0",
         },
       },
       most_tracked: {
         path: ["manga", "section"],
         query: {
           id: "most_tracked",
-          origin: getContentTypes().join(",").replaceAll("&", ","),
-          adult: "0",
+          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
+          adult: getShowAdultStatus() ? "both" : "0",
         },
       },
       top_rated: {
         path: ["manga", "section"],
         query: {
           id: "top_rated",
-          origin: getContentTypes().join(",").replaceAll("&", ","),
-          adult: "0",
+          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
+          adult: getShowAdultStatus() ? "both" : "0",
         },
       },
     };

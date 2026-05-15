@@ -9,11 +9,11 @@ pbConfig.language = "fr";
 pbConfig.icon = "icon.png";
 pbConfig.contentRating = ContentRating.EVERYONE;
 pbConfig.badges = [
-	{
-		label: "French 🇫🇷",
-		textColor: "#ffffff",
-		backgroundColor: "#2865ea",
-	},
-]
+  {
+    label: "French 🇫🇷",
+    textColor: "#ffffff",
+    backgroundColor: "#2865ea",
+  },
+];
 
 export default pbConfig;
