@@ -53,10 +53,15 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    const pages = await this.api.getJsonChapPagesApi(
+    let pages = await this.api.getJsonChapPagesApi(
       chapter.chapterId,
       chapter.sourceManga.mangaId,
     );
+    try {
+      const _ = pages.images.length
+    } catch (e){
+      pages = await this.parser.fixChapterPagesOnFail(chapter.chapterId,chapter.sourceManga.mangaId)
+    }
     return this.parser.parseChapterPages(pages, chapter);
   }
 
@@ -151,7 +156,7 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     ];
   }
   globalRateLimiter = new BasicRateLimiter("rateLimiter", {
-    numberOfRequests: 2,
+    numberOfRequests: 5,
     bufferInterval: 1,
     ignoreImages: true,
   });

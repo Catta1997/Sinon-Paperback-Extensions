@@ -20,8 +20,9 @@ import {
   type MangaDotMetadata,
   getArrayArtists,
   getArrayAuthor,
-  getArrayTitles,
+  getArrayTitles, getDate,
 } from "./utils";
+import {MangaDot} from "./main";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -66,8 +67,8 @@ export class Parser {
         version: chapter.scanlator_name,
         volume: Number(chapter.volume_number) ?? 0,
         sortingIndex: Number(chapter.chapter_number) ?? 0,
-        publishDate: new Date(chapter.date_added.replace(" ", "T")),
-        creationDate: new Date(chapter.date_added.replace(" ", "T")),
+        publishDate: getDate(chapter.date_added),
+        creationDate: getDate(chapter.date_added),
       });
     });
     return chapters;
@@ -110,6 +111,7 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -124,11 +126,12 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
         type: "chapterUpdatesCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
         chapterId: "",
-        publishDate: new Date(item.last_chapter_date.replaceAll(" ", "T")),
+        publishDate: getDate(item.last_chapter_date),
         contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
@@ -139,6 +142,7 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
         type: "prominentCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -152,6 +156,7 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
+        supertitle: `Chapter ${item.chapter_count}`,
         type: "featuredCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -159,5 +164,19 @@ export class Parser {
       });
     });
     return { items: results, metadata: undefined };
+  }
+  async fixChapterPagesOnFail(chapter: string, mangaId: string): Promise<ChapterPagesAPI> {
+    await Application.scheduleRequest({
+      url: `https://mangadot.net/api/manga/${chapter}/view`,
+      method: "POST"
+    })
+    await Application.scheduleRequest({
+      url: `https://mangadot.net/api/manga/${chapter}/count`,
+      method: "POST"
+    })
+    return await MangaDot.api.getJsonChapPagesApi(
+        chapter,
+        mangaId,
+    );
   }
 }

@@ -14,4 +14,4 @@ class HNIExtension extends FansubGeneral {
   }
 }
 
-export const HNI = new HNIExtension();
+export const HNIScantrad = new HNIExtension();

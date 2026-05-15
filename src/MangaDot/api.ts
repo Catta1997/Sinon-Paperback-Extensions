@@ -26,13 +26,13 @@ export class MangaDotApi {
     const url = new URL(API);
     const paths = Array.isArray(api.path) ? api.path : [api.path];
     paths.forEach((p) => url.addPathComponent(p));
-    if (api.query) {
+    if (api.query !== undefined) {
       for (const [key, value] of Object.entries(api.query)) {
         url.setQueryItem(key, value);
       }
     }
     this.apiLink = url.toString();
-    const html = await this.getDataFromRequest();
+    const html = await this.getDataFromRequest(api.referer);
     return JSON.parse(html) as T;
   }
   private async getDataFromRequest(referer?: string): Promise<string> {
@@ -87,14 +87,14 @@ export class MangaDotApi {
   }
   async getJsonMangaInfoApi(mangaId: string) {
     return this.APIJson<MangaInfoAPI>({
-      path: ["manga", mangaId],
+      path: ["manga", `${mangaId}`],
       query: {},
     });
   }
 
   async getJsonChapterListApi(mangaId: string) {
     return this.APIJson<MangaChapterListAPI[]>({
-      path: ["manga", mangaId, "chapters", "list"],
+      path: ["manga", `${mangaId}`, "chapters", "list"],
       query: {},
     });
   }
@@ -132,16 +132,14 @@ export class MangaDotApi {
 
   async getJsonChapPagesApi(chapterId: string, mangaId: string) {
     return this.APIJson<ChapterPagesAPI>({
-      path: ["uploads", chapterId, "images"],
-      query: {},
-      referer: `${DOMAIN}/manga/${mangaId}`,
+      path: ["uploads", `${chapterId}`, "images"],
+      referer: `${DOMAIN}/manga/${mangaId}`
     });
   }
 
   async getFilters() {
     return this.APIJson<string[]>({
       path: ["manga", "genres"],
-      query: {},
     });
   }
 

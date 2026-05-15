@@ -121,3 +121,7 @@ export function getArrayTitles(mangaInfo: MangaInfo): string[] {
 export function getArrayAuthor(mangaInfo: MangaInfo): string {
   return parseStringArray(mangaInfo.authors).join(",");
 }
+
+export function getDate(date: string) {
+  return new Date(date.split(".")[0].replace(" ", "T"))
+}

@@ -63,7 +63,7 @@ export class SettingsForm extends Form {
             ),
           }),
           ToggleRow("toggle_adult", {
-            title: "Show Adult result on sections",
+            title: "Show Adult results",
             value: getShowAdultStatus(),
             onValueChange: Application.Selector(
               this as SettingsForm,

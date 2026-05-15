@@ -44,6 +44,7 @@ interface SectionManga {
   hiatus: string;
   country_of_region: string;
   last_chapter_date: string;
+  chapter_count: number;
   is_blurworthy: boolean;
 }
 export interface ApiRequestConfig {
