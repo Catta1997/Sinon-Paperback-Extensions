@@ -18,12 +18,13 @@ import {
 } from "@paperback/types";
 import { APIRequests, MainInterceptor } from "./network";
 import { FansubGeneralParsers } from "./parsers";
-import type { SearchMetadata } from "../EHentai/utils";
+import type { BaseMetadata } from "./models";
 
 export interface FansubGenericParams {
   name: string;
   domain: string;
   contentRating: ContentRating;
+  english?: boolean;
 }
 
 abstract class FansubGeneral
@@ -36,6 +37,7 @@ abstract class FansubGeneral
 {
   readonly name: string;
   public base_url = "";
+  public english = false;
   public defaultContentRating = ContentRating.EVERYONE;
   parser: FansubGeneralParsers;
   requestManager: APIRequests;
@@ -46,6 +48,7 @@ abstract class FansubGeneral
     this.name = params.name;
     this.base_url = params.domain;
     this.defaultContentRating = params.contentRating ?? ContentRating.EVERYONE;
+    this.english = params?.english ?? false;
     this.parser = new FansubGeneralParsers();
     this.requestManager = new APIRequests(this.base_url);
     // Rate limit: Wait 1 sec after 5 requests
@@ -81,7 +84,7 @@ abstract class FansubGeneral
     const discover_section: DiscoverSection[] = [];
     discover_section.push({
       id: "section",
-      title: "Tendenze",
+      title: this.english ? "Trends" : "Tendenze",
       subtitle: "",
       type: DiscoverSectionType.chapterUpdates,
     });
@@ -89,7 +92,7 @@ abstract class FansubGeneral
   }
 
   async getSearchResults(
-    query: SearchQuery<SearchMetadata>,
+    query: SearchQuery<BaseMetadata>,
   ): Promise<PagedResults<SearchResultItem>> {
     return await this.parser.parseSearchResults(query, this);
   }

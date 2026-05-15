@@ -8,8 +8,8 @@ export const basePbConfig = {
   language: "",
   capabilities: [
     SourceIntents.CHAPTER_PROVIDING,
-    SourceIntents.DISCOVER_SECIONS_PROVIDING,
-    SourceIntents.SEARCH_RESULTS_PROVIDING,
+    SourceIntents.DISCOVER_SECTION_PROVIDING,
+    SourceIntents.SEARCH_RESULT_PROVIDING,
   ],
   badges: [
     {
