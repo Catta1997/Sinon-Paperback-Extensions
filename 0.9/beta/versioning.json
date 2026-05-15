@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-05-15T08:58:47.136Z",
+  "buildTime": "2026-05-15T16:43:18.642Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.87",
     "types": "1.0.0-alpha.87"
@@ -127,7 +127,7 @@
         }
       ],
       "contentRating": "SAFE",
-      "id": "HNI-scantrad"
+      "id": "HNIScantrad"
     },
     {
       "name": "HastaTeam",
