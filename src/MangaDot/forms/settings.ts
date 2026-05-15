@@ -18,7 +18,7 @@ export class SettingsForm extends Form {
       Section(
         {
           id: "update_settings",
-          footer: "Default Search Filter",
+          header: "Default Search Filter",
         },
         [
           SelectRow("type", {
@@ -47,7 +47,7 @@ export class SettingsForm extends Form {
       Section(
         {
           id: "section_settings",
-          footer: "Sections Settings",
+          header: "Sections Settings",
         },
         [
           SelectRow("section_type", {

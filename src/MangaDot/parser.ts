@@ -110,7 +110,6 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
-        subtitle: item.status,
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -125,7 +124,6 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
-        subtitle: item.status,
         type: "chapterUpdatesCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -141,7 +139,6 @@ export class Parser {
     sectionElements.items.forEach((item) => {
       results.push({
         title: item.title,
-        subtitle: item.status,
         type: "prominentCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
@@ -154,8 +151,7 @@ export class Parser {
     const results: DiscoverSectionItem[] = [];
     sectionElements.items.forEach((item) => {
       results.push({
-        supertitle: item.title,
-        title: item.status,
+        title: item.title,
         type: "featuredCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
