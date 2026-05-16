@@ -130,9 +130,10 @@ export class MangaDotApi {
     });
   }
 
-  async getJsonChapPagesApi(chapterId: string, mangaId: string) {
+  async getJsonChapPagesApi(chapterId: string, mangaId: string, upload: string | undefined) {
+    const chapPath = upload === "0" ? "chapters" : "uploads";
     return this.APIJson<ChapterPagesAPI>({
-      path: ["chapters", `${chapterId}`, "images"],
+      path: [`${chapPath}`, `${chapterId}`, "images"],
       referer: `${DOMAIN}/manga/${mangaId}`,
     });
   }

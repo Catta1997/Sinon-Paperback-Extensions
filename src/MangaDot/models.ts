@@ -59,7 +59,7 @@ export interface MangaChapterListAPI {
   volume_number: null | number;
   chapter_title: string;
   language: string;
-  group_id: string;
+  group_id: number;
   group_name: string;
   date_added: string;
   scanlator_name: string;

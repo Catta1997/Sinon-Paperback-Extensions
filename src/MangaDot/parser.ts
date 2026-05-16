@@ -70,6 +70,7 @@ export class Parser {
         sortingIndex: chapter.chapter_number ?? 0,
         publishDate: getDate(chapter.date_added),
         creationDate: getDate(chapter.date_added),
+        additionalInfo: ({upload: chapter.group_id.toString()})
       });
     });
     return chapters;
@@ -168,30 +169,5 @@ export class Parser {
       });
     });
     return { items: results, metadata: undefined };
-  }
-  async fixChapterPagesOnFail(chapter: string, mangaId: string): Promise<ChapterDetails> {
-    await Application.scheduleRequest({
-      url: `${DOMAIN}/api/token/generate?chapter_id=${chapter}&type=chapter`,
-      method: "GET"
-    })
-    await Application.scheduleRequest({
-      url: `${DOMAIN}/api/manga/${chapter}/view`,
-      method: "POST"
-    })
-    const k = await Application.scheduleRequest({
-      url: `${DOMAIN}/api/chapters/${chapter}/images`,
-      method: "GET",
-      headers: {
-        "User-Agent": await Application.getDefaultUserAgent(),
-        "Referer": `${DOMAIN}/manga/${mangaId}`
-      }
-    })
-    const html = Application.arrayBufferToASCIIString(k[1])
-    const pages = JSON.parse(html) as ChapterPagesAPI
-    return {
-      id: chapter,
-      mangaId: mangaId,
-      pages: pages.images.map((image) => `${DOMAIN}${image.url}`),
-    };
   }
 }

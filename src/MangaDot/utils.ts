@@ -62,6 +62,10 @@ export class MangaDotFilters {
   ];
   origin: Tag[] = [
     {
+      id: "",
+      title: "Any",
+    },
+    {
       id: "JP",
       title: "Manga",
     },
@@ -77,7 +81,7 @@ export class MangaDotFilters {
 }
 
 export function getContentTypes() {
-  return (Application.getState("_type") as string[] | undefined) ?? ["JP", "CN&TW", "KR"];
+  return (Application.getState("_type") as string[] | undefined) ?? [""];
 }
 
 export function getSectionContentTypes() {

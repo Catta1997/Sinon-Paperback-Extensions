@@ -54,16 +54,7 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    let pages: ChapterPagesAPI;
-    try {
-      pages = await this.api.getJsonChapPagesApi(chapter.chapterId, chapter.sourceManga.mangaId);
-      const _ = pages.images.map((image) => `${DOMAIN}${image.url}`);
-    } catch {
-      return await this.parser.fixChapterPagesOnFail(
-        chapter.chapterId,
-        chapter.sourceManga.mangaId,
-      );
-    }
+    let pages: ChapterPagesAPI = await this.api.getJsonChapPagesApi(chapter.chapterId, chapter.sourceManga.mangaId, chapter.additionalInfo?.upload);
     return this.parser.parseChapterPages(pages, chapter);
   }
 
