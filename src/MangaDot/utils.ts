@@ -95,7 +95,8 @@ export function getShowAdultStatus(): boolean {
 export function defaultMetadata(): BaseMetadata {
   return {
     genres: Object.fromEntries(getGenresHidden().map((item) => [item, "excluded" as const])),
-    origin: Object.fromEntries(getContentTypes().map((item) => [item, "included" as const])),
+    //
+    //origin: Object.fromEntries(getContentTypes().map((item) => [item, "included" as const])),
   };
 }
 function parseStringArray(value: string[] | string | null): string[] {
