@@ -1,12 +1,11 @@
+import { type TestLogger } from "@paperback/types";
+import { TestSuite, registerDefaultTests } from "./suite.js";
+import { GTOTheGreatSite } from "../GTOTheGreatSite/main.js";
+import sourceInfo from "../GTOTheGreatSite/pbconfig.js";
 
-  import { type TestLogger } from '@paperback/types'
-  import { TestSuite, registerDefaultTests } from './suite.js'
-  import { GTOTheGreatSite } from '../GTOTheGreatSite/main.js'
-  import sourceInfo from '../GTOTheGreatSite/pbconfig.js'
-  
-  export async function runTests(logger: TestLogger) {
-    const suite = new TestSuite('GTOTheGreatSite tests', logger)
-    registerDefaultTests(suite, GTOTheGreatSite, sourceInfo)
-    
-    await suite.run()
-  }
+export async function runTests(logger: TestLogger) {
+  const suite = new TestSuite("GTOTheGreatSite tests", logger);
+  registerDefaultTests(suite, GTOTheGreatSite, sourceInfo);
+
+  await suite.run();
+}

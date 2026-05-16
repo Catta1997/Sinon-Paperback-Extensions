@@ -85,7 +85,7 @@ export function getContentTypes() {
 }
 
 export function getSectionContentTypes() {
-  return (Application.getState("_sectionType") as string[] | undefined) ?? ["JP", "CN&TW", "KR"];
+  return (Application.getState("_sectionType") as string[] | undefined) ?? [""];
 }
 
 export function getGenresHidden() {
