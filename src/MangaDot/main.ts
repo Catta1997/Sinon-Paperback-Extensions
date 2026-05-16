@@ -2,7 +2,7 @@ import {
   type AdvancedSearchForm,
   BasicRateLimiter,
   type Chapter,
-  type ChapterDetails,
+  type ChapterDetails, CloudflareError,
   type Cookie,
   CookieStorageInterceptor,
   type DiscoverSection,
@@ -28,6 +28,7 @@ import {
 } from "./utils";
 import MangaDotAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
+import { type ChapterPagesAPI, DOMAIN } from "./models";
 
 export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async getSettingsForm(): Promise<Form> {
@@ -53,14 +54,15 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    let pages = await this.api.getJsonChapPagesApi(
-      chapter.chapterId,
-      chapter.sourceManga.mangaId,
-    );
+    let pages: ChapterPagesAPI;
     try {
-      const _ = pages.images.length
-    } catch (e){
-      pages = await this.parser.fixChapterPagesOnFail(chapter.chapterId,chapter.sourceManga.mangaId)
+      pages = await this.api.getJsonChapPagesApi(chapter.chapterId, chapter.sourceManga.mangaId);
+      const _ = pages.images.map((image) => `${DOMAIN}${image.url}`);
+    } catch {
+      return await this.parser.fixChapterPagesOnFail(
+        chapter.chapterId,
+        chapter.sourceManga.mangaId,
+      );
     }
     return this.parser.parseChapterPages(pages, chapter);
   }

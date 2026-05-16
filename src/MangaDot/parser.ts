@@ -20,9 +20,10 @@ import {
   type MangaDotMetadata,
   getArrayArtists,
   getArrayAuthor,
-  getArrayTitles, getDate,
+  getArrayTitles,
+  getDate,
 } from "./utils";
-import {MangaDot} from "./main";
+import { MangaDot } from "./main";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -59,14 +60,14 @@ export class Parser {
     const chapters: Chapter[] = [];
     chapterAPI.filter((chapter) => {
       chapters.push({
-        chapterId: chapter.id,
+        chapterId: chapter.id.toString(),
         sourceManga: manga,
         langCode: chapter.language,
-        chapNum: Number(chapter.chapter_number) ?? 0,
+        chapNum: chapter.chapter_number ?? 0,
         title: chapter.chapter_title,
         version: chapter.scanlator_name,
-        volume: Number(chapter.volume_number) ?? 0,
-        sortingIndex: Number(chapter.chapter_number) ?? 0,
+        volume: chapter.volume_number ?? 0,
+        sortingIndex: chapter.chapter_number ?? 0,
         publishDate: getDate(chapter.date_added),
         creationDate: getDate(chapter.date_added),
       });
@@ -99,6 +100,9 @@ export class Parser {
   }
 
   parseChapterPages(pages: ChapterPagesAPI, chapter: Chapter): ChapterDetails {
+    if (!pages?.images || !Array.isArray(pages.images)) {
+      throw new Error("pages.images doesn't exist");
+    }
     return {
       id: chapter.chapterId,
       mangaId: chapter.sourceManga.mangaId,
@@ -165,18 +169,29 @@ export class Parser {
     });
     return { items: results, metadata: undefined };
   }
-  async fixChapterPagesOnFail(chapter: string, mangaId: string): Promise<ChapterPagesAPI> {
+  async fixChapterPagesOnFail(chapter: string, mangaId: string): Promise<ChapterDetails> {
     await Application.scheduleRequest({
-      url: `https://mangadot.net/api/manga/${chapter}/view`,
-      method: "POST"
+      url: `${DOMAIN}/api/token/generate?chapter_id=${chapter}&type=chapter`,
+      method: "GET"
     })
     await Application.scheduleRequest({
-      url: `https://mangadot.net/api/manga/${chapter}/count`,
+      url: `${DOMAIN}/api/manga/${chapter}/view`,
       method: "POST"
     })
-    return await MangaDot.api.getJsonChapPagesApi(
-        chapter,
-        mangaId,
-    );
+    const k = await Application.scheduleRequest({
+      url: `${DOMAIN}/api/chapters/${chapter}/images`,
+      method: "GET",
+      headers: {
+        "User-Agent": await Application.getDefaultUserAgent(),
+        "Referer": `${DOMAIN}/manga/${mangaId}`
+      }
+    })
+    const html = Application.arrayBufferToASCIIString(k[1])
+    const pages = JSON.parse(html) as ChapterPagesAPI
+    return {
+      id: chapter,
+      mangaId: mangaId,
+      pages: pages.images.map((image) => `${DOMAIN}${image.url}`),
+    };
   }
 }

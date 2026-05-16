@@ -6,15 +6,15 @@ import {
 } from "@paperback/types";
 
 import { DOMAIN } from "./models";
+import {MangaDot} from "./main";
 
 export class MangaDotInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
     return {
       ...request,
       headers: {
-        ...request.headers,
-        referer: `${DOMAIN}/`,
         "user-agent": await Application.getDefaultUserAgent(),
+        ...request.headers,
       },
     };
   }

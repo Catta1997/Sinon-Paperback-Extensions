@@ -54,9 +54,9 @@ export interface ApiRequestConfig {
 }
 
 export interface MangaChapterListAPI {
-  id: string;
-  chapter_number: string;
-  volume_number: null | string;
+  id: number;
+  chapter_number: number;
+  volume_number: null | number;
   chapter_title: string;
   language: string;
   group_id: string;

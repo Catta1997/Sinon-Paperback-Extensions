@@ -133,7 +133,7 @@ export class MangaDotApi {
   async getJsonChapPagesApi(chapterId: string, mangaId: string) {
     return this.APIJson<ChapterPagesAPI>({
       path: ["uploads", `${chapterId}`, "images"],
-      referer: `${DOMAIN}/manga/${mangaId}`
+      referer: `${DOMAIN}/manga/${mangaId}`,
     });
   }
 

@@ -123,5 +123,6 @@ export function getArrayAuthor(mangaInfo: MangaInfo): string {
 }
 
 export function getDate(date: string) {
-  return new Date(date.split(".")[0].replace(" ", "T"))
+  if (date === null) return new Date();
+  return new Date(date.split(".")[0].split("+")[0].replace(" ", "T"));
 }
