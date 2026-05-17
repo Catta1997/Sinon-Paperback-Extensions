@@ -36,7 +36,7 @@ export class Parser {
         primaryTitle: mangaInfo.title,
         secondaryTitles: getArrayTitles(mangaInfo),
         contentRating:
-          mangaInfo.is_adult || mangaInfo.is_hot ? ContentRating.ADULT : ContentRating.EVERYONE,
+          mangaInfo.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
         status: mangaInfo.status,
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
@@ -88,8 +88,7 @@ export class Parser {
         title: result.title,
         subtitle: getArrayAuthor(result),
         imageUrl: `${DOMAIN}${result.photo}`,
-        contentRating:
-          result.is_hot || result.is_adult || result.is_blurworthy
+        contentRating: result.is_adult || result.is_blurworthy
             ? ContentRating.ADULT
             : ContentRating.EVERYONE,
       });
