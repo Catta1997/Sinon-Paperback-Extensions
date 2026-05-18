@@ -5,7 +5,6 @@ import {
   DOMAIN,
   type MangaChapterListAPI,
   type MangaInfoAPI,
-  type MangaSectionAPI,
   type SearchInfoAPI,
   type SearchSuggestionsAPI,
 } from "./models";
@@ -13,7 +12,6 @@ import { URL, type Request, type SearchQuery, type SortingOption } from "@paperb
 import {
   deNormalizeId,
   type BaseMetadata,
-  getContentTypes,
   getShowAdultStatus,
   getSectionContentTypes,
 } from "./utils";

@@ -3,7 +3,6 @@ import {
   DOMAIN,
   type MangaChapterListAPI,
   type MangaInfoAPI,
-  type MangaSectionAPI,
   type SearchInfoAPI,
 } from "./models";
 import {
@@ -22,8 +21,8 @@ import {
   getArrayAuthor,
   getArrayTitles,
   getDate,
+  getRating,
 } from "./utils";
-import { MangaDot } from "./main";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -39,7 +38,7 @@ export class Parser {
         status: mangaInfo.status,
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
-        bannerUrl: `${DOMAIN}${mangaInfo.photo}`,
+        bannerUrl: `${DOMAIN}${mangaInfo.banner_image}`,
         rating: mangaInfo.avg_rating / 10,
         tagGroups: [
           {
@@ -87,8 +86,7 @@ export class Parser {
         title: result.title,
         subtitle: getArrayAuthor(result),
         imageUrl: `${DOMAIN}${result.photo}`,
-        contentRating:
-          result.is_adult || result.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(result),
       });
     });
     return {
@@ -117,7 +115,7 @@ export class Parser {
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
-        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(item),
       });
     });
     return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
@@ -137,7 +135,7 @@ export class Parser {
         imageUrl: `${DOMAIN}${item.photo}`,
         chapterId: "",
         publishDate: getDate(item.last_chapter_date),
-        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(item),
       });
     });
     return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
@@ -155,7 +153,7 @@ export class Parser {
         type: "prominentCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
-        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(item),
       });
     });
     return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
@@ -173,7 +171,7 @@ export class Parser {
         type: "featuredCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
-        contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(item),
       });
     });
     return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };

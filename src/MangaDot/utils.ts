@@ -1,4 +1,4 @@
-import type { JSONObject } from "@paperback/types";
+import { ContentRating, type JSONObject } from "@paperback/types";
 import { MangaDot } from "./main";
 import type { MangaInfo } from "./models";
 
@@ -130,4 +130,19 @@ export function getArrayAuthor(mangaInfo: MangaInfo): string {
 export function getDate(date: string) {
   if (date === null) return new Date();
   return new Date(date.split(".")[0].split("+")[0].replace(" ", "T"));
+}
+
+export function getRating(mangaInfo: MangaInfo) {
+  switch (mangaInfo.content_rating) {
+    case "safe":
+      return ContentRating.EVERYONE;
+    case "suggestive":
+      return ContentRating.EVERYONE;
+    case "erotica":
+      return ContentRating.MATURE;
+    case "pornographic":
+      return ContentRating.ADULT;
+    default:
+      return mangaInfo.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE;
+  }
 }

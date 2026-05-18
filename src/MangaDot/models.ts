@@ -10,6 +10,7 @@ export interface MangaInfo extends SectionManga {
   description: string;
   source_url: string;
   banner_image: string;
+  content_rating: string | null;
   is_hot: boolean;
   avg_rating: number;
   alt_titles: string[] | string | null;
