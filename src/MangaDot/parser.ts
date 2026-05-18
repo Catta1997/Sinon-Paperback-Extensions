@@ -35,8 +35,7 @@ export class Parser {
         synopsis: mangaInfo.description,
         primaryTitle: mangaInfo.title,
         secondaryTitles: getArrayTitles(mangaInfo),
-        contentRating:
-          mangaInfo.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: mangaInfo.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
         status: mangaInfo.status,
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
@@ -70,7 +69,7 @@ export class Parser {
         sortingIndex: chapter.chapter_number ?? 0,
         publishDate: getDate(chapter.date_added),
         creationDate: getDate(chapter.date_added),
-        additionalInfo: ({upload: chapter.group_id.toString()})
+        additionalInfo: { upload: chapter.group_id.toString() },
       });
     });
     return chapters;
@@ -88,9 +87,8 @@ export class Parser {
         title: result.title,
         subtitle: getArrayAuthor(result),
         imageUrl: `${DOMAIN}${result.photo}`,
-        contentRating: result.is_adult || result.is_blurworthy
-            ? ContentRating.ADULT
-            : ContentRating.EVERYONE,
+        contentRating:
+          result.is_adult || result.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
     return {
@@ -110,9 +108,9 @@ export class Parser {
     };
   }
 
-  parseSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+  parseSection(sectionElements: SearchInfoAPI, page: number): PagedResults<DiscoverSectionItem> {
     const results: DiscoverSectionItem[] = [];
-    sectionElements.items.forEach((item) => {
+    sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
         subtitle: `Chapter ${item.chapter_count}`,
@@ -122,12 +120,15 @@ export class Parser {
         contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
-    return { items: results, metadata: undefined };
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
   }
 
-  parseLatestSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+  parseLatestSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
     const results: DiscoverSectionItem[] = [];
-    sectionElements.items.forEach((item) => {
+    sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
         subtitle: `Chapter ${item.chapter_count}`,
@@ -139,11 +140,15 @@ export class Parser {
         contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
-    return { items: results, metadata: undefined };
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
   }
-  parseProminentSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+
+  parseProminentSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
     const results: DiscoverSectionItem[] = [];
-    sectionElements.items.forEach((item) => {
+    sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
         subtitle: `Chapter ${item.chapter_count}`,
@@ -153,11 +158,15 @@ export class Parser {
         contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
-    return { items: results, metadata: undefined };
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
   }
-  parseFeaturedSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+
+  parseFeaturedSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
     const results: DiscoverSectionItem[] = [];
-    sectionElements.items.forEach((item) => {
+    sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
         supertitle: `Chapter ${item.chapter_count}`,
@@ -167,6 +176,6 @@ export class Parser {
         contentRating: item.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE,
       });
     });
-    return { items: results, metadata: undefined };
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
   }
 }

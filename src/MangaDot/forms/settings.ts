@@ -62,6 +62,14 @@ export class SettingsForm extends Form {
               "handleSectionTypeStatusChange",
             ),
           }),
+        ],
+      ),
+      Section(
+        {
+          id: "global_settings",
+          header: "Global Settings",
+        },
+        [
           ToggleRow("toggle_adult", {
             title: "Show Adult results",
             value: getShowAdultStatus(),

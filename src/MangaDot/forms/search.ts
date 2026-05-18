@@ -8,8 +8,10 @@ import {
   NavigationRow,
   type SearchQuery,
   Section,
+  type SelectorID,
   SelectSection,
   TriStateSelectRow,
+  ToggleRow,
 } from "@paperback/types";
 import { MangaDot } from "../main";
 import {
@@ -24,8 +26,10 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
   override getSearchQueryMetadata(): BaseMetadata {
     return this.searchMetadata;
   }
+
   private genreFilter: { id: string; title: string }[];
   private searchMetadata: BaseMetadata;
+
   constructor(searchQuery: SearchQuery<BaseMetadata>, filters: { id: string; title: string }[]) {
     super();
     if (searchQuery.metadata !== undefined) {
@@ -35,11 +39,19 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
     }
     this.genreFilter = filters;
   }
+
   override getSections(): FormSectionElement<unknown>[] {
     return [
       Section("genres", this.getGenresFilter()),
       Section("status", this.getStatusFilter()),
       Section("origin", this.getOriginFilter()),
+      Section("adult", [
+        ToggleRow("adultToggle", {
+          title: "Show Adult results",
+          value: this.searchMetadata.adult ?? false,
+          onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleAdult"),
+        }),
+      ]),
       Section("author", [
         NavigationRow("author_filter", {
           title: "Authors",
@@ -56,6 +68,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
       ]),
     ];
   }
+
   getGenresFilter(): FormItemElement<unknown>[] {
     return [
       TriStateSelectRow("genres", {
@@ -70,6 +83,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
   getStatusFilter(): FormItemElement<unknown>[] {
     return [
       TriStateSelectRow("status", {
@@ -99,12 +113,19 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
+  async handleAdult(value: boolean): Promise<void> {
+    this.searchMetadata.adult = value;
+  }
+
   async handleGenres(value: TagMap): Promise<void> {
     this.searchMetadata.genres = value;
   }
+
   async handleStatus(value: TagMap): Promise<void> {
     this.searchMetadata.status = value;
   }
+
   async handleOrigin(value: TagMap): Promise<void> {
     this.searchMetadata.origin = value;
   }
@@ -112,6 +133,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
 
 class AuthorFilter extends AdvancedSearchForm {
   private authorMetadata: BaseMetadata;
+
   constructor(authorMetadata: BaseMetadata) {
     super();
     if (authorMetadata !== undefined) {
@@ -130,17 +152,21 @@ class AuthorFilter extends AdvancedSearchForm {
     }
     return this.authorMetadata;
   }
+
   override async formDidSubmit(): Promise<void> {
     if (this.savedAuthorFiltered.length > 0) {
       this.authorMetadata.author = this.savedAuthorFiltered;
     }
   }
+
   private authorFiltered: string[] = [];
   private savedAuthorFiltered: string[] = [];
   private searchedValue: string = "";
+
   override getSections(): (ListSectionElement | FlowSectionElement)[] {
     return this.getAuthorFilter();
   }
+
   getAuthorFilter(): (ListSectionElement | FlowSectionElement)[] {
     return [
       Section("author", [
@@ -182,6 +208,7 @@ class AuthorFilter extends AdvancedSearchForm {
         : []),
     ];
   }
+
   async handleAuthorLabel(value: string): Promise<void> {
     this.searchedValue = value;
     if (value.length > 2) {
@@ -193,6 +220,7 @@ class AuthorFilter extends AdvancedSearchForm {
 
 class ArtistFilter extends AdvancedSearchForm {
   private artistMetadata: BaseMetadata;
+
   constructor(authorMetadata: BaseMetadata) {
     super();
     if (authorMetadata !== undefined) {
@@ -211,17 +239,21 @@ class ArtistFilter extends AdvancedSearchForm {
     }
     return this.artistMetadata;
   }
+
   override async formDidSubmit(): Promise<void> {
     if (this.savedArtistFiltered.length > 0) {
       this.artistMetadata.artist = this.savedArtistFiltered;
     }
   }
+
   private artistsFiltered: string[] = [];
   private savedArtistFiltered: string[] = [];
   private searchedValue: string = "";
+
   override getSections(): (ListSectionElement | FlowSectionElement)[] {
     return this.getAuthorFilter();
   }
+
   getAuthorFilter(): (ListSectionElement | FlowSectionElement)[] {
     return [
       Section("artist", [
@@ -263,6 +295,7 @@ class ArtistFilter extends AdvancedSearchForm {
         : []),
     ];
   }
+
   async handleArtistLabel(value: string): Promise<void> {
     this.searchedValue = value;
     if (value.length > 2) {

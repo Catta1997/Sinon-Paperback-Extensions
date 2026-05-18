@@ -46,44 +46,44 @@ export class MangaDotApi {
     const data = await Application.scheduleRequest(request);
     return Application.arrayBufferToUTF8String(data[1]);
   }
-  async getJsonSectionApi(section: string): Promise<MangaSectionAPI> {
+  async getJsonSectionApi(section: string, page: number): Promise<SearchInfoAPI> {
     const sections: Record<string, ApiRequestConfig> = {
       latest_updates: {
-        path: ["manga", "section"],
+        path: ["manga", "section", "latest-updates"],
         query: {
-          id: "latest_updates",
           origin: getSectionContentTypes().join(",").replaceAll("&", ","),
           adult: getShowAdultStatus() ? "both" : "0",
+          page: page.toString(),
         },
       },
       recently_added: {
-        path: ["manga", "section"],
+        path: ["manga", "section", "recently-added"],
         query: {
-          id: "recently_added",
           origin: getSectionContentTypes().join(",").replaceAll("&", ","),
           adult: getShowAdultStatus() ? "both" : "0",
+          page: page.toString(),
         },
       },
       most_tracked: {
-        path: ["manga", "section"],
+        path: ["manga", "section", "most-tracked"],
         query: {
-          id: "most_tracked",
           origin: getSectionContentTypes().join(",").replaceAll("&", ","),
           adult: getShowAdultStatus() ? "both" : "0",
+          page: page.toString(),
         },
       },
       top_rated: {
-        path: ["manga", "section"],
+        path: ["manga", "section", "top-rated"],
         query: {
-          id: "top_rated",
           origin: getSectionContentTypes().join(",").replaceAll("&", ","),
           adult: getShowAdultStatus() ? "both" : "0",
+          page: page.toString(),
         },
       },
     };
     const config = sections[section];
     if (!config) throw new Error(`${section} not found on API`);
-    return this.APIJson<MangaSectionAPI>({ path: config.path, query: config.query });
+    return this.APIJson<SearchInfoAPI>({ path: config.path, query: config.query });
   }
   async getJsonMangaInfoApi(mangaId: string) {
     return this.APIJson<MangaInfoAPI>({

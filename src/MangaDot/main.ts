@@ -2,7 +2,8 @@ import {
   type AdvancedSearchForm,
   BasicRateLimiter,
   type Chapter,
-  type ChapterDetails, CloudflareError,
+  type ChapterDetails,
+  CloudflareError,
   type Cookie,
   CookieStorageInterceptor,
   type DiscoverSection,
@@ -54,7 +55,11 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    let pages: ChapterPagesAPI = await this.api.getJsonChapPagesApi(chapter.chapterId, chapter.sourceManga.mangaId, chapter.additionalInfo?.upload);
+    let pages: ChapterPagesAPI = await this.api.getJsonChapPagesApi(
+      chapter.chapterId,
+      chapter.sourceManga.mangaId,
+      chapter.additionalInfo?.upload,
+    );
     return this.parser.parseChapterPages(pages, chapter);
   }
 
@@ -85,23 +90,25 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
 
   async getDiscoverSectionItems(
     section: DiscoverSection,
+    metadata: MangaDotMetadata | undefined,
   ): Promise<PagedResults<DiscoverSectionItem>> {
-    const sectionElements = await this.api.getJsonSectionApi(section.id);
+    const page = metadata?.page ?? 1;
+    const sectionElements = await this.api.getJsonSectionApi(section.id, page);
     switch (section.id) {
       case "latest_updates": {
-        return this.parser.parseLatestSection(sectionElements);
+        return this.parser.parseLatestSection(sectionElements, page);
       }
       case "most_tracked": {
-        return this.parser.parseSection(sectionElements);
+        return this.parser.parseSection(sectionElements, page);
       }
       case "recently_added": {
-        return this.parser.parseProminentSection(sectionElements);
+        return this.parser.parseProminentSection(sectionElements, page);
       }
       case "top_rated": {
-        return this.parser.parseFeaturedSection(sectionElements);
+        return this.parser.parseFeaturedSection(sectionElements, page);
       }
       default: {
-        return this.parser.parseSection(sectionElements);
+        return this.parser.parseSection(sectionElements, page);
       }
     }
   }
