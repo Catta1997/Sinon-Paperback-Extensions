@@ -1,8 +1,8 @@
 {
-  "buildTime": "2026-05-14T10:41:00.640Z",
+  "buildTime": "2026-05-19T09:21:17.905Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.85",
-    "types": "1.0.0-alpha.85"
+    "toolchain": "1.0.0-alpha.87",
+    "types": "1.0.0-alpha.87"
   },
   "repository": {
     "name": "sinon-extensions",
@@ -127,7 +127,7 @@
         }
       ],
       "contentRating": "SAFE",
-      "id": "HNI-scantrad"
+      "id": "HNIScantrad"
     },
     {
       "name": "HastaTeam",
@@ -232,7 +232,7 @@
     {
       "name": "MangaDot",
       "description": "Extension that pulls content from MangaDot.net",
-      "version": "1.0.0-alpha.5",
+      "version": "1.0.1-alpha.1",
       "icon": "icon.png",
       "language": "en",
       "contentRating": "SAFE",
