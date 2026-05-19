@@ -28,6 +28,7 @@ import {
 } from "./utils";
 import MangaDotAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
+import { type ChapterPagesAPI, DOMAIN } from "./models";
 
 export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async getSettingsForm(): Promise<Form> {
@@ -53,9 +54,10 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    const pages = await this.api.getJsonChapPagesApi(
+    let pages: ChapterPagesAPI = await this.api.getJsonChapPagesApi(
       chapter.chapterId,
       chapter.sourceManga.mangaId,
+      chapter.additionalInfo?.upload,
     );
     return this.parser.parseChapterPages(pages, chapter);
   }
@@ -63,23 +65,23 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return [
       {
-        id: "latest_updates",
-        title: "Latest updates",
-        type: DiscoverSectionType.simpleCarousel,
+        id: "top_rated",
+        title: "Top Rated",
+        type: DiscoverSectionType.featured,
       },
       {
         id: "recently_added",
         title: "Recently Added",
-        type: DiscoverSectionType.simpleCarousel,
+        type: DiscoverSectionType.prominentCarousel,
+      },
+      {
+        id: "latest_updates",
+        title: "Latest updates",
+        type: DiscoverSectionType.chapterUpdates,
       },
       {
         id: "most_tracked",
         title: "Most Tracked Comics",
-        type: DiscoverSectionType.simpleCarousel,
-      },
-      {
-        id: "top_rated",
-        title: "Top Rated",
         type: DiscoverSectionType.simpleCarousel,
       },
     ];
@@ -87,9 +89,27 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
 
   async getDiscoverSectionItems(
     section: DiscoverSection,
+    metadata: MangaDotMetadata | undefined,
   ): Promise<PagedResults<DiscoverSectionItem>> {
-    const sectionElements = await this.api.getJsonSectionApi(section.id);
-    return this.parser.parseSection(sectionElements);
+    const page = metadata?.page ?? 1;
+    const sectionElements = await this.api.getJsonSectionApi(section.id, page);
+    switch (section.id) {
+      case "latest_updates": {
+        return this.parser.parseLatestSection(sectionElements, page);
+      }
+      case "most_tracked": {
+        return this.parser.parseSection(sectionElements, page);
+      }
+      case "recently_added": {
+        return this.parser.parseProminentSection(sectionElements, page);
+      }
+      case "top_rated": {
+        return this.parser.parseFeaturedSection(sectionElements, page);
+      }
+      default: {
+        return this.parser.parseSection(sectionElements, page);
+      }
+    }
   }
   async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
     for (const cookie of cookies) {
@@ -135,7 +155,7 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     ];
   }
   globalRateLimiter = new BasicRateLimiter("rateLimiter", {
-    numberOfRequests: 2,
+    numberOfRequests: 5,
     bufferInterval: 1,
     ignoreImages: true,
   });

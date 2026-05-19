@@ -3,7 +3,6 @@ import {
   DOMAIN,
   type MangaChapterListAPI,
   type MangaInfoAPI,
-  type MangaSectionAPI,
   type SearchInfoAPI,
 } from "./models";
 import {
@@ -15,7 +14,15 @@ import {
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
-import { normalizeId, type MangaDotMetadata } from "./utils";
+import {
+  normalizeId,
+  type MangaDotMetadata,
+  getArrayArtists,
+  getArrayAuthor,
+  getArrayTitles,
+  getDate,
+  getRating,
+} from "./utils";
 
 export class Parser {
   parseMangaInfo(manga: MangaInfoAPI): SourceManga {
@@ -26,13 +33,12 @@ export class Parser {
         thumbnailUrl: `${DOMAIN}${mangaInfo.photo}`,
         synopsis: mangaInfo.description,
         primaryTitle: mangaInfo.title,
-        secondaryTitles: mangaInfo.alt_titles,
-        contentRating:
-          mangaInfo.is_adult || mangaInfo.is_hot ? ContentRating.ADULT : ContentRating.EVERYONE,
+        secondaryTitles: getArrayTitles(mangaInfo),
+        contentRating: mangaInfo.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
         status: mangaInfo.status,
-        artist: Array.isArray(mangaInfo.artists) ? mangaInfo.artists.join(",") : mangaInfo.artists,
-        author: Array.isArray(mangaInfo.authors) ? mangaInfo.authors.join(",") : mangaInfo.authors,
-        bannerUrl: `${DOMAIN}${mangaInfo.photo}`,
+        artist: getArrayArtists(mangaInfo),
+        author: getArrayAuthor(mangaInfo),
+        bannerUrl: `${DOMAIN}${mangaInfo.banner_image}`,
         rating: mangaInfo.avg_rating / 10,
         tagGroups: [
           {
@@ -52,16 +58,17 @@ export class Parser {
     const chapters: Chapter[] = [];
     chapterAPI.filter((chapter) => {
       chapters.push({
-        chapterId: chapter.id,
+        chapterId: chapter.id.toString(),
         sourceManga: manga,
         langCode: chapter.language,
-        chapNum: Number(chapter.chapter_number) ?? 0,
+        chapNum: chapter.chapter_number ?? 0,
         title: chapter.chapter_title,
         version: chapter.scanlator_name,
-        volume: Number(chapter.volume_number) ?? 0,
-        sortingIndex: Number(chapter.chapter_number) ?? 0,
-        publishDate: new Date(chapter.date_added.replace(" ", "T")),
-        creationDate: new Date(chapter.date_added.replace(" ", "T")),
+        volume: chapter.volume_number ?? 0,
+        sortingIndex: chapter.chapter_number ?? 0,
+        publishDate: getDate(chapter.date_added),
+        creationDate: getDate(chapter.date_added),
+        additionalInfo: { upload: chapter.group_id.toString() },
       });
     });
     return chapters;
@@ -77,10 +84,9 @@ export class Parser {
       searchResults.push({
         mangaId: result.id.toString(),
         title: result.title,
-        subtitle: Array.isArray(result.authors) ? result.authors.join(",") : result.authors,
+        subtitle: getArrayAuthor(result),
         imageUrl: `${DOMAIN}${result.photo}`,
-        contentRating:
-          result.is_hot || result.is_adult ? ContentRating.ADULT : ContentRating.EVERYONE,
+        contentRating: getRating(result),
       });
     });
     return {
@@ -90,6 +96,9 @@ export class Parser {
   }
 
   parseChapterPages(pages: ChapterPagesAPI, chapter: Chapter): ChapterDetails {
+    if (!pages?.images || !Array.isArray(pages.images)) {
+      throw new Error("pages.images doesn't exist");
+    }
     return {
       id: chapter.chapterId,
       mangaId: chapter.sourceManga.mangaId,
@@ -97,18 +106,74 @@ export class Parser {
     };
   }
 
-  parseSection(sectionElements: MangaSectionAPI): PagedResults<DiscoverSectionItem> {
+  parseSection(sectionElements: SearchInfoAPI, page: number): PagedResults<DiscoverSectionItem> {
     const results: DiscoverSectionItem[] = [];
-    sectionElements.items.forEach((item) => {
+    sectionElements.manga_list.forEach((item) => {
       results.push({
+        title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
-        title: item.title,
-        subtitle: item.status,
-        contentRating: item.is_blurworthy ? ContentRating.MATURE : ContentRating.EVERYONE,
+        contentRating: getRating(item),
       });
     });
-    return { items: results, metadata: undefined };
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+  }
+
+  parseLatestSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.manga_list.forEach((item) => {
+      results.push({
+        title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
+        type: "chapterUpdatesCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        chapterId: "",
+        publishDate: getDate(item.last_chapter_date),
+        contentRating: getRating(item),
+      });
+    });
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+  }
+
+  parseProminentSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.manga_list.forEach((item) => {
+      results.push({
+        title: item.title,
+        subtitle: `Chapter ${item.chapter_count}`,
+        type: "prominentCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        contentRating: getRating(item),
+      });
+    });
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+  }
+
+  parseFeaturedSection(
+    sectionElements: SearchInfoAPI,
+    page: number,
+  ): PagedResults<DiscoverSectionItem> {
+    const results: DiscoverSectionItem[] = [];
+    sectionElements.manga_list.forEach((item) => {
+      results.push({
+        title: item.title,
+        supertitle: `Chapter ${item.chapter_count}`,
+        type: "featuredCarouselItem",
+        mangaId: item.id.toString(),
+        imageUrl: `${DOMAIN}${item.photo}`,
+        contentRating: getRating(item),
+      });
+    });
+    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
   }
 }

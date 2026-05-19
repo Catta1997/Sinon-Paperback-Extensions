@@ -1,22 +1,21 @@
-import type { JSONObject } from "@paperback/types";
-
 export const DOMAIN = "https://mangadot.net";
 export const API = `${DOMAIN}/api`;
 export interface MangaInfoAPI {
   manga: MangaInfo;
 }
 
-interface MangaInfo extends SectionManga {
+export interface MangaInfo extends SectionManga {
   genres: string[];
   date_added: string;
   description: string;
   source_url: string;
   banner_image: string;
+  content_rating: string | null;
   is_hot: boolean;
   avg_rating: number;
-  alt_titles: string[];
-  authors: string[] | string;
-  artists: string[] | string;
+  alt_titles: string[] | string | null;
+  authors: string[] | string | null;
+  artists: string[] | string | null;
   is_adult: boolean;
 }
 
@@ -45,6 +44,8 @@ interface SectionManga {
   status: string;
   hiatus: string;
   country_of_region: string;
+  last_chapter_date: string;
+  chapter_count: number;
   is_blurworthy: boolean;
 }
 export interface ApiRequestConfig {
@@ -54,12 +55,12 @@ export interface ApiRequestConfig {
 }
 
 export interface MangaChapterListAPI {
-  id: string;
-  chapter_number: string;
-  volume_number: null | string;
+  id: number;
+  chapter_number: number;
+  volume_number: null | number;
   chapter_title: string;
   language: string;
-  group_id: string;
+  group_id: number;
   group_name: string;
   date_added: string;
   scanlator_name: string;

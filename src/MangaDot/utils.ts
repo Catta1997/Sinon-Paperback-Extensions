@@ -1,5 +1,6 @@
-import type { JSONObject } from "@paperback/types";
+import { ContentRating, type JSONObject } from "@paperback/types";
 import { MangaDot } from "./main";
+import type { MangaInfo } from "./models";
 
 export function normalizeId(id: string): string {
   return id.replaceAll("-", "@#@").replaceAll("'", "&#@").replaceAll(" ", "#@&");
@@ -17,6 +18,7 @@ export type BaseMetadata = {
   origin?: TagMap;
   author?: string[];
   artist?: string[];
+  adult?: boolean;
 };
 
 export interface MangaDotMetadata extends JSONObject {
@@ -61,6 +63,10 @@ export class MangaDotFilters {
   ];
   origin: Tag[] = [
     {
+      id: "",
+      title: "Any",
+    },
+    {
       id: "JP",
       title: "Manga",
     },
@@ -76,15 +82,67 @@ export class MangaDotFilters {
 }
 
 export function getContentTypes() {
-  return (Application.getState("_type") as string[] | undefined) ?? ["JP", "CN&TW", "KR"];
+  return (Application.getState("_type") as string[] | undefined) ?? [""];
+}
+
+export function getSectionContentTypes() {
+  return (Application.getState("_sectionType") as string[] | undefined) ?? [""];
 }
 
 export function getGenresHidden() {
   return (Application.getState("_genres") as string[] | undefined) ?? [];
 }
 
+export function getShowAdultStatus(): boolean {
+  return (Application.getState("_adult") as boolean | undefined) ?? false;
+}
+
 export function defaultMetadata(): BaseMetadata {
   return {
     genres: Object.fromEntries(getGenresHidden().map((item) => [item, "excluded" as const])),
+    adult: getShowAdultStatus(),
   };
+}
+function parseStringArray(value: string[] | string | null): string[] {
+  if (value == null) return [];
+  if (Array.isArray(value)) {
+    return value;
+  }
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
+export function getArrayArtists(mangaInfo: MangaInfo): string {
+  return parseStringArray(mangaInfo.artists).join(",");
+}
+
+export function getArrayTitles(mangaInfo: MangaInfo): string[] {
+  return parseStringArray(mangaInfo.alt_titles);
+}
+
+export function getArrayAuthor(mangaInfo: MangaInfo): string {
+  return parseStringArray(mangaInfo.authors).join(",");
+}
+
+export function getDate(date: string) {
+  if (date === null) return new Date();
+  return new Date(date.split(".")[0].split("+")[0].replace(" ", "T"));
+}
+
+export function getRating(mangaInfo: MangaInfo) {
+  switch (mangaInfo.content_rating) {
+    case "safe":
+      return ContentRating.EVERYONE;
+    case "suggestive":
+      return ContentRating.EVERYONE;
+    case "erotica":
+      return ContentRating.MATURE;
+    case "pornographic":
+      return ContentRating.ADULT;
+    default:
+      return mangaInfo.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE;
+  }
 }

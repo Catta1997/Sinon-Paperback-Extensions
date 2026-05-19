@@ -12,9 +12,8 @@ export class MangaDotInterceptor extends PaperbackInterceptor {
     return {
       ...request,
       headers: {
-        ...request.headers,
-        referer: `${DOMAIN}/`,
         "user-agent": await Application.getDefaultUserAgent(),
+        ...request.headers,
       },
     };
   }
