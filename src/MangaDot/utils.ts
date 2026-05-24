@@ -1,5 +1,6 @@
 import { ContentRating, type JSONObject } from "@paperback/types";
-import { MangaDot } from "./main";
+
+import type { MangaDotApi } from "./api";
 import type { MangaInfo } from "./models";
 
 export function normalizeId(id: string): string {
@@ -14,8 +15,8 @@ type FilterValue = "included" | "excluded";
 export type TagMap = Record<string, FilterValue>;
 export type BaseMetadata = {
   genres?: TagMap;
-  status?: TagMap;
-  origin?: TagMap;
+  origin?: string[];
+  status?: string[];
   author?: string[];
   artist?: string[];
   adult?: boolean;
@@ -24,63 +25,52 @@ export type BaseMetadata = {
 export interface MangaDotMetadata extends JSONObject {
   page: number;
 }
-type Tag = {
+export type Tag = {
   id: string;
   title: string;
 };
 
-export class MangaDotFilters {
-  private constructor(genres: string[]) {
-    this.genres = genres.map((elem) => ({
-      id: normalizeId(elem),
-      title: deNormalizeId(elem),
-    }));
-  }
+export const status: Tag[] = [
+  {
+    id: "",
+    title: "Any",
+  },
+  {
+    id: "Ongoing",
+    title: "Ongoing",
+  },
+  {
+    id: "Completed",
+    title: "Completed",
+  },
+  {
+    id: "Hiatus",
+    title: "Interrupted",
+  },
+];
 
-  static async create(): Promise<MangaDotFilters> {
-    const genres = await MangaDot.api.getFilters();
-
-    return new MangaDotFilters(genres);
-  }
-  genres: Tag[];
-  status: Tag[] = [
-    {
-      id: "",
-      title: "Any",
-    },
-    {
-      id: "Ongoing",
-      title: "Ongoing",
-    },
-    {
-      id: "Completed",
-      title: "Completed",
-    },
-    {
-      id: "Hiatus",
-      title: "Interrupted",
-    },
-  ];
-  origin: Tag[] = [
-    {
-      id: "",
-      title: "Any",
-    },
-    {
-      id: "JP",
-      title: "Manga",
-    },
-    {
-      id: "KR",
-      title: "Manhwa",
-    },
-    {
-      id: "CN&TW",
-      title: "Manhua",
-    },
-  ];
-}
-
+export const origin: Tag[] = [
+  {
+    id: "",
+    title: "Any",
+  },
+  {
+    id: "JP",
+    title: "Manga",
+  },
+  {
+    id: "KR",
+    title: "Manhwa",
+  },
+  {
+    id: "CN&TW",
+    title: "Manhua",
+  },
+  {
+    id: "ONESHOT",
+    title: "Oneshot",
+  },
+];
 export function getContentTypes() {
   return (Application.getState("_type") as string[] | undefined) ?? [""];
 }
@@ -133,6 +123,8 @@ export function getDate(date: string) {
 }
 
 export function getRating(mangaInfo: MangaInfo) {
+  if (mangaInfo.is_adult) return ContentRating.ADULT;
+  if (mangaInfo.is_blurworthy) return ContentRating.MATURE;
   switch (mangaInfo.content_rating) {
     case "safe":
       return ContentRating.EVERYONE;
@@ -143,6 +135,38 @@ export function getRating(mangaInfo: MangaInfo) {
     case "pornographic":
       return ContentRating.ADULT;
     default:
-      return mangaInfo.is_blurworthy ? ContentRating.ADULT : ContentRating.EVERYONE;
+      return ContentRating.EVERYONE;
+  }
+}
+
+export let genres: Tag[] = [];
+
+function setGenreFilter(tags: Tag[]) {
+  genres = tags;
+  Application.setState(JSON.stringify(tags), "genres_filter");
+}
+
+export async function checkFilters(api: MangaDotApi): Promise<void> {
+  await updateFilters(genres.length === 0, api);
+}
+
+export async function updateFilters(force: boolean, api: MangaDotApi): Promise<void> {
+  const lastFilterFetch = Number(Application.getState("last-genres-fetch") ?? 0);
+  const cached = lastFilterFetch + 172800 > new Date().valueOf() / 1000;
+  if (cached && !force) {
+    const cachedGenres = Application.getState("genres_filter") as string | undefined;
+    if (cachedGenres === undefined) {
+      await updateFilters(true, api);
+      return;
+    }
+    setGenreFilter(JSON.parse(cachedGenres) as Tag[]);
+  } else {
+    const fetchedGenres = await api.getFilters();
+    genres = fetchedGenres.map((elem) => ({
+      id: normalizeId(elem),
+      title: deNormalizeId(elem),
+    }));
+    setGenreFilter(genres);
+    Application.setState(String(new Date().valueOf() / 1000), "last-genres-fetch");
   }
 }

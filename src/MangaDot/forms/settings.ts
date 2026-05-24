@@ -1,19 +1,30 @@
-import { Form, Section, SelectRow, StepperRow, ToggleRow } from "@paperback/types";
-import { MangaDot } from "../main";
 import {
-  deNormalizeId,
+  ButtonRow,
+  Form,
+  FormConfirmationError,
+  Section,
+  SelectRow,
+  ToggleRow,
+} from "@paperback/types";
+
+import type { MangaDotApi } from "../api";
+import {
   getContentTypes,
   getGenresHidden,
   getSectionContentTypes,
   getShowAdultStatus,
-  normalizeId,
+  origin,
+  genres,
+  updateFilters,
 } from "../utils";
 
 export class SettingsForm extends Form {
+  api: MangaDotApi;
+  constructor(api: MangaDotApi) {
+    super();
+    this.api = api;
+  }
   override getSections() {
-    const types = MangaDot.filters?.origin ?? [];
-    const genres = MangaDot.filters?.genres ?? [];
-
     return [
       Section(
         {
@@ -25,9 +36,9 @@ export class SettingsForm extends Form {
             title: "Content Type",
             subtitle: "This settings only as default search filter",
             value: getContentTypes(),
-            options: types,
+            options: origin,
             minItemCount: 0,
-            maxItemCount: types.length,
+            maxItemCount: origin.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleTypeStatusChange"),
           }),
           SelectRow("hide_genres", {
@@ -54,9 +65,9 @@ export class SettingsForm extends Form {
             title: "Content Type",
             subtitle: "This settings apply on sections only",
             value: getSectionContentTypes(),
-            options: types,
-            minItemCount: 0,
-            maxItemCount: types.length,
+            options: origin,
+            minItemCount: 1,
+            maxItemCount: origin.length,
             onValueChange: Application.Selector(
               this as SettingsForm,
               "handleSectionTypeStatusChange",
@@ -80,6 +91,18 @@ export class SettingsForm extends Form {
           }),
         ],
       ),
+      Section(
+        {
+          id: "reset_settings",
+          footer: "Filters",
+        },
+        [
+          ButtonRow("reload_genres", {
+            title: "Refresh genres filters",
+            onSelect: Application.Selector(this as SettingsForm, "resetFiltersDialog"),
+          }),
+        ],
+      ),
     ];
   }
   public async updateValue<T>(value: T, filter: string): Promise<void> {
@@ -93,9 +116,29 @@ export class SettingsForm extends Form {
     await this.updateValue(value, "_type");
   }
   async handleSectionTypeStatusChange(value: string[]): Promise<void> {
+    const previous = getSectionContentTypes();
+
+    const hadAnyBefore = previous.includes("");
+    const hasAnyNow = value.includes("");
+
+    if (hadAnyBefore && value.length > 1) {
+      value = value.filter((v) => v !== "");
+    } else if (!hadAnyBefore && hasAnyNow) {
+      value = [""];
+    }
+
     await this.updateValue(value, "_sectionType");
   }
   async handleHideGenresStatusChange(value: string[]): Promise<void> {
     await this.updateValue(value, "_genres");
+  }
+  async resetFiltersDialog() {
+    throw new FormConfirmationError(
+      Application.Selector(this as SettingsForm, "resetFilters"),
+      "Do you want to refresh genres filters?",
+    );
+  }
+  async resetFilters() {
+    await updateFilters(true, this.api);
   }
 }

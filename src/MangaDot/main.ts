@@ -16,33 +16,28 @@ import {
   type SortingOption,
   type SourceManga,
 } from "@paperback/types";
+
 import { MangaDotApi } from "./api";
-import { MangaDotInterceptor } from "./network";
-import MangaDotConfig from "./pbconfig";
-import { Parser } from "./parser";
-import {
-  type BaseMetadata,
-  type MangaDotMetadata,
-  MangaDotFilters,
-  defaultMetadata,
-} from "./utils";
 import MangaDotAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
-import { type ChapterPagesAPI, DOMAIN } from "./models";
+import { type ChapterPagesAPI } from "./models";
+import { MangaDotInterceptor } from "./network";
+import { Parser } from "./parser";
+import MangaDotConfig from "./pbconfig";
+import { type BaseMetadata, type MangaDotMetadata, defaultMetadata, checkFilters } from "./utils";
 
 export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   async getSettingsForm(): Promise<Form> {
-    return new SettingsForm();
+    await checkFilters(this.api);
+    return new SettingsForm(this.api);
   }
   async initialise(): Promise<void> {
     this.globalRateLimiter.registerInterceptor();
     this.cookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
-    this.filters = await MangaDotFilters.create();
   }
   api = new MangaDotApi();
   parser = new Parser();
-  filters: MangaDotFilters | undefined;
   async getMangaDetails(mangaId: string): Promise<SourceManga> {
     const mangaInfo = await this.api.getJsonMangaInfoApi(mangaId);
     return this.parser.parseMangaInfo(mangaInfo);
@@ -119,11 +114,8 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     }
   }
   async getAdvancedSearchForm(searchQuery: SearchQuery<BaseMetadata>): Promise<AdvancedSearchForm> {
-    let filter: { id: string; title: string }[] = [];
-    if (this.filters) {
-      filter = this.filters.genres;
-    }
-    return new MangaDotAdvancedSearchForm(searchQuery, filter);
+    await checkFilters(this.api);
+    return new MangaDotAdvancedSearchForm(searchQuery);
   }
   async getSearchResults(
     query: SearchQuery<BaseMetadata>,

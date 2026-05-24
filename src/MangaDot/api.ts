@@ -1,3 +1,5 @@
+import { URL, type Request, type SearchQuery, type SortingOption } from "@paperback/types";
+
 import {
   API,
   type ApiRequestConfig,
@@ -8,7 +10,6 @@ import {
   type SearchInfoAPI,
   type SearchSuggestionsAPI,
 } from "./models";
-import { URL, type Request, type SearchQuery, type SortingOption } from "@paperback/types";
 import {
   deNormalizeId,
   type BaseMetadata,
@@ -17,10 +18,7 @@ import {
 } from "./utils";
 
 export class MangaDotApi {
-  apiLink = "";
-
-  constructor() {}
-  private async APIJson<T>(api: ApiRequestConfig): Promise<T> {
+  private async fetchAPI<T>(api: ApiRequestConfig): Promise<T> {
     const url = new URL(API);
     const paths = Array.isArray(api.path) ? api.path : [api.path];
     paths.forEach((p) => url.addPathComponent(p));
@@ -29,13 +27,12 @@ export class MangaDotApi {
         url.setQueryItem(key, value);
       }
     }
-    this.apiLink = url.toString();
-    const html = await this.getDataFromRequest(api.referer);
+    const html = await this.getDataFromRequest(url, api.referer);
     return JSON.parse(html) as T;
   }
-  private async getDataFromRequest(referer?: string): Promise<string> {
+  private async getDataFromRequest(apiLink: URL, referer?: string): Promise<string> {
     const request: Request = {
-      url: this.apiLink,
+      url: apiLink.toString(),
       method: "GET",
     };
     if (referer) {
@@ -44,113 +41,95 @@ export class MangaDotApi {
     const data = await Application.scheduleRequest(request);
     return Application.arrayBufferToUTF8String(data[1]);
   }
+
+  private generateSectionAPI(sectionId: string, page: number): ApiRequestConfig {
+    return {
+      path: ["manga", "section", sectionId],
+      query: {
+        origin: getSectionContentTypes().join(",").replaceAll("&", ","),
+        adult: getShowAdultStatus() ? "both" : "0",
+        page: page.toString(),
+      },
+    };
+  }
+
   async getJsonSectionApi(section: string, page: number): Promise<SearchInfoAPI> {
     const sections: Record<string, ApiRequestConfig> = {
-      latest_updates: {
-        path: ["manga", "section", "latest-updates"],
-        query: {
-          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
-          adult: getShowAdultStatus() ? "both" : "0",
-          page: page.toString(),
-        },
-      },
-      recently_added: {
-        path: ["manga", "section", "recently-added"],
-        query: {
-          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
-          adult: getShowAdultStatus() ? "both" : "0",
-          page: page.toString(),
-        },
-      },
-      most_tracked: {
-        path: ["manga", "section", "most-tracked"],
-        query: {
-          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
-          adult: getShowAdultStatus() ? "both" : "0",
-          page: page.toString(),
-        },
-      },
-      top_rated: {
-        path: ["manga", "section", "top-rated"],
-        query: {
-          origin: getSectionContentTypes().join(",").replaceAll("&", ","),
-          adult: getShowAdultStatus() ? "both" : "0",
-          page: page.toString(),
-        },
-      },
+      latest_updates: this.generateSectionAPI("latest-updates", page),
+      recently_added: this.generateSectionAPI("recently-added", page),
+      most_tracked: this.generateSectionAPI("most-tracked", page),
+      top_rated: this.generateSectionAPI("top-rated", page),
     };
     const config = sections[section];
     if (!config) throw new Error(`${section} not found on API`);
-    return this.APIJson<SearchInfoAPI>({ path: config.path, query: config.query });
+    return this.fetchAPI<SearchInfoAPI>(config);
   }
   async getJsonMangaInfoApi(mangaId: string) {
-    return this.APIJson<MangaInfoAPI>({
+    return this.fetchAPI<MangaInfoAPI>({
       path: ["manga", `${mangaId}`],
       query: {},
     });
   }
 
   async getJsonChapterListApi(mangaId: string) {
-    return this.APIJson<MangaChapterListAPI[]>({
+    return this.fetchAPI<MangaChapterListAPI[]>({
       path: ["manga", `${mangaId}`, "chapters", "list"],
       query: {},
     });
   }
 
   async getJsonSearchApi(query: SearchQuery<BaseMetadata>, page: number, sorting: SortingOption) {
-    let genres = query.metadata?.genres ?? [];
+    const genres = query.metadata?.genres ?? [];
     const formattedGenres = Object.entries(genres).map(([genre, state]) => {
       const normalized = deNormalizeId(genre);
       return state === "excluded" ? `-${normalized}` : normalized;
     });
-    let statuses = query.metadata?.status ?? [];
-    const formattedStatus = Object.entries(statuses).map(([status, state]) => {
-      return state === "excluded" ? `-${status}` : status;
-    });
-    let origins = query.metadata?.origin ?? [];
-    const formattedOrigin = Object.entries(origins).map(([origin, state]) => {
-      return state === "excluded" ? `-${origin}` : origin;
-    });
-    let authors = query.metadata?.author ?? [];
+    const statuses = query.metadata?.status ?? [];
+    const origins = query.metadata?.origin ?? [];
+    const authors = query.metadata?.author ?? [];
+    const artist = query.metadata?.artist ?? [];
+    const adult = query.metadata?.adult ? "both" : "0";
     const [sort, order] = sorting.id.split("$");
-    return this.APIJson<SearchInfoAPI>({
+    return this.fetchAPI<SearchInfoAPI>({
       path: ["search"],
       query: {
         search: query.title,
         page: page.toString(),
         genres: formattedGenres.join(","),
-        origin: formattedOrigin.join(",").replaceAll("&", ","),
-        status: formattedStatus.join(","),
+        origin: origins.join(",").replaceAll("&", ","),
+        status: statuses.join(","),
         author: authors.join(","),
+        artist: artist.join(","),
         sortBy: sort,
         sortOrder: order ? order : "",
+        adult: adult,
       },
     });
   }
 
   async getJsonChapPagesApi(chapterId: string, mangaId: string, upload: string | undefined) {
-    const chapPath = upload === "0" ? "chapters" : "uploads";
-    return this.APIJson<ChapterPagesAPI>({
+    const chapPath = upload === "trusted" ? "uploads" : "chapters";
+    return this.fetchAPI<ChapterPagesAPI>({
       path: [`${chapPath}`, `${chapterId}`, "images"],
       referer: `${DOMAIN}/manga/${mangaId}`,
     });
   }
 
   async getFilters() {
-    return this.APIJson<string[]>({
+    return this.fetchAPI<string[]>({
       path: ["manga", "genres"],
     });
   }
 
   async getAuthor(value: string) {
-    return this.APIJson<SearchSuggestionsAPI>({
+    return this.fetchAPI<SearchSuggestionsAPI>({
       path: ["manga", "people-suggest"],
       query: { kind: "author", q: value },
     });
   }
 
   async getArtist(value: string) {
-    return this.APIJson<SearchSuggestionsAPI>({
+    return this.fetchAPI<SearchSuggestionsAPI>({
       path: ["manga", "people-suggest"],
       query: { kind: "artist", q: value },
     });

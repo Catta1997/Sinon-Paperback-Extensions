@@ -4,50 +4,39 @@ export interface MangaInfoAPI {
   manga: MangaInfo;
 }
 
-export interface MangaInfo extends SectionManga {
-  genres: string[];
-  date_added: string;
-  description: string;
-  source_url: string;
-  banner_image: string;
-  content_rating: string | null;
-  is_hot: boolean;
-  avg_rating: number;
-  alt_titles: string[] | string | null;
-  authors: string[] | string | null;
-  artists: string[] | string | null;
-  is_adult: boolean;
+export interface SearchSuggestionsAPI {
+  suggestions: string[];
 }
 
 export interface SearchInfoAPI {
   manga_list: MangaInfo[];
+  pagination: { total_pages: number };
 }
 
 export interface ChapterPagesAPI {
-  images: ChapterPages[];
+  images: { url: string }[];
 }
 
-interface ChapterPages {
-  url: string;
-  w: number;
-  h: number;
-}
-
-export interface MangaSectionAPI {
-  items: SectionManga[];
-}
-
-interface SectionManga {
+export interface MangaInfo {
+  genres: string[];
+  date_added: string;
+  description: string;
+  banner_image: string;
+  content_rating: string | null;
+  avg_rating: number;
+  alt_titles: string[] | string | null;
+  authors: string[] | string | null;
+  artists: string[] | string | null;
   id: number;
   title: string;
   photo: string;
   status: string;
-  hiatus: string;
-  country_of_region: string;
   last_chapter_date: string;
   chapter_count: number;
   is_blurworthy: boolean;
+  is_adult: boolean;
 }
+
 export interface ApiRequestConfig {
   path: string | string[];
   query?: Record<string, string | string[]>;
@@ -60,12 +49,8 @@ export interface MangaChapterListAPI {
   volume_number: null | number;
   chapter_title: string;
   language: string;
-  group_id: number;
+  uploader_upload_status: string | null;
   group_name: string;
   date_added: string;
   scanlator_name: string;
-}
-
-export interface SearchSuggestionsAPI {
-  suggestions: string[];
 }

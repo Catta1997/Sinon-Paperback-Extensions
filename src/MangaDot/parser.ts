@@ -1,11 +1,4 @@
 import {
-  type ChapterPagesAPI,
-  DOMAIN,
-  type MangaChapterListAPI,
-  type MangaInfoAPI,
-  type SearchInfoAPI,
-} from "./models";
-import {
   type Chapter,
   type ChapterDetails,
   ContentRating,
@@ -14,6 +7,14 @@ import {
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
+
+import {
+  type ChapterPagesAPI,
+  DOMAIN,
+  type MangaChapterListAPI,
+  type MangaInfoAPI,
+  type SearchInfoAPI,
+} from "./models";
 import {
   normalizeId,
   type MangaDotMetadata,
@@ -50,14 +51,13 @@ export class Parser {
             })),
           },
         ],
-        shareUrl: mangaInfo.source_url,
+        shareUrl: `${DOMAIN}/manga/${mangaInfo.id}`,
       },
     };
   }
   parseChapters(chapterAPI: MangaChapterListAPI[], manga: SourceManga): Chapter[] {
-    const chapters: Chapter[] = [];
-    chapterAPI.filter((chapter) => {
-      chapters.push({
+    return chapterAPI.map((chapter) => {
+      return {
         chapterId: chapter.id.toString(),
         sourceManga: manga,
         langCode: chapter.language,
@@ -68,10 +68,9 @@ export class Parser {
         sortingIndex: chapter.chapter_number ?? 0,
         publishDate: getDate(chapter.date_added),
         creationDate: getDate(chapter.date_added),
-        additionalInfo: { upload: chapter.group_id.toString() },
-      });
+        additionalInfo: { upload: chapter.uploader_upload_status?.toString() ?? "" },
+      };
     });
-    return chapters;
   }
 
   parseSearch(
@@ -91,7 +90,7 @@ export class Parser {
     });
     return {
       items: searchResults,
-      metadata: searchResults.length > 0 ? { page: page + 1 } : undefined,
+      metadata: results.pagination.total_pages > page ? { page: page + 1 } : undefined,
     };
   }
 
@@ -111,14 +110,17 @@ export class Parser {
     sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
-        subtitle: `Chapter ${item.chapter_count}`,
+        subtitle: getArrayAuthor(item),
         type: "simpleCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
         contentRating: getRating(item),
       });
     });
-    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+    return {
+      items: results,
+      metadata: sectionElements.pagination.total_pages > page ? { page: page + 1 } : undefined,
+    };
   }
 
   parseLatestSection(
@@ -138,7 +140,10 @@ export class Parser {
         contentRating: getRating(item),
       });
     });
-    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+    return {
+      items: results,
+      metadata: sectionElements.pagination.total_pages > page ? { page: page + 1 } : undefined,
+    };
   }
 
   parseProminentSection(
@@ -149,14 +154,17 @@ export class Parser {
     sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
-        subtitle: `Chapter ${item.chapter_count}`,
+        subtitle: getArrayAuthor(item),
         type: "prominentCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
         contentRating: getRating(item),
       });
     });
-    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+    return {
+      items: results,
+      metadata: sectionElements.pagination.total_pages > page ? { page: page + 1 } : undefined,
+    };
   }
 
   parseFeaturedSection(
@@ -167,13 +175,16 @@ export class Parser {
     sectionElements.manga_list.forEach((item) => {
       results.push({
         title: item.title,
-        supertitle: `Chapter ${item.chapter_count}`,
+        supertitle: getArrayAuthor(item),
         type: "featuredCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
         contentRating: getRating(item),
       });
     });
-    return { items: results, metadata: results.length > 0 ? { page: page + 1 } : undefined };
+    return {
+      items: results,
+      metadata: sectionElements.pagination.total_pages > page ? { page: page + 1 } : undefined,
+    };
   }
 }
