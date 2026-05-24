@@ -8,11 +8,12 @@ import {
   NavigationRow,
   type SearchQuery,
   Section,
-  type SelectorID,
   SelectSection,
   TriStateSelectRow,
   ToggleRow,
+  SelectRow,
 } from "@paperback/types";
+
 import { MangaDot } from "../main";
 import {
   deNormalizeId,
@@ -20,6 +21,9 @@ import {
   type BaseMetadata,
   type TagMap,
   defaultMetadata,
+  status,
+  origin,
+  genres,
 } from "../utils";
 
 class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
@@ -27,17 +31,15 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
     return this.searchMetadata;
   }
 
-  private genreFilter: { id: string; title: string }[];
   private searchMetadata: BaseMetadata;
 
-  constructor(searchQuery: SearchQuery<BaseMetadata>, filters: { id: string; title: string }[]) {
+  constructor(searchQuery: SearchQuery<BaseMetadata>) {
     super();
     if (searchQuery.metadata !== undefined) {
       this.searchMetadata = searchQuery.metadata;
     } else {
       this.searchMetadata = defaultMetadata();
     }
-    this.genreFilter = filters;
   }
 
   override getSections(): FormSectionElement<unknown>[] {
@@ -75,7 +77,7 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
         title: "Genres",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleGenres"),
-        items: this.genreFilter,
+        items: genres,
         value: this.searchMetadata.genres ?? {},
         allowEmptySelection: true,
         allowExclusion: true,
@@ -86,14 +88,14 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
 
   getStatusFilter(): FormItemElement<unknown>[] {
     return [
-      TriStateSelectRow("status", {
+      SelectRow("status", {
         title: "Status",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleStatus"),
-        items: MangaDot.filters?.status ?? [],
-        value: this.searchMetadata.status ?? {},
-        allowEmptySelection: true,
-        allowExclusion: true,
+        items: status,
+        value: this.searchMetadata.status ?? [""],
+        minItemCount: 1,
+        maxItemCount: 1,
         isHidden: false,
       }),
     ];
@@ -101,14 +103,14 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
 
   getOriginFilter(): FormItemElement<unknown>[] {
     return [
-      TriStateSelectRow("origin", {
+      SelectRow("origin", {
         title: "Origin",
         layout: "list",
         onValueChange: Application.Selector(this as MangaDotAdvancedSearchForm, "handleOrigin"),
-        items: MangaDot.filters?.origin ?? [],
-        value: this.searchMetadata.origin ?? {},
-        allowEmptySelection: true,
-        allowExclusion: true,
+        items: origin,
+        value: this.searchMetadata.origin ?? [""],
+        minItemCount: 1,
+        maxItemCount: origin.length,
         isHidden: false,
       }),
     ];
@@ -122,11 +124,19 @@ class MangaDotAdvancedSearchForm extends AdvancedSearchForm {
     this.searchMetadata.genres = value;
   }
 
-  async handleStatus(value: TagMap): Promise<void> {
+  async handleStatus(value: string[]): Promise<void> {
     this.searchMetadata.status = value;
   }
 
-  async handleOrigin(value: TagMap): Promise<void> {
+  async handleOrigin(value: string[]): Promise<void> {
+    const previous = this.searchMetadata?.origin ?? [""];
+    const hadAnyBefore = previous.includes("");
+    const hasAnyNow = value.includes("");
+    if (hadAnyBefore && value.length > 1) {
+      value = value.filter((v) => v !== "");
+    } else if (!hadAnyBefore && hasAnyNow) {
+      value = [""];
+    }
     this.searchMetadata.origin = value;
   }
 }
@@ -221,10 +231,10 @@ class AuthorFilter extends AdvancedSearchForm {
 class ArtistFilter extends AdvancedSearchForm {
   private artistMetadata: BaseMetadata;
 
-  constructor(authorMetadata: BaseMetadata) {
+  constructor(artistMetadata: BaseMetadata) {
     super();
-    if (authorMetadata !== undefined) {
-      this.artistMetadata = authorMetadata;
+    if (artistMetadata !== undefined) {
+      this.artistMetadata = artistMetadata;
     } else {
       this.artistMetadata = {
         artist: [],
@@ -251,10 +261,10 @@ class ArtistFilter extends AdvancedSearchForm {
   private searchedValue: string = "";
 
   override getSections(): (ListSectionElement | FlowSectionElement)[] {
-    return this.getAuthorFilter();
+    return this.getArtistsFilter();
   }
 
-  getAuthorFilter(): (ListSectionElement | FlowSectionElement)[] {
+  getArtistsFilter(): (ListSectionElement | FlowSectionElement)[] {
     return [
       Section("artist", [
         InputRow("artist", {
