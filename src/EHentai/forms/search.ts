@@ -221,7 +221,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     const index = Number(indexStr);
     const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
     if (!arr || isNaN(index)) return;
-    value.length ? (arr[index] = value) : arr.splice(index, 1);
+    const _ = value.length > 0 ? (arr[index] = value) : arr.splice(index, 1);
     return;
   }
   async handleTypeChange(value: string[]): Promise<void> {
