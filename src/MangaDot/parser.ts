@@ -40,6 +40,7 @@ export class Parser {
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
         bannerUrl: `${DOMAIN}${mangaInfo.banner_image}`,
+        artworkUrls: [`${DOMAIN}${mangaInfo.banner_image}`, `${DOMAIN}${mangaInfo.photo}`],
         rating: mangaInfo.avg_rating / 10,
         tagGroups: [
           {
@@ -135,7 +136,7 @@ export class Parser {
         type: "chapterUpdatesCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
-        chapterId: "",
+        chapterId: item.chapter_count.toString(),
         publishDate: getDate(item.last_chapter_date),
         contentRating: getRating(item),
       });
