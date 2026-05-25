@@ -54,3 +54,7 @@ export interface MangaChapterListAPI {
   date_added: string;
   scanlator_name: string;
 }
+
+export interface Volumes {
+  cover_url: string;
+}

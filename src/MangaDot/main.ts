@@ -20,7 +20,7 @@ import {
 import { MangaDotApi } from "./api";
 import MangaDotAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
-import { type ChapterPagesAPI } from "./models";
+import { type ChapterPagesAPI, DOMAIN } from "./models";
 import { MangaDotInterceptor } from "./network";
 import { Parser } from "./parser";
 import MangaDotConfig from "./pbconfig";
@@ -40,7 +40,10 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
   parser = new Parser();
   async getMangaDetails(mangaId: string): Promise<SourceManga> {
     const mangaInfo = await this.api.getJsonMangaInfoApi(mangaId);
-    return this.parser.parseMangaInfo(mangaInfo);
+    const volumes = (await this.api.getJsonVolumesApi(mangaId)).map(
+      (volume) => `${DOMAIN}${volume.cover_url}`,
+    );
+    return this.parser.parseMangaInfo(mangaInfo, volumes);
   }
 
   async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {

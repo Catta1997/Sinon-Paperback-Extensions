@@ -26,7 +26,7 @@ import {
 } from "./utils";
 
 export class Parser {
-  parseMangaInfo(manga: MangaInfoAPI): SourceManga {
+  parseMangaInfo(manga: MangaInfoAPI, volumes: string[]): SourceManga {
     const mangaInfo = manga.manga;
     return {
       mangaId: mangaInfo.id.toString(),
@@ -40,7 +40,10 @@ export class Parser {
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
         bannerUrl: `${DOMAIN}${mangaInfo.banner_image}`,
-        artworkUrls: [`${DOMAIN}${mangaInfo.banner_image}`, `${DOMAIN}${mangaInfo.photo}`],
+        artworkUrls: [
+          `${DOMAIN}${mangaInfo.photo}`,
+          ...volumes,
+        ],
         rating: mangaInfo.avg_rating / 10,
         tagGroups: [
           {

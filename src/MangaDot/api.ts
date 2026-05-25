@@ -9,6 +9,7 @@ import {
   type MangaInfoAPI,
   type SearchInfoAPI,
   type SearchSuggestionsAPI,
+  type Volumes,
 } from "./models";
 import {
   deNormalizeId,
@@ -74,6 +75,13 @@ export class MangaDotApi {
   async getJsonChapterListApi(mangaId: string) {
     return this.fetchAPI<MangaChapterListAPI[]>({
       path: ["manga", `${mangaId}`, "chapters", "list"],
+      query: {},
+    });
+  }
+
+  async getJsonVolumesApi(mangaId: string) {
+    return this.fetchAPI<Volumes[]>({
+      path: ["manga", `${mangaId}`, "volumes"],
       query: {},
     });
   }
