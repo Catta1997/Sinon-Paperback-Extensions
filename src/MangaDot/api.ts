@@ -96,7 +96,7 @@ export class MangaDotApi {
     const origins = query.metadata?.origin ?? [];
     const authors = query.metadata?.author ?? [];
     const artist = query.metadata?.artist ?? [];
-    const adult = query.metadata?.adult ? "both" : "0";
+    const adult = query.metadata?.adult === true ? "both" : "0";
     const [sort, order] = sorting.id.split("$");
     return this.fetchAPI<SearchInfoAPI>({
       path: ["search"],
