@@ -15,11 +15,9 @@ import {
   type SourceManga,
 } from "@paperback/types";
 import { MainInterceptor } from "./network";
-import { globalFilters, JsonParser } from "./parsers";
-import type { SearchMetadata } from "../EHentai/utils";
+import { JsonParser } from "./parsers";
 
 const parse = new JsonParser();
-export const filter = new globalFilters();
 type HentaiHandImplementation = Extension &
   SearchResultsProviding &
   MangaProviding &
@@ -50,7 +48,7 @@ export class HentaiHandExtension implements HentaiHandImplementation {
     }
   }
 
-  getSearchResults(query: SearchQuery<SearchMetadata>): Promise<PagedResults<SearchResultItem>> {
+  getSearchResults(query: SearchQuery<{}>): Promise<PagedResults<SearchResultItem>> {
     return parse.parseSearchResults(query);
   }
 

@@ -30,6 +30,7 @@
     "oxfmt": "^0.48.0",
     "oxlint": "^1.63.0",
     "oxlint-tsgolint": "^0.22.1",
+    "paperback-interceptors": "github:Catta1997/paperback-interceptors",
     "stemmer": "^2.0.1",
     "typescript": "^6.0.3",
     "upng-js": "^2.1.0"

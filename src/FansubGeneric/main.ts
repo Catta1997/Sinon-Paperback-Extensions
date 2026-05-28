@@ -57,7 +57,7 @@ abstract class FansubGeneral
       bufferInterval: 1,
       ignoreImages: true,
     });
-    this.mainInterceptor = new MainInterceptor("main");
+    this.mainInterceptor = new MainInterceptor(this.base_url, "main");
   }
   getMangaDetails(mangaId: string): Promise<SourceManga> {
     return this.parser.parseMangaDetails(mangaId, this);

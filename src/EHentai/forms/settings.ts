@@ -1,5 +1,5 @@
 import { typeFilter } from "../utils";
-import { Form, Section, SelectRow, StepperRow, ToggleRow } from "@paperback/types";
+import { Form, Section, SelectRow, StepperRow } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 
 export class SettingsForm extends Form {
@@ -35,13 +35,6 @@ export class SettingsForm extends Form {
             loopOver: true,
             onValueChange: Application.Selector(this as SettingsForm, "handleRateStatusChange"),
           }),
-          ToggleRow("tl_link", {
-            title: "Use Secondary Image Link",
-            subtitle:
-              "Use every time the second available image link (chapter image load will be slower)",
-            value: this.getRateNLValue(),
-            onValueChange: Application.Selector(this as SettingsForm, "handleNLStatusChange"),
-          }),
         ],
       ),
     ];
@@ -70,13 +63,5 @@ export class SettingsForm extends Form {
   async handleRateStatusChange(value: number): Promise<void> {
     await this.updateValue(value, "RateFilter");
     mainRateLimiter.options.numberOfRequests = value;
-  }
-
-  getRateNLValue(): boolean {
-    return (Application.getState("nlLink") as boolean | undefined) ?? false;
-  }
-
-  async handleNLStatusChange(value: boolean): Promise<void> {
-    await this.updateValue(value, "nlLink");
   }
 }

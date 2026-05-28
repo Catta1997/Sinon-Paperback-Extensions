@@ -11,7 +11,6 @@ import {
   type TagSection,
 } from "@paperback/types";
 import { ApiMaker } from "./network";
-import type { SearchMetadata } from "../EHentai/utils";
 
 const api = new ApiMaker();
 export class JsonParser {
@@ -77,28 +76,7 @@ export class JsonParser {
     return { mangaId: mangaId, mangaInfo: mangaInfo };
   }
 
-  async parseSearchResults(
-    query: SearchQuery<SearchMetadata>,
-  ): Promise<PagedResults<SearchResultItem>> {
-    // const page = metadata?.page ?? 1;
-
-    /*   const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
-    const category: string | Record<string, "included" | "excluded"> =
-      getFilterValue("category") ?? "";
-    const language: string | Record<string, "included" | "excluded"> =
-      getFilterValue("language") ?? "";
-    const langFilter: string[] = [];
-    const categoryFilter: string[] = [];
-    if (category && typeof category === "object") {
-      for (const tag of Object.entries(category)) {
-        if (tag[1] == "included") categoryFilter.push(tag[0]);
-      }
-    }
-    if (language && typeof language === "object") {
-      for (const tag of Object.entries(language)) {
-        if (tag[1] == "included") langFilter.push(tag[0]);
-      }
-    }*/
+  async parseSearchResults(query: SearchQuery<{}>): Promise<PagedResults<SearchResultItem>> {
     const search = await api.getJsonSearchApi(query.title, 1, [], []);
     const items: SearchResultItem[] = [];
     search.data.forEach((item) => {
@@ -114,44 +92,4 @@ export class JsonParser {
       metadata: undefined,
     };
   }
-}
-
-export class globalFilters {
-  themes = [];
-  /*
-  async getFilters() {
-    const filters: SearchFilter[] = [];
-    const lang = await api.getJSONFilters("languages");
-    const languages = lang.data.map((language) => ({
-      id: language.id.toString(),
-      value: language.name,
-    }));
-    const category = await api.getJSONFilters("categories");
-    const categories = category.data.map((language) => ({
-      id: language.id.toString(),
-      value: language.name,
-    }));
-    filters.push({
-      type: "multiselect",
-      id: "language",
-      title: "Language",
-      options: languages,
-      value: {},
-      allowExclusion: false,
-      allowEmptySelection: true,
-      maximum: 1,
-    });
-    filters.push({
-      type: "multiselect",
-      id: "category",
-      title: "Category",
-      options: categories,
-      value: {},
-      allowExclusion: false,
-      allowEmptySelection: true,
-      maximum: 1,
-    });
-    return filters;
-  }
-*/
 }

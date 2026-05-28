@@ -5,11 +5,16 @@ import {
   type Request,
   type Response,
   type SearchQuery,
-  CloudflareError,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
+import {
+  cloudflareInterceptor,
+  composeInterceptors,
+  httpErrorInterceptor,
+  type Interceptor,
+} from "paperback-interceptors";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
   numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
@@ -17,43 +22,49 @@ export const mainRateLimiter = new BasicRateLimiter("main", {
   ignoreImages: true,
 });
 export class MainInterceptor extends PaperbackInterceptor {
-  private async getImage(request: Request) {
-    const data = await Application.scheduleRequest(request);
-    const html = Application.arrayBufferToUTF8String(data[1]);
-    const $ = cheerio.load(html);
-    const div = $("#i3");
-    return div.find("img#img");
-  }
-  private getNLsSettings() {
-    return (Application.getState("nlLink") as boolean | undefined) ?? false;
-  }
+  private interceptor = composeInterceptors(
+    cloudflareInterceptor({ url: BASE_URL }),
+    httpErrorInterceptor(),
+    this.getImageURLInterceptor(),
+  );
   override async interceptRequest(request: Request): Promise<Request> {
-    if (request.url.includes(`${BASE_URL}/s/`)) {
-      if (request.headers && request.headers["x-intercepted"]) {
-        delete request.headers["x-intercepted"];
-        return request;
-      } else {
-        request.headers = { ["x-intercepted"]: "1" };
-        let image = await this.getImage(request);
-
-        // !request.url.includes("?nl=") -> first loaded page
-        if (!request.url.includes("?nl=") && this.getNLsSettings()) {
-          const new_page = image.attr("onerror") ?? "";
-          const match = new_page.match(/'(\d+-\d+)'/);
-          if (match && match[1]) {
-            request.url = `${request.url}?nl=${match[1]}`;
-            image = await this.getImage(request);
-          }
+    if (!request.url.includes(`${BASE_URL}`)) {
+      if (request.headers && request.headers["nl-link"]) {
+        if (request.headers["first"]) {
+          delete request.headers["first"];
+          return request;
+        } else {
+          request.url = request.headers["nl-link"];
+          return request;
         }
-        request.url = image.attr("src") ?? request.url;
-        return request;
       }
-    } else if (request.url.includes(`${BASE_URL}/g/`)) {
+    }
+    if (request.url.includes(`${BASE_URL}/g/`)) {
       request.headers = { Cookie: "nw=1" };
     } else {
-      request.headers = { Cookie: "sl=dm_2" };
+      request.headers = { Cookie: "sl=dm_2", ...request.headers };
     }
     return request;
+  }
+
+  getImageURLInterceptor(): Interceptor {
+    return async (request, response, data) => {
+      if (request.url.includes(`${BASE_URL}/s/`)) {
+        const html = Application.arrayBufferToUTF8String(data);
+        const $ = cheerio.load(html);
+        const div = $("#i3");
+        const image = div.find("img#img");
+        const new_page = image.attr("onerror") ?? "";
+        const match = new_page.match(/'(\d+-\d+)'/) ?? "";
+        if (match && match[1]) {
+          request.headers = { ["nl-link"]: `${request.url}?nl=${match[1]}`, ["first"]: "1" };
+        }
+        request.url = image.attr("src") ?? request.url;
+        return (await Application.scheduleRequest(request))[1];
+      } else {
+        return data;
+      }
+    };
   }
 
   override async interceptResponse(
@@ -61,15 +72,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    const cfMitigated = response.headers?.["cf-mitigated"];
-    if (cfMitigated === "challenge") {
-      throw new CloudflareError({
-        url: request.url,
-        method: request.method ?? "GET",
-      });
-    }
-
-    return data;
+    return this.interceptor(request, response, data);
   }
 }
 

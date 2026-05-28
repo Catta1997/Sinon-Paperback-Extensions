@@ -17,7 +17,6 @@ import {
 import { MainInterceptor } from "./network";
 import { Parser } from "./parsers";
 import { type RokuMetadata } from "./utils";
-import type { SearchMetadata } from "../EHentai/utils";
 
 export const DOMAIN = "https://rokuhentai.com/";
 const parser = new Parser();
@@ -66,7 +65,7 @@ export class RokuHentaiExtension implements RokuHentaiImplementation {
   }
 
   getSearchResults(
-    query: SearchQuery<SearchMetadata>,
+    query: SearchQuery<{}>,
     metadata: RokuMetadata,
   ): Promise<PagedResults<SearchResultItem>> {
     return parser.parseSearchResult(query, metadata);

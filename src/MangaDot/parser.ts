@@ -40,7 +40,7 @@ export class Parser {
         artist: getArrayArtists(mangaInfo),
         author: getArrayAuthor(mangaInfo),
         bannerUrl: `${DOMAIN}${mangaInfo.banner_image}`,
-        artworkUrls: [`${DOMAIN}${mangaInfo.photo}`, ...volumes],
+        artworkUrls: [`${DOMAIN}${mangaInfo.banner_image}`, ...volumes],
         rating: mangaInfo.avg_rating ? mangaInfo.avg_rating / 10 : 0,
         tagGroups: [
           {

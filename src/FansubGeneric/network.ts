@@ -5,25 +5,35 @@ import {
   type Request,
   type Response,
 } from "@paperback/types";
-import type { ReadChapterResponse } from "./models";
-import type { SearchMetadata } from "../EHentai/utils";
+import type { BaseMetadata, ReadChapterResponse } from "./models";
+import {
+  cloudflareInterceptor,
+  composeInterceptors,
+  httpErrorInterceptor,
+} from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
+  private readonly base_url: string = "";
+  constructor(base_url: string, id: string) {
+    super(id);
+    this.base_url = base_url;
+  }
+  private interceptor = composeInterceptors(
+    cloudflareInterceptor({ url: this.base_url }),
+    httpErrorInterceptor(),
+  );
   override async interceptRequest(request: Request): Promise<Request> {
     return {
       url: request.url.replace("http://", "https://"),
       method: request.method,
     };
   }
-
   override async interceptResponse(
     request: Request,
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    void request;
-    void response;
-    return data;
+    return this.interceptor(request, response, data);
   }
 }
 
@@ -32,7 +42,7 @@ export class APIRequests {
   constructor(baseUrl: string) {
     this.apiBaseUrl = baseUrl;
   }
-  async apiSearchResult(query: SearchQuery<SearchMetadata>) {
+  async apiSearchResult(query: SearchQuery<BaseMetadata>) {
     const searchApi = new URL(this.apiBaseUrl);
     const path = query.title.length > 0 ? "search" : "comics";
     searchApi.addPathComponent(path);

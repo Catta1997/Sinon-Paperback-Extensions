@@ -11,7 +11,7 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
-import { filter_lang, filter_tags, type MangaCardInfo, type RokuMetadata } from "./utils";
+import { type MangaCardInfo, type RokuMetadata } from "./utils";
 import { DOMAIN } from "./main";
 import type { SearchMetadata } from "../EHentai/utils";
 
@@ -114,30 +114,5 @@ export class Parser {
       title,
       subtitle,
     };
-  }
-
-  getFilters() {
-    const filters = [];
-    filters.push({
-      type: "multiselect",
-      id: "languages",
-      title: "Language",
-      options: filter_lang,
-      value: {},
-      allowExclusion: false,
-      allowEmptySelection: true,
-      maximum: filter_lang.length,
-    });
-    filters.push({
-      type: "multiselect",
-      id: "tags",
-      title: "Tags",
-      options: filter_tags,
-      value: {},
-      allowExclusion: false,
-      allowEmptySelection: true,
-      maximum: filter_tags.length,
-    });
-    return filters;
   }
 }

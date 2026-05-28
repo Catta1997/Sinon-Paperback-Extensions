@@ -4,13 +4,20 @@ import {
   URL,
   type Request,
   type Response,
-  CloudflareError,
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
 import { DOMAIN } from "./main";
-import type { SearchMetadata } from "../EHentai/utils";
+import {
+  cloudflareInterceptor,
+  composeInterceptors,
+  httpErrorInterceptor,
+} from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
+  private interceptor = composeInterceptors(
+    cloudflareInterceptor({ url: DOMAIN }),
+    httpErrorInterceptor(),
+  );
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -25,36 +32,12 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    const cfMitigated = response.headers?.["cf-mitigated"];
-    if (cfMitigated === "challenge") {
-      throw new CloudflareError({
-        url: request.url,
-        method: request.method ?? "GET",
-      });
-    }
-    return data;
+    return this.interceptor(request, response, data);
   }
 }
 
 export class Requests {
-  async requestSearchResults(query: SearchQuery<SearchMetadata>, metadata: RokuMetadata) {
-    /*  const getFilterValue = (id: string) => query.filters.find((filter) => filter.id == id)?.value;
-    const languageFilter: string[] = [];
-    const tagFilter: string[] = [];
-
-    const language: string | Record<string, "included" | "excluded"> =
-      getFilterValue("languages") ?? "";
-    const tags: string | Record<string, "included" | "excluded"> = getFilterValue("tags") ?? "";
-    if (language && typeof language === "object") {
-      for (const tag of Object.entries(language)) {
-        if (tag[1] == "included") languageFilter.push(tag[0]);
-      }
-    }
-    if (tags && typeof tags === "object") {
-      for (const tag of Object.entries(tags)) {
-        if (tag[1] == "included") tagFilter.push(tag[0]);
-      }
-    }*/
+  async requestSearchResults(query: SearchQuery<{}>, metadata: RokuMetadata) {
     const page = metadata?.page ?? "";
     const keyword = query.title;
     const baseURL: URL = new URL(`${DOMAIN}_search`);
@@ -62,16 +45,6 @@ export class Requests {
       baseURL.setQueryItem("q", keyword);
     }
     let url = baseURL.toString();
-    /* if (tagFilter.length > 0) {
-      tagFilter.forEach((filter) => {
-        url = `${url}+tag:${filter}`;
-      });
-    }
-    if (languageFilter.length > 0) {
-      languageFilter.forEach((filter) => {
-        url = `${url}+language:${filter}`;
-      });
-    }*/
     const data = await Application.scheduleRequest({
       url: page.length > 0 ? page : url,
       method: "GET",
