@@ -1,5 +1,6 @@
 import {
   AdvancedSearchForm,
+  EditSection,
   type FormItemElement,
   type FormSectionElement,
   InputRow,
@@ -20,7 +21,8 @@ import {
 class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   onValueChangeLabelProxy = new Proxy(this, {
     has(target, p) {
-      return typeof p === "string" && (p.startsWith("onSelect_") || p.startsWith("handle_"))
+      return typeof p === "string" &&
+        (p.startsWith("onDelete_") || p.startsWith("onSelect_") || p.startsWith("handle_"))
         ? true
         : Object.hasOwn(target, p);
     },
@@ -36,6 +38,11 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         const rowId = p.slice("handle_".length);
         return async (value?: any) => {
           await target.onHandle(rowId, value);
+        };
+      } else if (typeof p === "string" && p.startsWith("onDelete_")) {
+        const rowId = p.slice("onDelete_".length);
+        return async (value?: any) => {
+          await target.onDelete(rowId, value);
         };
       }
       // @ts-ignore
@@ -76,14 +83,18 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   }
   override getSections(): FormSectionElement<unknown>[] {
     const inputSections = filterKeys.map((filter) =>
-      Section(
-        {
-          header: filter.charAt(0).toUpperCase() + filter.slice(1),
-          id: filter.toString(),
-          footer: "Add '-' before the filter to exclude it",
-        },
-        this.getInputFilter(filter),
-      ),
+      EditSection(`${filter}`, {
+        allowAddition: false,
+        allowDeletion: true,
+        allowReorder: false,
+        id: `${filter}`,
+        onDeletion: Application.Selector(
+          this.onValueChangeLabelProxy,
+          // @ts-expect-error
+          `onDelete_${filter}`,
+        ),
+        items: this.getInputFilter(filter),
+      }),
     );
     return [
       Section("type", this.getTypeFilter()),
@@ -222,6 +233,12 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
     if (!arr || isNaN(index)) return;
     const _ = value.length > 0 ? (arr[index] = value) : arr.splice(index, 1);
+    return;
+  }
+  async onDelete(type: string, value: number): Promise<void> {
+    const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
+    if (!arr || isNaN(value)) return;
+    arr.splice(value - 1, 1);
     return;
   }
   async handleTypeChange(value: string[]): Promise<void> {
