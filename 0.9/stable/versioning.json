@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-05-28T10:44:21.552Z",
+  "buildTime": "2026-05-29T07:42:44.580Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.87",
     "types": "1.0.0-alpha.87"
@@ -39,7 +39,7 @@
     {
       "name": "EHentai",
       "description": "Extension that pulls content from E-Hentai.",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
