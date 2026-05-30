@@ -7,17 +7,11 @@ import {
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
 import { DOMAIN } from "./main";
-import {
-  cloudflareInterceptor,
-  composeInterceptors,
-  httpErrorInterceptor,
-} from "paperback-interceptors";
+import { CompositeInterceptor } from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
-  private interceptor = composeInterceptors(
-    cloudflareInterceptor({ url: DOMAIN }),
-    httpErrorInterceptor(),
-  );
+  interceptors = new CompositeInterceptor([]);
+
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -32,7 +26,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptor(request, response, data);
+    return this.interceptors.intercept(request, response, data);
   }
 }
 

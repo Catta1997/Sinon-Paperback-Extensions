@@ -11,7 +11,6 @@ import {
   type SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { type CheerioAPI } from "cheerio";
 import { Requests } from "./network";
 import { type GalleryInfo, getLangFlag, type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
@@ -245,10 +244,10 @@ export class Parser {
       pages: images,
     };
   }
-  private getRow($: CheerioAPI, label: string): string {
+  private getRow($: cheerio.CheerioAPI, label: string): string {
     return $(`#gdd .gdt1:contains("${label}")`).next(".gdt2").text().trim();
   }
-  private parseGalleryInfo($: CheerioAPI): GalleryInfo {
+  private parseGalleryInfo($: cheerio.CheerioAPI): GalleryInfo {
     const root = $("#gmid #gd3");
     const category = root.find("#gdc div").first().text().trim();
     let uploaderName = root.find("#gdn a").first().text().trim();

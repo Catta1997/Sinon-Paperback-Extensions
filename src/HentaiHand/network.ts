@@ -6,19 +6,13 @@ import {
   type Response,
 } from "@paperback/types";
 import type { GetMangaInfo, JSONSearch, MangaDetails, TagParsing } from "./models";
-import {
-  cloudflareInterceptor,
-  composeInterceptors,
-  httpErrorInterceptor,
-} from "paperback-interceptors";
+import { CompositeInterceptor } from "paperback-interceptors";
 
 const DOMAIN = "https://hentaihand.com/";
 let BASE_API = `${DOMAIN}api`;
 export class MainInterceptor extends PaperbackInterceptor {
-  private interceptor = composeInterceptors(
-    cloudflareInterceptor({ url: DOMAIN }),
-    httpErrorInterceptor(),
-  );
+  interceptors = new CompositeInterceptor([]);
+
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -33,7 +27,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptor(request, response, data);
+    return this.interceptors.intercept(request, response, data);
   }
 }
 

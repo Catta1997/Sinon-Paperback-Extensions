@@ -1,19 +1,10 @@
 import { type Request, type Response, PaperbackInterceptor } from "@paperback/types";
 
-import {
-  composeInterceptors,
-  cloudflareInterceptor,
-  httpErrorInterceptor,
-  type Interceptor,
-} from "paperback-interceptors";
-import { DOMAIN } from "./models";
+import { CompositeInterceptor } from "paperback-interceptors";
 
 export class MangaDotInterceptor extends PaperbackInterceptor {
-  private interceptor = composeInterceptors(
-    cloudflareInterceptor({ url: DOMAIN }),
-    httpErrorInterceptor(),
-    this.customInterceptResponse(),
-  );
+  interceptors = new CompositeInterceptor([]);
+
   override async interceptRequest(request: Request): Promise<Request> {
     return {
       ...request,
@@ -23,19 +14,11 @@ export class MangaDotInterceptor extends PaperbackInterceptor {
       },
     };
   }
-
   override async interceptResponse(
     request: Request,
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptor(request, response, data);
-  }
-
-  customInterceptResponse(): Interceptor {
-    return async (req, response, data) => {
-      //.....
-      return data;
-    };
+    return this.interceptors.intercept(request, response, data);
   }
 }

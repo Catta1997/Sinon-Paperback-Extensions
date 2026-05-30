@@ -113,6 +113,7 @@ export class MangaDotExtension implements ExtensionImpl<typeof MangaDotConfig> {
     for (const cookie of cookies) {
       if (cookie.name == "cf_clearance") {
         this.cookieStorageInterceptor.setCookie(cookie);
+        Application.invalidateDiscoverSections()
       }
     }
   }

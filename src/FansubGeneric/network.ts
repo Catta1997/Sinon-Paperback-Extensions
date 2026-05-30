@@ -6,11 +6,7 @@ import {
   type Response,
 } from "@paperback/types";
 import type { BaseMetadata, ReadChapterResponse } from "./models";
-import {
-  cloudflareInterceptor,
-  composeInterceptors,
-  httpErrorInterceptor,
-} from "paperback-interceptors";
+import { CompositeInterceptor } from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
   private readonly base_url: string = "";
@@ -18,10 +14,8 @@ export class MainInterceptor extends PaperbackInterceptor {
     super(id);
     this.base_url = base_url;
   }
-  private interceptor = composeInterceptors(
-    cloudflareInterceptor({ url: this.base_url }),
-    httpErrorInterceptor(),
-  );
+  interceptors = new CompositeInterceptor([]);
+
   override async interceptRequest(request: Request): Promise<Request> {
     return {
       url: request.url.replace("http://", "https://"),
@@ -33,7 +27,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptor(request, response, data);
+    return this.interceptors.intercept(request, response, data);
   }
 }
 
