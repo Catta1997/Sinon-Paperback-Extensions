@@ -24,6 +24,7 @@ export interface MangaInfo {
   banner_image: string;
   content_rating: string | null;
   avg_rating: number | null;
+  rating: string | null;
   alt_titles: string[] | string | null;
   authors: string[] | string | null;
   artists: string[] | string | null;

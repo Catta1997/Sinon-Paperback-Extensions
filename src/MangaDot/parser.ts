@@ -177,6 +177,15 @@ export class Parser {
       results.push({
         title: item.title,
         supertitle: getArrayAuthor(item),
+        summary: `${item.chapter_count.toString()} ${item.chapter_count > 1 ? "Chapters" : "Chapter"}`,
+        infoItems: item.rating
+          ? [
+              {
+                symbol: "*",
+                text: item.rating?.toString() ?? "0",
+              },
+            ]
+          : undefined,
         type: "featuredCarouselItem",
         mangaId: item.id.toString(),
         imageUrl: `${DOMAIN}${item.photo}`,
