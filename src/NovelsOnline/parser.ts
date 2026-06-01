@@ -15,6 +15,7 @@ import {
 import { load } from "cheerio";
 import { BASE_URL } from "./main";
 import { type Metadata, type ReqInit, type SearchMetadata } from "./models";
+import { fixVoidElements } from "./helper";
 
 export class Parser {
   private async getCheerio(url: string, init?: ReqInit) {
@@ -121,7 +122,10 @@ export class Parser {
             .find("li")
             .map((_, li) => $(li).text().trim())
             .get();
-          const tagsMapper: Tag[] = tags.map((t) => ({ title: t, id: t.toLocaleLowerCase().replace(" ","") }));
+          const tagsMapper: Tag[] = tags.map((t) => ({
+            title: t,
+            id: t.toLocaleLowerCase().replace(" ", ""),
+          }));
           manga.tagGroups = [
             {
               id: "genres",
@@ -155,18 +159,17 @@ export class Parser {
     let lastValidChapterNumber = -1;
     let lastValidVolumeNumber = -1;
     $("ul.chapter-chs > li > a").each((i, el) => {
-      const chapterId = $(el).attr("href")?.replace(BASE_URL, "");
+      const url = $(el).attr("href") ?? "";
+      const chapterId = url.replace(BASE_URL, "");
       const title = $(el).text().trim();
       const parsed = Number(title.split(" ")[1]);
-      const ul = $(el).closest("ul.chapter-chs");
-      const div = ul.parent().attr("id");
-      const volume = Number(div?.match(/^chapters_(\d+)-/)?.[1] ?? 0);
+      const volume = Number(url.match(/\/volume-(\d+)\//)?.[1] ?? 0);
       if (volume > lastValidVolumeNumber) {
         lastValidVolumeNumber = volume;
         lastValidChapterNumber = -1;
       }
       const num = Number.isNaN(parsed) ? lastValidChapterNumber + 1 : parsed;
-      lastValidChapterNumber = num;
+      lastValidChapterNumber = Math.floor(num);
       chapters.push({
         chapNum: num,
         volume: volume,
@@ -183,7 +186,11 @@ export class Parser {
 
   async parseChapter(chapter: Chapter): Promise<ChapterDetails> {
     const $ = await this.getCheerio(`${BASE_URL}${chapter.chapterId}`);
-    const contentDiv = $.html($("#contentall"));
+    const content = $("#contentall");
+    const html = $.html(content);
+    const contentDiv = fixVoidElements(html)
+      .replaceAll(/\u00a0/g, " ")
+      .replaceAll("&nbsp;", " ");
     return {
       type: "html",
       id: chapter.chapterId,

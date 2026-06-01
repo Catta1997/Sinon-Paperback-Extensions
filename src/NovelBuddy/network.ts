@@ -1,6 +1,7 @@
 import { type Request, type SortingOption, URL } from "@paperback/types";
 import type { ApiRequestConfig, ChapterResponse, SearchResponse } from "./models";
 import { load } from "cheerio";
+import { fixVoidElements } from "../NovelsOnline/helper";
 
 export class NovelBuddyNetwork {
   constructor() {}
@@ -54,6 +55,7 @@ export class NovelBuddyNetwork {
   }
 
   async getChapterPages(url: string) {
+    url = url.replace("//", "/");
     const request: Request = {
       url: `${this.domain}${url}`,
       method: "GET",
@@ -61,6 +63,10 @@ export class NovelBuddyNetwork {
     const response = await Application.scheduleRequest(request);
     const html = Application.arrayBufferToUTF8String(response[1]);
     const $ = load(html);
-    return $.html($(".novel-tts-content"));
+    const content = $(".novel-tts-content");
+    const htmlDiv = $.html(content);
+    return fixVoidElements(htmlDiv)
+      .replaceAll(/\u00a0/g, " ")
+      .replaceAll("&nbsp;", " ");
   }
 }
