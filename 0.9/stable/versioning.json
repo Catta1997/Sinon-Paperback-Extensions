@@ -1,8 +1,8 @@
 {
-  "buildTime": "2026-05-30T13:44:57.690Z",
+  "buildTime": "2026-06-01T09:46:50.526Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.87",
-    "types": "1.0.0-alpha.87"
+    "toolchain": "1.0.0-alpha.89",
+    "types": "1.0.0-alpha.89"
   },
   "repository": {
     "name": "sinon-extensions",
@@ -230,18 +230,13 @@
       "id": "LupiTeam"
     },
     {
-      "name": "MangaDot",
-      "description": "Extension that pulls content from MangaDot.net",
-      "version": "1.0.0-alpha.3",
+      "name": "MangaBuddy",
+      "description": "Extension that pulls content from MangaBuddy.",
+      "version": "1.0.0",
       "icon": "icon.png",
-      "language": "en",
       "contentRating": "SAFE",
       "capabilities": [
-        1,
-        16,
-        4,
-        64,
-        32
+        69
       ],
       "badges": [],
       "developers": [
@@ -250,7 +245,7 @@
           "github": "https://github.com/Catta1997"
         }
       ],
-      "id": "MangaDot"
+      "id": "NovelBuddy"
     },
     {
       "name": "PhoenixScans",
