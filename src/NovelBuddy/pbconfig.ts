@@ -5,7 +5,7 @@ export default {
   description: "Extension that pulls content from MangaBuddy.",
   version: "1.0.0",
   icon: "icon.png",
-  contentRating: ContentRating.MATURE,
+  contentRating: ContentRating.EVERYONE,
   capabilities: [
     SourceIntents.DISCOVER_SECTION_PROVIDING |
       SourceIntents.SEARCH_RESULT_PROVIDING |

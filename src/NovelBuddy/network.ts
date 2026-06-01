@@ -1,24 +1,27 @@
-import {type Request, URL} from "@paperback/types";
-import type {ApiRequestConfig, ChapterResponse, SearchResponse} from "./models";
-import {load} from "cheerio";
+import { type Request, type SortingOption, URL } from "@paperback/types";
+import type { ApiRequestConfig, ChapterResponse, SearchResponse } from "./models";
+import { load } from "cheerio";
 
 export class NovelBuddyNetwork {
   constructor() {}
 
   private api = "https://api.novelbuddy.com/";
-  private domain = "https://novelbuddy.com/"
-  async search(page: number, query?: string) {
-    const params : ApiRequestConfig = {
+  private domain = "https://novelbuddy.com/";
+  async search(page: number, query: string, sort: SortingOption) {
+    const params: ApiRequestConfig = {
       page: page,
       limit: "24",
-      query: query ? query : "",
+      query: query,
+      sort: sort.id,
     };
 
-    const url:URL = new URL(`${this.api}titles/search`);
-    url.setQueryItem("q", params.query)
-    url.setQueryItem("limit", params.limit)
-    url.setQueryItem("page", params.page.toString())
-
+    const url: URL = new URL(`${this.api}titles/search`);
+    url.setQueryItem("q", params.query);
+    url.setQueryItem("limit", params.limit);
+    url.setQueryItem("page", params.page.toString());
+    if (params.sort.length > 0) {
+      url.setQueryItem("sort", params.sort);
+    }
     const request: Request = {
       url: url.toString(),
       method: "GET",
@@ -58,6 +61,6 @@ export class NovelBuddyNetwork {
     const response = await Application.scheduleRequest(request);
     const html = Application.arrayBufferToUTF8String(response[1]);
     const $ = load(html);
-    return $.html($(".novel-tts-content"))
+    return $.html($(".novel-tts-content"));
   }
 }

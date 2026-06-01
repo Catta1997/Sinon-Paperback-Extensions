@@ -1,6 +1,9 @@
+import type { JSONObject } from "@paperback/types";
+
 export interface SearchResponse {
   data: {
     items: NovelItem[];
+    pagination: { limit: number };
   };
 }
 
@@ -29,6 +32,7 @@ export interface ApiRequestConfig {
   page: number;
   query: string;
   limit: string;
+  sort: string;
 }
 
 export interface NovelInfo {
@@ -47,22 +51,12 @@ export interface NovelInfo {
         artists: { name: string; slug: string }[];
         genres: { name: string; slug: string }[];
         summary: string;
-        cv: number
-       // chapters: ChapterList[];
+        cv: number;
       };
     };
   };
 }
 
-export interface ChapterListtt {
-  id: string;
-  name: string;
-  slug: string;
-  url: string;
-  updatedAt: string;
-  group: string | null;
-  views: number;
-  uploader: string | null;
-  cv: string | number | null;
-  content_version: number | string | null;
+export interface NovelBuddyMetadata extends JSONObject {
+  page: number;
 }
