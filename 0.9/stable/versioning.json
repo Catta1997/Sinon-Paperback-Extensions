@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-01T09:51:02.122Z",
+  "buildTime": "2026-06-01T19:10:04.547Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.89",
     "types": "1.0.0-alpha.89"
@@ -246,6 +246,24 @@
         }
       ],
       "id": "NovelBuddy"
+    },
+    {
+      "name": "NovelsOnline",
+      "description": "Extension that pulls content from NovelsOnline.",
+      "version": "1.0.0",
+      "icon": "icon.png",
+      "contentRating": "SAFE",
+      "capabilities": [
+        101
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "NovelsOnline"
     },
     {
       "name": "PhoenixScans",
