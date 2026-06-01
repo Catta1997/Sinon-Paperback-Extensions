@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-01T09:46:50.526Z",
+  "buildTime": "2026-06-01T09:51:02.122Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.89",
     "types": "1.0.0-alpha.89"
@@ -230,8 +230,8 @@
       "id": "LupiTeam"
     },
     {
-      "name": "MangaBuddy",
-      "description": "Extension that pulls content from MangaBuddy.",
+      "name": "NovelBuddy",
+      "description": "Extension that pulls content from NovelBuddy.",
       "version": "1.0.0",
       "icon": "icon.png",
       "contentRating": "SAFE",
