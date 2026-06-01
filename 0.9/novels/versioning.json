@@ -1,0 +1,323 @@
+{
+  "buildTime": "2026-06-01T09:44:25.892Z",
+  "builtWith": {
+    "toolchain": "1.0.0-alpha.89",
+    "types": "1.0.0-alpha.89"
+  },
+  "repository": {
+    "name": "sinon-extensions",
+    "description": "Some Paperback Extensions"
+  },
+  "sources": [
+    {
+      "name": "BlueSolo",
+      "description": "Extension that pulls manga from BlueSolo.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "fr",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "French 🇫🇷",
+          "textColor": "#ffffff",
+          "backgroundColor": "#2865ea"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "BlueSolo"
+    },
+    {
+      "name": "EHentai",
+      "description": "Extension that pulls content from E-Hentai.",
+      "version": "1.0.6",
+      "icon": "icon.png",
+      "contentRating": "ADULT",
+      "capabilities": [
+        101
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "EHentai"
+    },
+    {
+      "name": "FMTeam",
+      "description": "Extension that pulls manga from FMTeam.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "fr",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "French 🇫🇷",
+          "textColor": "#ffffff",
+          "backgroundColor": "#2865ea"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "FMTeam"
+    },
+    {
+      "name": "GTOTheGreatSite",
+      "description": "Extension that pulls manga from GTOTheGreatSite.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "GTOTheGreatSite"
+    },
+    {
+      "name": "HNI-scantrad",
+      "description": "Extension that pulls manga from HNI-scantrad.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "en",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "HNIScantrad"
+    },
+    {
+      "name": "HastaTeam",
+      "description": "Extension that pulls manga from HastaTeam.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "HastaTeam"
+    },
+    {
+      "name": "HastaTeamDDT",
+      "description": "Extension that pulls manga from HastaTeamDDT.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "HastaTeamDDT"
+    },
+    {
+      "name": "HentaiHand",
+      "description": "Extension that pulls content from HentaiHand",
+      "version": "1.0.0-alpha.5",
+      "icon": "icon.png",
+      "language": "en",
+      "contentRating": "ADULT",
+      "capabilities": [
+        85
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "HentaiHand"
+    },
+    {
+      "name": "LupiTeam",
+      "description": "Extension that pulls manga from LupiTeam.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "LupiTeam"
+    },
+    {
+      "name": "MangaBuddy",
+      "description": "Extension that pulls content from MangaBuddy.",
+      "version": "1.0.0",
+      "icon": "icon.png",
+      "contentRating": "SAFE",
+      "capabilities": [
+        69
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "NovelBuddy"
+    },
+    {
+      "name": "PhoenixScans",
+      "description": "Extension that pulls manga from PhoenixScans.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "PhoenixScans"
+    },
+    {
+      "name": "RokuHentai",
+      "description": "Extension that pulls content from RokuHentai.com",
+      "version": "1.0.0-alpha.5",
+      "icon": "icon.png",
+      "contentRating": "ADULT",
+      "capabilities": [
+        81
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "RokuHentai"
+    },
+    {
+      "name": "TuttoAnimeManga",
+      "description": "Extension that pulls manga from TuttoAnimeManga.",
+      "version": "1.0.3",
+      "icon": "icon.png",
+      "language": "it",
+      "capabilities": [
+        1,
+        4,
+        64
+      ],
+      "badges": [
+        {
+          "label": "Italian 🇮🇹",
+          "textColor": "#ffffff",
+          "backgroundColor": "#28eac2"
+        }
+      ],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "website": "https://github.com/Catta1997"
+        }
+      ],
+      "contentRating": "SAFE",
+      "id": "TuttoAnimeManga"
+    }
+  ]
+}
