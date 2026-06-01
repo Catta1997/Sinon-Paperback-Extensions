@@ -32,36 +32,37 @@ export interface ApiRequestConfig {
 }
 
 export interface NovelInfo {
-  props : {
+  props: {
     pageProps: {
       initialManga: {
-        id: string,
-        url: string,
-        name: string,
-        slug: string,
-        cover: string,
-        status: string,
-        rating: number,
-        isAdult: boolean,
-        authors: {name: string, slug:string}[],
-        artists: {name: string, slug:string}[],
-        genres: {name: string, slug:string}[]
-        summary: string
-        chapters: ChapterList[]
-      }
-    }
-  }
+        id: string;
+        url: string;
+        name: string;
+        slug: string;
+        cover: string;
+        status: string;
+        rating: number;
+        isAdult: boolean;
+        authors: { name: string; slug: string }[];
+        artists: { name: string; slug: string }[];
+        genres: { name: string; slug: string }[];
+        summary: string;
+        cv: number
+       // chapters: ChapterList[];
+      };
+    };
+  };
 }
 
-export interface ChapterList {
-  id:string,
-  name:string,
-  slug:string,
-  url:string,
-  updatedAt:string,
-  group:string | null,
-  views:number,
-  uploader:string | null,
-  cv:string | number | null
-  content_version: number | string| null
+export interface ChapterListtt {
+  id: string;
+  name: string;
+  slug: string;
+  url: string;
+  updatedAt: string;
+  group: string | null;
+  views: number;
+  uploader: string | null;
+  cv: string | number | null;
+  content_version: number | string | null;
 }

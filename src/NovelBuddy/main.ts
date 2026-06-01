@@ -19,7 +19,7 @@ import {
 
 import { NovelBuddyNetwork } from "./network";
 import { NovelBuddyParser } from "./parser";
-import type {ChapterList, NovelItem} from "./models";
+import type {ChapterItem, NovelItem} from "./models";
 
 type NovelBuddyImplementation = DiscoverSectionProviding &
   Extension &
@@ -33,7 +33,7 @@ export default class NovelBuddyExtension implements NovelBuddyImplementation {
     metadata?: Metadata,
   ): Promise<PagedResults<DiscoverSectionItem>> {
     const data = await this.network.search(1);
-	return {items:[]}
+    return { items: [] };
   }
   async initialise(): Promise<void> {
     //throw new Error("Method not implemented.");
@@ -73,6 +73,7 @@ export default class NovelBuddyExtension implements NovelBuddyImplementation {
     return {
       mangaId: mangaId,
       mangaInfo: {
+        additionalInfo: {id: manga.id},
         primaryTitle: manga.name,
         thumbnailUrl: manga.cover,
         contentType: "novel",
@@ -86,35 +87,33 @@ export default class NovelBuddyExtension implements NovelBuddyImplementation {
   }
 
   async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-    const html = await this.network.getNovel(sourceManga.mangaId);
-
-    const data = this.parser.parseNextData(html);
-
-    const chapters = data.props.pageProps.initialManga.chapters;
-
-    return chapters.map((chapter: ChapterList) => ({
+    console.log(sourceManga.mangaInfo.additionalInfo?.id)
+    const id = sourceManga.mangaInfo.additionalInfo?.id ?? ""
+    const chaptersRequest = await this.network.getChaptersList(id)
+    const chapters = chaptersRequest.data?.chapters ?? []
+    return chapters
+      .map((chapter: ChapterItem, index: number) => ({
         chapterId: chapter.id,
         sourceManga: sourceManga,
         langCode: "en",
-        chapNum: 0,
-      additionalInfo: {slug: chapter.slug},
+        chapNum: chapters.length - index,
+        additionalInfo: { url: chapter.url },
         title: chapter.name,
-        publishDate: chapter.updatedAt ? new Date(chapter.updatedAt) : undefined,
+        publishDate: chapter.updated_at ? new Date(chapter.updated_at) : undefined,
       }))
       .reverse();
   }
 
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    const html = await this.network.getNovel(chapter.sourceManga.mangaId);
-    const data = this.parser.parseNextData(html);
-    const manga = data.props.pageProps.initialManga;
-    const chapterData = await this.network.getChapterPages(manga.slug, chapter.additionalInfo?.slug ?? "");
+    const chapterData = await this.network.getChapterPages(
+      chapter.additionalInfo?.url ?? "",
+    );
 
     return {
       id: chapter.chapterId,
       mangaId: chapter.sourceManga.mangaId,
       type: "html",
-      html: `<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${chapterData}</body></html>`
+      html: `<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${chapterData}</body></html>`,
     };
   }
 

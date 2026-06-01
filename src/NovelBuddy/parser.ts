@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import type {NovelInfo} from "./models";
+import type { NovelInfo } from "./models";
 
 export class NovelBuddyParser {
   parseNextData(html: string): NovelInfo {

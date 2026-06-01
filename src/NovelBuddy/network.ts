@@ -1,5 +1,5 @@
 import {type Request, URL} from "@paperback/types";
-import type {ApiRequestConfig, SearchResponse} from "./models";
+import type {ApiRequestConfig, ChapterResponse, SearchResponse} from "./models";
 import {load} from "cheerio";
 
 export class NovelBuddyNetwork {
@@ -39,7 +39,7 @@ export class NovelBuddyNetwork {
     return Application.arrayBufferToUTF8String(response[1]);
   }
 
-  async getChapters(mangaId: string, cv?: number) {
+  async getChaptersList(mangaId: string, cv?: number) {
     const request: Request = {
       url: `${this.api}titles/${mangaId}/chapters${cv ? `?cv=${cv}` : ""}`,
       method: "GET",
@@ -47,12 +47,12 @@ export class NovelBuddyNetwork {
 
     const response = await Application.scheduleRequest(request);
     const data = Application.arrayBufferToUTF8String(response[1]);
-    return JSON.parse(data);
+    return JSON.parse(data) as ChapterResponse;
   }
 
-  async getChapterPages(mangaId: string, chapterId: string) {
+  async getChapterPages(url: string) {
     const request: Request = {
-      url: `${this.domain}${mangaId}/${chapterId}`,
+      url: `${this.domain}${url}`,
       method: "GET",
     };
     const response = await Application.scheduleRequest(request);
