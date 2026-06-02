@@ -107,54 +107,87 @@ export class Parser {
       author: "",
       tagGroups: [],
     };
+    let authors: string[] = [];
+    let names: string[] = [];
+    let artists: string[] = [];
+    let genreTags: Tag[] = [];
+    let tagsTags: Tag[] = [];
     $(".novel-detail-item").each((_, el) => {
       const label = $(el).find("h6").text().trim();
-
       const detail = $(el).find(".novel-detail-body");
-
       switch (label) {
         case "Description":
           manga.synopsis = detail.text().trim();
           break;
-
         case "Genre":
-          const tags = detail
-            .find("li")
-            .map((_, li) => $(li).text().trim())
-            .get();
-          const tagsMapper: Tag[] = tags.map((t) => ({
-            title: t,
-            id: t.toLocaleLowerCase().replace(" ", ""),
-          }));
-          manga.tagGroups = [
-            {
-              id: "genres",
-              title: "Genre",
-              tags: tagsMapper,
-            },
-          ];
-
-          break;
-        case "Author(s)":
-          manga.author = detail
+          const genre = detail
             .find("li")
             .map((_, li) => $(li).text().trim())
             .get()
-            .join(", ");
+            .filter((name) => name !== "N/A");
+          genreTags = genre.map((t) => ({
+            title: t,
+            id: t.toLocaleLowerCase().replaceAll(" ", ""),
+          }));
+          break;
+        case "Tags":
+          const tags = detail
+            .find("li")
+            .map((_, li) => $(li).text().trim())
+            .get()
+            .filter((name) => name !== "N/A");
+          tagsTags = tags.map((t) => ({
+            title: t,
+            id: t.toLocaleLowerCase().replaceAll(" ", ""),
+          }));
+          break;
+        case "Author(s)":
+          authors = detail
+            .find("li")
+            .map((_, li) => $(li).text().trim())
+            .get()
+            .filter((name) => name !== "N/A");
+          break;
+        case "Artist(s)":
+          artists = detail
+            .find("li")
+            .map((_, li) => $(li).text().trim())
+            .get()
+            .filter((name) => name !== "N/A");
           break;
 
         case "Status":
           manga.status = detail.text().trim();
           break;
-      }
-    });
 
+        case "Alternative Names":
+          names = detail
+            .find("li")
+            .map((_, li) => $(li).text().trim())
+            .get()
+            .filter((name) => name !== "N/A");
+          break;
+      }
+      manga.secondaryTitles = names;
+      manga.tagGroups = [
+        {
+          id: "genres",
+          title: "Genre",
+          tags: genreTags,
+        },
+        {
+          id: "tags",
+          title: "Tags",
+          tags: tagsTags,
+        },
+      ];
+      manga.author = [...authors, ...artists].join(",");
+    });
     return { mangaId: mangaId, mangaInfo: manga };
   }
 
   async parseChapters(sourceManga: SourceManga): Promise<Chapter[]> {
     const $ = await this.getCheerio(`${BASE_URL}${sourceManga.mangaId}`);
-
     const chapters: Chapter[] = [];
     let lastValidChapterNumber = -1;
     let lastValidVolumeNumber = -1;
@@ -180,7 +213,6 @@ export class Parser {
         title: title,
       });
     });
-    console.log(chapters.map((x) => `[${x.sortingIndex}] v.${x.volume} c.${x.chapNum}`));
     return chapters.reverse();
   }
 

@@ -11,7 +11,13 @@ export default {
       SourceIntents.SEARCH_RESULT_PROVIDING |
       SourceIntents.CHAPTER_PROVIDING,
   ],
-  badges: [],
+  badges: [
+    {
+      label: "Novel",
+      textColor: "#ffffff",
+      backgroundColor: "#3baf4b",
+    },
+  ],
   developers: [
     {
       name: "Catta1997",
