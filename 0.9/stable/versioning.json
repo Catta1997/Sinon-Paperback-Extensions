@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-01T20:17:13.162Z",
+  "buildTime": "2026-06-02T19:23:54.323Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.89",
     "types": "1.0.0-alpha.89"
@@ -238,7 +238,13 @@
       "capabilities": [
         69
       ],
-      "badges": [],
+      "badges": [
+        {
+          "label": "Novel",
+          "textColor": "#ffffff",
+          "backgroundColor": "#3baf4b"
+        }
+      ],
       "developers": [
         {
           "name": "Catta1997",
@@ -250,13 +256,19 @@
     {
       "name": "NovelsOnline",
       "description": "Extension that pulls content from NovelsOnline.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "icon": "icon.png",
       "contentRating": "SAFE",
       "capabilities": [
         101
       ],
-      "badges": [],
+      "badges": [
+        {
+          "label": "Novel",
+          "textColor": "#ffffff",
+          "backgroundColor": "#3baf4b"
+        }
+      ],
       "developers": [
         {
           "name": "Catta1997",
