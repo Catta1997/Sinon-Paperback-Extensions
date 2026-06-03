@@ -1,4 +1,5 @@
 import {
+  type AdvancedSearchForm,
   type Chapter,
   type ChapterDetails,
   type ChapterProviding,
@@ -15,7 +16,14 @@ import {
 
 import { NovelBuddyNetwork } from "./network";
 import { NovelBuddyParser } from "./parser";
-import type { ChapterItem, NovelBuddyMetadata, NovelItem } from "./models";
+import type {
+  ChapterItem,
+  NovelBuddyMetadata,
+  NovelBuddySearchMetadata,
+  NovelItem,
+} from "./models";
+import NovelBuddyAdvancedSearchForm from "./search";
+import { fetchGenres } from "./filters";
 
 type NovelBuddyImplementation = Extension &
   SearchResultsProviding &
@@ -27,21 +35,21 @@ export default class NovelBuddyExtension implements NovelBuddyImplementation {
 
   private parser = new NovelBuddyParser();
   private network = new NovelBuddyNetwork();
-
+  async getAdvancedSearchForm(
+    searchQuery: SearchQuery<NovelBuddySearchMetadata>,
+  ): Promise<AdvancedSearchForm> {
+    await fetchGenres(this.network);
+    return new NovelBuddyAdvancedSearchForm(searchQuery);
+  }
   async getSearchResults(
-    query: SearchQuery<{}>,
+    query: SearchQuery<NovelBuddySearchMetadata>,
     metadata: NovelBuddyMetadata | undefined,
     sortingOption: SortingOption,
   ): Promise<PagedResults<SearchResultItem>> {
     const page = metadata?.page ?? 1;
-    if (query.title.length < 2) {
-      return {
-        items: [],
-        metadata: undefined,
-      };
-    }
-    const data = await this.network.search(page, query.title, sortingOption);
-    const results: SearchResultItem[] = data.data.items.map((item: NovelItem) => ({
+    let results: SearchResultItem[] = [];
+    const data = await this.network.search(page, query, sortingOption);
+    results = data.data.items.map((item: NovelItem) => ({
       mangaId: item.url.replace(/^\//, ""),
       title: item.name,
       imageUrl: item.cover,
@@ -53,7 +61,7 @@ export default class NovelBuddyExtension implements NovelBuddyImplementation {
     }));
     return {
       items: results,
-      metadata: { page: page < data.data.pagination.limit ? page + 1 : undefined },
+      metadata: data.data.pagination.has_next ? { page: page + 1 } : undefined,
     };
   }
 

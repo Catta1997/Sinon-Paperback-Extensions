@@ -1,9 +1,7 @@
-import type { JSONObject } from "@paperback/types";
-
 export interface SearchResponse {
   data: {
     items: NovelItem[];
-    pagination: { limit: number };
+    pagination: { has_next: boolean };
   };
 }
 
@@ -28,13 +26,6 @@ export interface ChapterItem {
   updated_at?: string;
 }
 
-export interface ApiRequestConfig {
-  page: number;
-  query: string;
-  limit: string;
-  sort: string;
-}
-
 export interface NovelInfo {
   props: {
     pageProps: {
@@ -47,9 +38,9 @@ export interface NovelInfo {
         status: string;
         rating: number;
         isAdult: boolean;
-        authors: { name: string; slug: string }[];
-        artists: { name: string; slug: string }[];
-        genres: { name: string; slug: string }[];
+        authors: NameObject[];
+        artists: NameObject[];
+        genres: NameObject[];
         summary: string;
         cv: number;
       };
@@ -57,6 +48,31 @@ export interface NovelInfo {
   };
 }
 
-export interface NovelBuddyMetadata extends JSONObject {
-  page: number;
+export interface GenresList {
+  success: boolean;
+  data: {
+    items: NameObject[];
+  };
 }
+
+export interface NameObject {
+  name: string;
+  slug: string;
+}
+
+export interface FilterType {
+  id: string;
+  value: string;
+}
+
+export type NovelBuddyMetadata = {
+  page: number;
+};
+
+export type NovelBuddySearchMetadata = {
+  genres?: Record<string, "included" | "excluded">;
+  exclude?: string[];
+  status?: string[];
+  type?: string[];
+  demographic?: string[];
+};
