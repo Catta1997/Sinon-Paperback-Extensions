@@ -15,7 +15,7 @@ import {
 import { load } from "cheerio";
 import { BASE_URL } from "./main";
 import { type Metadata, type ReqInit, type SearchMetadata } from "./models";
-import { fixVoidElements } from "./helper";
+import { fixVoidElements } from "../novelUtils";
 
 export class Parser {
   private async getCheerio(url: string, init?: ReqInit) {

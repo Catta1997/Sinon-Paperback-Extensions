@@ -6,7 +6,7 @@ import type {
   SearchResponse,
 } from "./models";
 import { load } from "cheerio";
-import { fixVoidElements } from "../NovelsOnline/helper";
+import { fixVoidElements } from "../novelUtils";
 
 export class NovelBuddyNetwork {
   constructor() {}
