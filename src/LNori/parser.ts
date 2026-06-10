@@ -143,7 +143,7 @@ export class LNoriParser {
     return {
       type: "html",
       id: chapter.chapterId,
-      mangaId: chapter.chapterId,
+      mangaId: chapter.sourceManga.mangaId,
       html: `<html xmlns="http://www.w3.org/1999/xhtml"><head></head><body>${contentDiv}</body></html>`,
     };
   }

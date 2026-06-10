@@ -5,7 +5,9 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 ---
 
 ## 📚 Available Sources
+
 Manga:
+
 - E-Hentai (🔞 | Multi-Language)
 - GTOTheGreatSite (🇮🇹)
 - HastaTeam (🇮🇹)
@@ -20,10 +22,10 @@ Manga:
 - HNIScanTrad (Multi-Language)
 
 Novel:
+
 - NovelBuddy (ENG)
 - NovelsOnline (ENG)
 - LNori (ENG)
-
 
 ## 🚀 Install
 
