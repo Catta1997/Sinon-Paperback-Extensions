@@ -30,7 +30,7 @@ type NovelBuddyImplementation = Extension &
   MangaProviding &
   ChapterProviding;
 
-export default class NovelBuddyExtension implements NovelBuddyImplementation {
+export class NovelBuddyExtension implements NovelBuddyImplementation {
   async initialise(): Promise<void> {}
 
   private parser = new NovelBuddyParser();

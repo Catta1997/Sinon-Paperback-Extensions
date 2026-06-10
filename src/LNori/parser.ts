@@ -6,11 +6,11 @@ import {
   ContentRating,
   type DiscoverSectionItem,
   type PagedResults,
-  type SearchQuery,
   type SearchResultItem,
   type SourceManga,
 } from "@paperback/types";
 import { fixVoidElements } from "../novelUtils";
+import {toTitleCase} from "./utils";
 
 export class LNoriParser {
   async parseProminent(html: string): Promise<PagedResults<DiscoverSectionItem>> {
@@ -113,6 +113,18 @@ export class LNoriParser {
         thumbnailUrl: cover,
         synopsis: description,
         primaryTitle: title,
+        tagGroups: [
+          {
+            title: "Genres",
+            tags: genres.map((genre) => ({
+              id: genre.toLocaleLowerCase()
+                  .replaceAll("-", "_")
+                  .replaceAll(" ", "_"),
+              title: toTitleCase(genre),
+            })),
+            id: "genres",
+          },
+        ],
         secondaryTitles: [],
         contentRating: ContentRating.EVERYONE,
         contentType: "novel",

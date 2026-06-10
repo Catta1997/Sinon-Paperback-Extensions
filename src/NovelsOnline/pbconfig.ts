@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "NovelsOnline",
   description: "Extension that pulls content from NovelsOnline.",
-  version: "1.0.2",
+  version: "1.0.3",
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   capabilities: [

@@ -86,10 +86,11 @@ export class LNoriExtension implements LNoriImplementation {
     );
     return volumes.map((volume, index) => ({
       chapterId: volume.link,
+      volume: index + 1,
       title: volume.title,
       sourceManga: sourceManga,
       langCode: "en",
-      chapNum: index + 1,
+      chapNum: 1,
     }));
   }
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {

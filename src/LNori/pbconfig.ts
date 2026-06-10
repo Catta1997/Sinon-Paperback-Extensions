@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "LNori",
   description: "Extension that pulls content from LNori.",
-  version: "1.0.0",
+  version: "1.0.1",
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   capabilities: [
@@ -12,7 +12,13 @@ export default {
       SourceIntents.SEARCH_RESULT_PROVIDING |
       SourceIntents.CHAPTER_PROVIDING,
   ],
-  badges: [],
+  badges: [
+    {
+      label: "Novel",
+      textColor: "#ffffff",
+      backgroundColor: "#3baf4b",
+    },
+  ],
   developers: [
     {
       name: "Catta1997",
