@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-10T10:57:49.463Z",
+  "buildTime": "2026-06-10T16:07:22.821Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.89",
     "types": "1.0.0-alpha.89"
@@ -205,7 +205,7 @@
     {
       "name": "LNori",
       "description": "Extension that pulls content from LNori.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "icon": "icon.png",
       "contentRating": "SAFE",
       "capabilities": [
