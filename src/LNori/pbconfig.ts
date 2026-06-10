@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "LNori",
   description: "Extension that pulls content from LNori.",
-  version: "1.0.1",
+  version: "1.0.2",
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   capabilities: [

@@ -10,7 +10,7 @@ import {
   type SourceManga,
 } from "@paperback/types";
 import { fixVoidElements } from "../novelUtils";
-import {toTitleCase} from "./utils";
+import { toTitleCase } from "./utils";
 
 export class LNoriParser {
   async parseProminent(html: string): Promise<PagedResults<DiscoverSectionItem>> {
@@ -96,13 +96,14 @@ export class LNoriParser {
     const volumes = $("section.vol-grid article.card")
       .map((_, el) => {
         const linkEl = $(el).find("figure.card-cover a").first();
-
+        const img = $(el).find("figure.card-cover img").first();
         const title =
           $(el).find("h3.card-title span").text().trim() || linkEl.attr("aria-label") || "";
 
         return {
           title,
           link: linkEl.attr("href") ?? "",
+          cover: img.attr("src") ?? "",
         };
       })
       .get();
@@ -111,20 +112,20 @@ export class LNoriParser {
       mangaId: mangaId,
       mangaInfo: {
         thumbnailUrl: cover,
+        author: author,
         synopsis: description,
         primaryTitle: title,
         tagGroups: [
           {
             title: "Genres",
             tags: genres.map((genre) => ({
-              id: genre.toLocaleLowerCase()
-                  .replaceAll("-", "_")
-                  .replaceAll(" ", "_"),
+              id: genre.toLocaleLowerCase().replaceAll("-", "_").replaceAll(" ", "_"),
               title: toTitleCase(genre),
             })),
             id: "genres",
           },
         ],
+        artworkUrls: volumes.map((volume) => volume.cover),
         secondaryTitles: [],
         contentRating: ContentRating.EVERYONE,
         contentType: "novel",
@@ -166,13 +167,6 @@ export class LNoriParser {
       (card) =>
         card.title.toLowerCase().includes(title) || card.author.toLowerCase().includes(title),
     );
-    const result = results.map((novel) => ({
-      mangaId: novel.link,
-      title: novel.title,
-      subtitle: novel.author,
-      imageUrl: novel.cover,
-      contentRating: ContentRating.EVERYONE,
-    }));
     return {
       items: results.map((novel) => ({
         mangaId: novel.link,

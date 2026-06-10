@@ -9,12 +9,10 @@ import {
   DiscoverSectionType,
   type Extension,
   type MangaProviding,
-  type Metadata,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
-  type SortingOption,
   type SourceManga,
 } from "@paperback/types";
 import { LNoriParser } from "./parser";
@@ -73,25 +71,40 @@ export class LNoriExtension implements LNoriImplementation {
   }
   async getSearchResults(
     query: SearchQuery<{}>,
-    metadata: undefined,
-    sortingOption: undefined,
+    _metadata: undefined,
+    _sortingOption: undefined,
   ): Promise<PagedResults<SearchResultItem>> {
     const html = await parseHTML(`${DOMAIN}/library`);
     return parser.parseSearch(html, query.title);
   }
 
-  async getChapters(sourceManga: SourceManga, sinceDate?: Date): Promise<Chapter[]> {
+  async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
     const volumes: { title: string; link: string }[] = JSON.parse(
       sourceManga.mangaInfo.additionalInfo?.volumes ?? "",
     );
-    return volumes.map((volume, index) => ({
-      chapterId: volume.link,
-      volume: index + 1,
-      title: volume.title,
-      sourceManga: sourceManga,
-      langCode: "en",
-      chapNum: 1,
-    }));
+    let novels: Chapter[] = [];
+    let volumeNum = 0;
+    volumes.forEach((volume, index) => {
+      if (volumes[index - 1] && volumes[index - 1].title === volume.title) {
+        volumeNum = volumeNum + 0.5;
+      } else {
+        if (Number.isInteger(volumeNum)) {
+          volumeNum = volumeNum + 1;
+        } else {
+          volumeNum = volumeNum + 0.5;
+        }
+      }
+      novels.push({
+        chapterId: volume.link,
+        volume: volumeNum,
+        title: volume.title,
+        sourceManga: sourceManga,
+        langCode: "en",
+        sortingIndex: index,
+        chapNum: 1,
+      });
+    });
+    return novels;
   }
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
     const html = await parseHTML(`${DOMAIN}${chapter.chapterId}`);
