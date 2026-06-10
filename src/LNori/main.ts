@@ -104,7 +104,7 @@ export class LNoriExtension implements LNoriImplementation {
         chapNum: 1,
       });
     });
-    return novels;
+    return novels.reverse();
   }
   async getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
     const html = await parseHTML(`${DOMAIN}${chapter.chapterId}`);
