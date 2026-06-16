@@ -33,6 +33,11 @@ Novel:
 
 [installation-webpage-stable]: https://catta1997.github.io/Sinon-Paperback-Extensions/0.9/stable/
 
+## Issues
+- **Report issues [here][issue]**
+
+[issue]: https://discord.com/channels/965890377896845352/1441074130089803810
+
 ---
 
 <p align="center">
