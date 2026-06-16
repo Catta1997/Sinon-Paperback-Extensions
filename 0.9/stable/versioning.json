@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-15T12:59:23.725Z",
+  "buildTime": "2026-06-16T11:59:09.638Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.89",
     "types": "1.0.0-alpha.89"
@@ -256,7 +256,7 @@
     {
       "name": "NovelBuddy",
       "description": "Extension that pulls content from NovelBuddy.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "icon": "icon.png",
       "contentRating": "SAFE",
       "capabilities": [
