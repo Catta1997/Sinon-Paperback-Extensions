@@ -4,14 +4,20 @@ import {
   type ChapterDetails,
   type ChapterProviding,
   ContentRating,
+  type DiscoverSection,
+  type DiscoverSectionItem,
+  type DiscoverSectionProviding,
+  DiscoverSectionType,
   type Extension,
   type MangaProviding,
+  type Metadata,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
   type SortingOption,
   type SourceManga,
+  type UpdateManager,
 } from "@paperback/types";
 
 import { NovelBuddyNetwork } from "./network";
@@ -28,9 +34,38 @@ import { fetchGenres } from "./filters";
 type NovelBuddyImplementation = Extension &
   SearchResultsProviding &
   MangaProviding &
-  ChapterProviding;
+  ChapterProviding &
+  DiscoverSectionProviding;
 
 export class NovelBuddyExtension implements NovelBuddyImplementation {
+  async getDiscoverSections(): Promise<DiscoverSection[]> {
+    return [
+      {
+        id: "trending",
+        title: "Trending",
+        subtitle: "",
+        type: DiscoverSectionType.prominentCarousel,
+      },
+      {
+        id: "chapters",
+        title: "Hot Chapters",
+        subtitle: "",
+        type: DiscoverSectionType.chapterUpdates,
+      },
+    ];
+  }
+  async getDiscoverSectionItems(
+    section: DiscoverSection,
+  ): Promise<PagedResults<DiscoverSectionItem>> {
+    switch (section.id) {
+      case "trending":
+        return this.network.parsePopular();
+      case "chapters":
+        return this.network.parseChapters();
+      default:
+        return { items: [] };
+    }
+  }
   async initialise(): Promise<void> {}
 
   private parser = new NovelBuddyParser();
@@ -75,7 +110,7 @@ export class NovelBuddyExtension implements NovelBuddyImplementation {
     return {
       mangaId: mangaId,
       mangaInfo: {
-        additionalInfo: { id: manga.id },
+        additionalInfo: { id: manga.id, cv: manga.cv.toString() },
         tagGroups: [
           {
             id: "genres",
@@ -101,7 +136,8 @@ export class NovelBuddyExtension implements NovelBuddyImplementation {
   async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
     console.log(sourceManga.mangaInfo.additionalInfo?.id);
     const id = sourceManga.mangaInfo.additionalInfo?.id ?? "";
-    const chaptersRequest = await this.network.getChaptersList(id);
+    const cv = sourceManga.mangaInfo.additionalInfo?.cv ?? "";
+    const chaptersRequest = await this.network.getChaptersList(id, cv);
     const chapters = chaptersRequest.data?.chapters ?? [];
     return chapters
       .map((chapter: ChapterItem, index: number) => ({

@@ -45,7 +45,20 @@ export class SettingsForm extends Form {
   }
 
   getHideTypeStatus(): string[] {
-    return (Application.getState("_type") as string[] | undefined) ?? ["1","2","4","8","16","32","64","128","256","512"];
+    return (
+      (Application.getState("_type") as string[] | undefined) ?? [
+        "1",
+        "2",
+        "4",
+        "8",
+        "16",
+        "32",
+        "64",
+        "128",
+        "256",
+        "512",
+      ]
+    );
   }
 
   async handleHideTypeStatusChange(value: string[]): Promise<void> {

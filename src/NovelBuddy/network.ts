@@ -1,9 +1,20 @@
-import { type Request, type SearchQuery, type SortingOption, URL } from "@paperback/types";
+import {
+  ContentRating,
+  type DiscoverSectionItem,
+  type PagedResults,
+  type Request,
+  type SearchQuery,
+  type SortingOption,
+  URL,
+} from "@paperback/types";
 import type {
   ChapterResponse,
   GenresList,
   NovelBuddySearchMetadata,
+  PopularChapter,
+  PopularNovel,
   SearchResponse,
+  SectionResponse,
 } from "./models";
 import { load } from "cheerio";
 import { fixVoidElements } from "../novelUtils";
@@ -69,7 +80,7 @@ export class NovelBuddyNetwork {
     return Application.arrayBufferToUTF8String(response[1]);
   }
 
-  async getChaptersList(mangaId: string, cv?: number) {
+  async getChaptersList(mangaId: string, cv?: string) {
     const request: Request = {
       url: `${this.api}titles/${mangaId}/chapters${cv ? `?cv=${cv}` : ""}`,
       method: "GET",
@@ -105,5 +116,39 @@ export class NovelBuddyNetwork {
     const response = await Application.scheduleRequest(request);
     const data = Application.arrayBufferToUTF8String(response[1]);
     return JSON.parse(data) as GenresList;
+  }
+
+  async getSections<T>(section: string) {
+    const url = `${this.api}trending/${section}`;
+    const response = await Application.scheduleRequest({ url: url, method: "GET" });
+    const data = Application.arrayBufferToUTF8String(response[1]);
+    return JSON.parse(data) as SectionResponse<T>;
+  }
+  async parsePopular(): Promise<PagedResults<DiscoverSectionItem>> {
+    const novels = await this.getSections<PopularNovel>("titles");
+    return {
+      items: novels.data.items.map((novel) => ({
+        type: "featuredCarouselItem",
+        mangaId: novel.url.replace(/^\//, ""),
+        imageUrl: novel.cover,
+        title: novel.name,
+        infoItems: [{ symbol: "star", text: novel.rating.toString() }],
+        contentRating: novel.isAdult === true ? ContentRating.ADULT : ContentRating.EVERYONE,
+      })),
+    };
+  }
+  async parseChapters(): Promise<PagedResults<DiscoverSectionItem>> {
+    const novels = await this.getSections<PopularChapter>("chapters");
+    return {
+      items: novels.data.items.map((novel) => ({
+        type: "chapterUpdatesCarouselItem",
+        chapterId: novel.chapter.id,
+        mangaId: novel.title.url.replace(/^\//, ""),
+        subtitle: `Chapter ${novel.chapter.chapter_number}`,
+        imageUrl: novel.title.cover,
+        title: novel.title.name,
+        contentRating: ContentRating.EVERYONE,
+      })),
+    };
   }
 }

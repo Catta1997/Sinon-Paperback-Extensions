@@ -76,3 +76,34 @@ export type NovelBuddySearchMetadata = {
   type?: string[];
   demographic?: string[];
 };
+
+export type PopularNovel = {
+  id: string;
+  url: string;
+  name: string;
+  slug: string;
+  cover: string;
+  status: string;
+  rating: number;
+  isAdult: boolean | null;
+  updated_at: string;
+  cv: number;
+  trending_score: number;
+};
+
+export type PopularChapter = {
+  id: string;
+  url: string;
+  chapter: {
+    id: string;
+    name: string;
+    cv: number;
+    chapter_number: number;
+  };
+  title: { id: string; url: string; name: string; cover: string; cv: number };
+  score: number;
+};
+
+export type SectionResponse<T> = {
+  data: { items: T[] };
+};

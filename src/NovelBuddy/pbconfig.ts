@@ -3,7 +3,7 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "NovelBuddy",
   description: "Extension that pulls content from NovelBuddy.",
-  version: "1.0.3",
+  version: "1.0.4",
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   capabilities: [
