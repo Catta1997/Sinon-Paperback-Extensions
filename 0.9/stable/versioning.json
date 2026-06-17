@@ -1,8 +1,8 @@
 {
-  "buildTime": "2026-06-17T06:59:00.501Z",
+  "buildTime": "2026-06-17T12:57:42.999Z",
   "builtWith": {
-    "toolchain": "1.0.0-alpha.89",
-    "types": "1.0.0-alpha.89"
+    "toolchain": "1.0.0-alpha.92",
+    "types": "1.0.0-alpha.92"
   },
   "repository": {
     "name": "sinon-extensions",
@@ -39,7 +39,7 @@
     {
       "name": "EHentai",
       "description": "Extension that pulls content from E-Hentai.",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
@@ -186,7 +186,7 @@
     {
       "name": "HentaiHand",
       "description": "Extension that pulls content from HentaiHand",
-      "version": "1.0.0-alpha.5",
+      "version": "1.0.0-alpha.6",
       "icon": "icon.png",
       "language": "en",
       "contentRating": "ADULT",
@@ -280,7 +280,7 @@
     {
       "name": "NovelsOnline",
       "description": "Extension that pulls content from NovelsOnline.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "icon": "icon.png",
       "contentRating": "SAFE",
       "capabilities": [
@@ -331,7 +331,7 @@
     {
       "name": "RokuHentai",
       "description": "Extension that pulls content from RokuHentai.com",
-      "version": "1.0.0-alpha.5",
+      "version": "1.0.0-alpha.6",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
