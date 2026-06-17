@@ -120,26 +120,24 @@ export class Parser {
           manga.synopsis = detail.text().trim();
           break;
         case "Genre":
-          const genre = detail
+          genreTags = detail
             .find("li")
-            .map((_, li) => $(li).text().trim())
+            .map((genreIndex, li) => ({
+              title: $(li).text().trim(),
+              id: `genre_${genreIndex.toString()}`,
+            }))
             .get()
-            .filter((name) => name !== "N/A");
-          genreTags = genre.map((t) => ({
-            title: t,
-            id: t.toLocaleLowerCase().replaceAll(" ", ""),
-          }));
+            .filter((genre) => genre.title !== "N/A");
           break;
         case "Tags":
-          const tags = detail
+          tagsTags = detail
             .find("li")
-            .map((_, li) => $(li).text().trim())
+            .map((tagIndex, li) => ({
+              title: $(li).text().trim(),
+              id: `tags_${tagIndex.toString()}`,
+            }))
             .get()
-            .filter((name) => name !== "N/A");
-          tagsTags = tags.map((t) => ({
-            title: t,
-            id: t.toLocaleLowerCase().replaceAll(" ", ""),
-          }));
+            .filter((tag) => tag.title !== "N/A");
           break;
         case "Author(s)":
           authors = detail
