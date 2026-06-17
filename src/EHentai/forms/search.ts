@@ -14,8 +14,7 @@ import {
 import {
   type FilterKey,
   filterKeys,
-  getPopularLanguages,
-  languageFilter,
+  getDefaultMetadata,
   languageFilterAll,
   type SearchMetadata,
   typeFilter,
@@ -59,9 +58,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     if (searchQuery.metadata !== undefined) {
       this.searchMetadata = searchQuery.metadata;
     } else {
-      this.searchMetadata = {
-        type: (Application.getState("_type") as string[]) ?? [],
-      };
+      this.searchMetadata = getDefaultMetadata();
     }
   }
 
@@ -126,7 +123,6 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     ];
   }
   getLanguageFilter(): FormItemElement<unknown>[] {
-    const languages = getPopularLanguages() ? languageFilter : languageFilterAll;
     return [
       TriStateSelectRow("language", {
         layout: "list",
@@ -135,8 +131,8 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
         allowEmptySelection: true,
-        maximum: languages.length,
-        items: languages.map((x) => ({ id: x.id, title: x.value })),
+        maximum: languageFilterAll.length,
+        items: languageFilterAll.map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleLanguagesChange",

@@ -47,7 +47,7 @@ export const typeFilter: {
 ];
 
 export function getLangFlag(lang: string) {
-  const langFlag = languageFilter.find((language) => language.id === lang);
+  const langFlag = languageFilterAll.find((language) => language.id === lang);
   return langFlag?.flag ?? "";
 }
 
@@ -55,13 +55,20 @@ export function getPopularLanguages() {
   return (Application.getState("popularLanguages") as boolean | undefined) ?? true;
 }
 
+export function getDefLangStatus(): string[] {
+  return (Application.getState("_languages") as string[] | undefined) ?? [];
+}
+
 export function getLanguageFilter() {
-  const languages = languageFilter; //.filter((lang) => getLangFilter().includes(lang.id));
+  const languages = languageFilterAll; //.filter((lang) => getLangFilter().includes(lang.id));
   languages.unshift({ id: "all", value: "All", flag: "All" });
   return languages;
 }
-
+/*
 export const languageFilter = [
+
+];*/
+export const languageFilterAll = [
   { id: "chinese", value: "Chinese", flag: "🇨🇳" },
   { id: "english", value: "English", flag: "🇬🇧" },
   { id: "french", value: "French", flag: "🇫🇷" },
@@ -76,8 +83,6 @@ export const languageFilter = [
   { id: "spanish", value: "Spanish", flag: "🇪🇸" },
   { id: "thai", value: "Thai", flag: "🇹🇭" },
   { id: "vietnamese", value: "Vietnamese", flag: "🇻🇳" },
-];
-export const languageFilterAll = [
   { id: "afrikaans", value: "Afrikaans", flag: "🇿🇦" },
   { id: "albanian", value: "Albanian", flag: "🇦🇱" },
   { id: "arabic", value: "Arabic", flag: "🇸🇦" },
@@ -87,10 +92,10 @@ export const languageFilterAll = [
   { id: "bosnian", value: "Bosnian", flag: "🇧🇦" },
   { id: "bulgarian", value: "Bulgarian", flag: "🇧🇬" },
   { id: "burmese", value: "Burmese", flag: "🇲🇲" },
-  { id: "catalan", value: "Catalan", flag: "🏴" },
+  { id: "catalan", value: "Catalan", flag: "" },
   { id: "cebuano", value: "Cebuano", flag: "🇵🇭" },
-  { id: "cree", value: "Cree", flag: "🇨🇦" },
-  { id: "creole", value: "Creole", flag: "🇭🇹" },
+  { id: "cree", value: "Cree", flag: "" },
+  { id: "creole", value: "Creole", flag: "" },
   { id: "croatian", value: "Croatian", flag: "🇭🇷" },
   { id: "czech", value: "Czech", flag: "🇨🇿" },
   { id: "danish", value: "Danish", flag: "🇩🇰" },
@@ -147,7 +152,7 @@ export const languageFilterAll = [
   { id: "welsh", value: "Welsh", flag: "" },
   { id: "yiddish", value: "Yiddish", flag: "" },
   { id: "zulu", value: "Zulu", flag: "🇿🇦" },
-];
+].sort((a, b) => a.value.localeCompare(b.value));
 
 export interface GalleryInfo {
   category: string;
@@ -187,3 +192,61 @@ export const filterKeys = [
   "cosplayer",
   "group",
 ] as const;
+
+export function getDefaultCharacter() {
+  return ((Application.getState("_character") as string | undefined) ?? "")
+    .split(",")
+    .filter(Boolean);
+}
+export function getDefaultFemale() {
+  return ((Application.getState("_female") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultMale() {
+  return ((Application.getState("_male") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultOther() {
+  return ((Application.getState("_other") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultCosplayer() {
+  return ((Application.getState("_cosplayer") as string | undefined) ?? "")
+    .split(",")
+    .filter(Boolean);
+}
+export function getDefaultArtist() {
+  return ((Application.getState("_artist") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultParody() {
+  return ((Application.getState("_parody") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultMixed() {
+  return ((Application.getState("_mixed") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultGroup() {
+  return ((Application.getState("_group") as string | undefined) ?? "").split(",").filter(Boolean);
+}
+export function getDefaultMetadata(): SearchMetadata {
+  const character = getDefaultCharacter();
+  const female = getDefaultFemale();
+  const male = getDefaultMale();
+  const other = getDefaultOther();
+  const cosplayer = getDefaultCosplayer();
+  const artist = getDefaultArtist();
+  const parody = getDefaultParody();
+  const mixed = getDefaultMixed();
+  const group = getDefaultGroup();
+  return {
+    type: (Application.getState("_type") as string[]) ?? [],
+    language: Object.fromEntries(
+      getDefLangStatus().map((language) => [language, "included"]),
+    ) as Record<string, "included" | "excluded">,
+    ...(character.length > 0 && { character }),
+    ...(female.length > 0 && { female }),
+    ...(male.length > 0 && { male }),
+    ...(other.length > 0 && { other }),
+    ...(cosplayer.length > 0 && { cosplayer }),
+    ...(artist.length > 0 && { artist }),
+    ...(parody.length > 0 && { parody }),
+    ...(mixed.length > 0 && { mixed }),
+    ...(group.length > 0 && { group }),
+  };
+}

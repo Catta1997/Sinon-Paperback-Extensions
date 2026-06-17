@@ -21,7 +21,7 @@ import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
 import { MainInterceptor, mainRateLimiter } from "./network";
 import { Parser } from "./parser";
-import { type Metadata, type SearchMetadata } from "./utils";
+import { getDefaultMetadata, type Metadata, type SearchMetadata } from "./utils";
 
 type EHentaiImplementation = SettingsFormProviding &
   DiscoverSectionProviding &
@@ -83,10 +83,9 @@ export class EHentaiExtension implements EHentaiImplementation {
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
     if (query.metadata === undefined) {
-      query.metadata = {
-        type: (Application.getState("_type") as string[]) ?? [],
-      };
+      query.metadata = getDefaultMetadata();
     }
+    console.log(JSON.stringify(query.metadata));
     return parser.parseSearchResults(query, metadata);
   }
 
