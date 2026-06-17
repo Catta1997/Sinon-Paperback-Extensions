@@ -10,14 +10,12 @@ import {
   DiscoverSectionType,
   type Extension,
   type MangaProviding,
-  type Metadata,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
   type SortingOption,
   type SourceManga,
-  type UpdateManager,
 } from "@paperback/types";
 
 import { NovelBuddyNetwork } from "./network";

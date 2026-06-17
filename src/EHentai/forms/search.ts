@@ -9,11 +9,14 @@ import {
   Section,
   SelectRow,
   StepperRow,
+  TriStateSelectRow,
 } from "@paperback/types";
 import {
   type FilterKey,
   filterKeys,
+  getPopularLanguages,
   languageFilter,
+  languageFilterAll,
   type SearchMetadata,
   typeFilter,
 } from "../utils";
@@ -88,6 +91,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         allowDeletion: true,
         allowReorder: false,
         id: `${filter}`,
+        footer: "Use `-` to exclude a tag",
         onDeletion: Application.Selector(
           this.onValueChangeLabelProxy,
           // @ts-expect-error
@@ -109,8 +113,11 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     return [
       SelectRow("genres", {
         title: "Type",
-        subtitle: "Select the genre(s) to include in search results",
-        value: this.searchMetadata.type ?? typeFilter.map((x) => x.id),
+        subtitle: "Select the genre(s) to include/exclude in search results",
+        value:
+          this.searchMetadata.type && this.searchMetadata.type.length > 0
+            ? this.searchMetadata.type
+            : typeFilter.map((x) => x.id),
         minItemCount: 1,
         maxItemCount: typeFilter.length,
         options: typeFilter.map((x) => ({ id: x.id, title: x.value })),
@@ -119,14 +126,17 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     ];
   }
   getLanguageFilter(): FormItemElement<unknown>[] {
+    const languages = getPopularLanguages() ? languageFilter : languageFilterAll;
     return [
-      SelectRow("genres", {
-        title: "Language",
-        subtitle: "Select the genre(s) to include in search results",
-        value: this.searchMetadata.language ?? [],
-        minItemCount: 0,
-        maxItemCount: languageFilter.length,
-        options: languageFilter.map((x) => ({ id: x.id, title: x.value })),
+      TriStateSelectRow("language", {
+        layout: "list",
+        title: "Languages",
+        subtitle: "Select the language(s) to include in search results",
+        value: this.searchMetadata.language ?? {},
+        allowExclusion: true,
+        allowEmptySelection: true,
+        maximum: languages.length,
+        items: languages.map((x) => ({ id: x.id, title: x.value })),
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleLanguagesChange",
@@ -244,7 +254,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   async handleTypeChange(value: string[]): Promise<void> {
     this.searchMetadata.type = value;
   }
-  async handleLanguagesChange(value: string[]): Promise<void> {
+  async handleLanguagesChange(value: Record<string, "included" | "excluded">): Promise<void> {
     this.searchMetadata.language = value;
   }
   async handleRatingChange(value: number): Promise<void> {

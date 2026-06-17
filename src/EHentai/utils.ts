@@ -51,6 +51,10 @@ export function getLangFlag(lang: string) {
   return langFlag?.flag ?? "";
 }
 
+export function getPopularLanguages() {
+  return (Application.getState("popularLanguages") as boolean | undefined) ?? true;
+}
+
 export function getLanguageFilter() {
   const languages = languageFilter; //.filter((lang) => getLangFilter().includes(lang.id));
   languages.unshift({ id: "all", value: "All", flag: "All" });
@@ -73,6 +77,77 @@ export const languageFilter = [
   { id: "thai", value: "Thai", flag: "🇹🇭" },
   { id: "vietnamese", value: "Vietnamese", flag: "🇻🇳" },
 ];
+export const languageFilterAll = [
+  { id: "afrikaans", value: "Afrikaans", flag: "🇿🇦" },
+  { id: "albanian", value: "Albanian", flag: "🇦🇱" },
+  { id: "arabic", value: "Arabic", flag: "🇸🇦" },
+  { id: "aramaic", value: "Aramaic", flag: "" },
+  { id: "armenian", value: "Armenian", flag: "🇦🇲" },
+  { id: "bengali", value: "Bengali", flag: "🇧🇩" },
+  { id: "bosnian", value: "Bosnian", flag: "🇧🇦" },
+  { id: "bulgarian", value: "Bulgarian", flag: "🇧🇬" },
+  { id: "burmese", value: "Burmese", flag: "🇲🇲" },
+  { id: "catalan", value: "Catalan", flag: "🏴" },
+  { id: "cebuano", value: "Cebuano", flag: "🇵🇭" },
+  { id: "cree", value: "Cree", flag: "🇨🇦" },
+  { id: "creole", value: "Creole", flag: "🇭🇹" },
+  { id: "croatian", value: "Croatian", flag: "🇭🇷" },
+  { id: "czech", value: "Czech", flag: "🇨🇿" },
+  { id: "danish", value: "Danish", flag: "🇩🇰" },
+  { id: "dutch", value: "Dutch", flag: "🇳🇱" },
+  { id: "esperanto", value: "Esperanto", flag: "" },
+  { id: "estonian", value: "Estonian", flag: "🇪🇪" },
+  { id: "finnish", value: "Finnish", flag: "🇫🇮" },
+  { id: "georgian", value: "Georgian", flag: "🇬🇪" },
+  { id: "greek", value: "Greek", flag: "🇬🇷" },
+  { id: "gujarati", value: "Gujarati", flag: "🇮🇳" },
+  { id: "hebrew", value: "Hebrew", flag: "🇮🇱" },
+  { id: "hindi", value: "Hindi", flag: "🇮🇳" },
+  { id: "hmong", value: "Hmong", flag: "" },
+  { id: "hungarian", value: "Hungarian", flag: "🇭🇺" },
+  { id: "icelandic", value: "Icelandic", flag: "🇮🇸" },
+  { id: "irish", value: "Irish", flag: "🇮🇪" },
+  { id: "javanese", value: "Javanese", flag: "🇮🇩" },
+  { id: "kannada", value: "Kannada", flag: "🇮🇳" },
+  { id: "kazakh", value: "Kazakh", flag: "🇰🇿" },
+  { id: "khmer", value: "Khmer", flag: "🇰🇭" },
+  { id: "kurdish", value: "Kurdish", flag: "" },
+  { id: "ladino", value: "Ladino", flag: "" },
+  { id: "lao", value: "Lao", flag: "🇱🇦" },
+  { id: "latin", value: "Latin", flag: "" },
+  { id: "latvian", value: "Latvian", flag: "🇱🇻" },
+  { id: "marathi", value: "Marathi", flag: "🇮🇳" },
+  { id: "mongolian", value: "Mongolian", flag: "🇲🇳" },
+  { id: "ndebele", value: "Ndebele", flag: "🇿🇼" },
+  { id: "nepali", value: "Nepali", flag: "🇳🇵" },
+  { id: "norwegian", value: "Norwegian", flag: "🇳🇴" },
+  { id: "oromo", value: "Oromo", flag: "🇪🇹" },
+  { id: "papiamento", value: "Papiamento", flag: "🇨🇼" },
+  { id: "pashto", value: "Pashto", flag: "🇦🇫" },
+  { id: "persian", value: "Persian", flag: "🇮🇷" },
+  { id: "punjabi", value: "Punjabi", flag: "🇮🇳" },
+  { id: "romanian", value: "Romanian", flag: "🇷🇴" },
+  { id: "sango", value: "Sango", flag: "🇨🇫" },
+  { id: "sanskrit", value: "Sanskrit", flag: "🇮🇳" },
+  { id: "serbian", value: "Serbian", flag: "🇷🇸" },
+  { id: "shona", value: "Shona", flag: "🇿🇼" },
+  { id: "slovak", value: "Slovak", flag: "🇸🇰" },
+  { id: "slovenian", value: "Slovenian", flag: "🇸🇮" },
+  { id: "somali", value: "Somali", flag: "🇸🇴" },
+  { id: "swahili", value: "Swahili", flag: "🇹🇿" },
+  { id: "swedish", value: "Swedish", flag: "🇸🇪" },
+  { id: "tagalog", value: "Tagalog", flag: "🇵🇭" },
+  { id: "tamil", value: "Tamil", flag: "🇮🇳" },
+  { id: "telugu", value: "Telugu", flag: "🇮🇳" },
+  { id: "tibetan", value: "Tibetan", flag: "" },
+  { id: "tigrinya", value: "Tigrinya", flag: "🇪🇷" },
+  { id: "turkish", value: "Turkish", flag: "🇹🇷" },
+  { id: "ukrainian", value: "Ukrainian", flag: "🇺🇦" },
+  { id: "urdu", value: "Urdu", flag: "🇵🇰" },
+  { id: "welsh", value: "Welsh", flag: "" },
+  { id: "yiddish", value: "Yiddish", flag: "" },
+  { id: "zulu", value: "Zulu", flag: "🇿🇦" },
+];
 
 export interface GalleryInfo {
   category: string;
@@ -92,7 +167,7 @@ export interface GalleryInfo {
 }
 type BaseMetadata = {
   type?: string[];
-  language?: string[];
+  language?: Record<string, "included" | "excluded">;
   rating?: number;
   minPages?: number;
   maxPages?: number;

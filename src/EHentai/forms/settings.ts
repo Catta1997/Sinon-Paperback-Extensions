@@ -1,5 +1,5 @@
-import { typeFilter } from "../utils";
-import { Form, Section, SelectRow, StepperRow } from "@paperback/types";
+import { getPopularLanguages, typeFilter } from "../utils";
+import { Form, Section, SelectRow, StepperRow, ToggleRow } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 
 export class SettingsForm extends Form {
@@ -25,14 +25,22 @@ export class SettingsForm extends Form {
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
           }),
+          ToggleRow("popular_languages", {
+            title: "Show Only Popular Languages",
+            value: getPopularLanguages(),
+            onValueChange: Application.Selector(
+              this as SettingsForm,
+              "handlePopularLanguagesChange",
+            ),
+          }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
             subtitle: "Set Custom Rate Limit",
             value: this.getRateFormsValue(),
-            minValue: 9,
+            minValue: 5,
             maxValue: 100,
             stepValue: 1,
-            loopOver: true,
+            loopOver: false,
             onValueChange: Application.Selector(this as SettingsForm, "handleRateStatusChange"),
           }),
         ],
@@ -76,5 +84,9 @@ export class SettingsForm extends Form {
   async handleRateStatusChange(value: number): Promise<void> {
     await this.updateValue(value, "RateFilter");
     mainRateLimiter.options.numberOfRequests = value;
+  }
+
+  async handlePopularLanguagesChange(value: boolean): Promise<void> {
+    await this.updateValue(value, "popularLanguages");
   }
 }

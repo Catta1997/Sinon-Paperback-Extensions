@@ -28,6 +28,7 @@ Novel:
 - LNori (ENG)
 
 ## Issues
+
 - [Join][discord] **Inkdex** Discord Server
 - Report issues **[here][issue]**
 

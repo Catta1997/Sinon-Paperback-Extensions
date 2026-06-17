@@ -66,7 +66,11 @@ export class Requests {
         query += ` -${filter.id}:${filterValue.split("-")[1]}`;
       } else {
         if (filter.id === "language" && filter.value.length > 0) {
-          query += ` ~${filter.id}:${filterValue}`;
+          if (filterValue.startsWith("-")) {
+            query += ` -~${filter.id}:${filterValue.split("-")[1]}`;
+          } else {
+            query += ` ~${filter.id}:${filterValue}`;
+          }
         } else {
           query += ` ${filter.id}:${filterValue}`;
         }
@@ -78,7 +82,9 @@ export class Requests {
     const url = new URL(BASE_URL);
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
     const typeFilter = query.metadata?.type ?? [];
-    const languageFilter = query.metadata?.language ?? [];
+    const languageFilter = Object.entries(query.metadata?.language ?? {}).map(
+      ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
+    );
     const characterFilter = query.metadata?.character ?? [];
     const femaleFilter = query.metadata?.female ?? [];
     const maleFilter = query.metadata?.male ?? [];
