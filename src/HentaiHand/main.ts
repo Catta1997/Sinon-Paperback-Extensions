@@ -9,6 +9,7 @@ import {
   type Extension,
   type MangaProviding,
   type PagedResults,
+  type Request,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
@@ -41,6 +42,18 @@ export class HentaiHandExtension implements HentaiHandImplementation {
     this.mainInterceptor.registerInterceptor();
   }
   async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
+    for (const cookie of cookies) {
+      if (cookie.name == "cf_clearance") {
+        this.cookieStorageInterceptor.setCookie(cookie);
+      }
+    }
+  }
+
+  async cloudflareBypassCompleted(
+    _request: Request,
+    cookies: Cookie[],
+    _localStorage: Record<string, string>,
+  ): Promise<void> {
     for (const cookie of cookies) {
       if (cookie.name == "cf_clearance") {
         this.cookieStorageInterceptor.setCookie(cookie);

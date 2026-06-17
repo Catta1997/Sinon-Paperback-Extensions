@@ -7,6 +7,7 @@ import {
   type Cookie,
   CookieStorageInterceptor,
   type Extension,
+  type Request,
   type MangaProviding,
   type PagedResults,
   type SearchQuery,
@@ -45,6 +46,18 @@ export class RokuHentaiExtension implements RokuHentaiImplementation {
   }
 
   async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
+    for (const cookie of cookies) {
+      if (cookie.name == "cf_clearance") {
+        this.cookieStorageInterceptor.setCookie(cookie);
+      }
+    }
+  }
+
+  async cloudflareBypassCompleted(
+    _request: Request,
+    cookies: Cookie[],
+    _localStorage: Record<string, string>,
+  ): Promise<void> {
     for (const cookie of cookies) {
       if (cookie.name == "cf_clearance") {
         this.cookieStorageInterceptor.setCookie(cookie);
