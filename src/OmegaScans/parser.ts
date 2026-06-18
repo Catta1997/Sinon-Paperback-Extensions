@@ -10,6 +10,9 @@ import {
 } from "@paperback/types";
 import { OmegaScansAPI } from "./network";
 import type { OmegaScansMetadata } from "./model";
+//import {fixVoidElements} from "../novelUtils";
+//import { load } from "cheerio";
+import { decodeHTML } from "entities";
 
 export class JsonParser {
   api = new OmegaScansAPI();
@@ -18,14 +21,14 @@ export class JsonParser {
     const manga = await this.api.getMangaInfo(mangaId);
     const info: MangaInfo = {
       thumbnailUrl: manga.thumbnail,
-      synopsis: manga.description,
+      synopsis: decodeHTML(manga.description).replace(/<[^>]*>/g, ""),
       primaryTitle: manga.title,
       secondaryTitles: [manga.alternative_names],
       contentRating: ContentRating.ADULT,
       contentType: manga.series_type === "Comic" ? "comic" : "novel",
       status: manga.status,
       artist: manga.studio,
-      rating: manga.rating,
+      rating: manga.rating / 10,
       additionalInfo: { id: manga.id.toString() },
       tagGroups: [
         {
@@ -56,7 +59,7 @@ export class JsonParser {
       mangaId: `${element.series_slug}`,
       imageUrl: element.thumbnail,
       title: element.title,
-      summary: element.description,
+      summary: decodeHTML(element.description).replace(/<[^>]*>/g, ""),
       ContentRating: ContentRating.ADULT,
     }));
     return { items: sections, metadata: metadata };
@@ -70,19 +73,32 @@ export class JsonParser {
     const chapterList: Chapter[] = [];
     chapters.data.forEach((chapter, index) => {
       if (chapter.price === 0) {
+        const number = Number(chapter.chapter_slug.split("chapter-")[1]);
         chapterList.push({
           chapterId: chapter.chapter_slug,
-          chapNum: index,
+          chapNum: Number.isNaN(number) ? index : number,
+          volume: 0,
+          sortingIndex: Number.isNaN(number) ? index : number,
           title: chapter.chapter_title,
           langCode: "en",
           creationDate: new Date(chapter.created_at),
+          publishDate: new Date(chapter.created_at),
           sourceManga: sourceManga,
         });
       }
     });
     return chapterList;
   }
-
+  /*
+  async getNovel(mangaSlug: string, chapterSlug: string): Promise<ChapterDetails> {
+    return {
+      type: "html",
+      id: chapterSlug,
+      mangaId:mangaSlug,
+      html: "",
+    };
+  }
+ */
   async getMangaPages(mangaSlug: string, chapterSlug: string): Promise<ChapterDetails> {
     const manga = await this.api.getMangaPages(mangaSlug, chapterSlug);
     return {

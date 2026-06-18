@@ -47,7 +47,7 @@ export class OmegaScansExtension implements OmegaScansImplementation {
   }
   async getDiscoverSectionItems(
     section: DiscoverSection,
-    metadata?: OmegaScansMetadata  ,
+    metadata?: OmegaScansMetadata,
   ): Promise<PagedResults<DiscoverSectionItem>> {
     const page = metadata?.page ?? 1;
     switch (section.id) {
@@ -105,6 +105,7 @@ export class OmegaScansExtension implements OmegaScansImplementation {
       return this.parser.getMangaPages(chapter.sourceManga.mangaId, chapter.chapterId);
     } else {
       return { id: chapter.chapterId, mangaId: chapter.sourceManga.mangaId, pages: [] };
+      // return this.parser.getNovel(chapter.sourceManga.mangaId, chapter.chapterId);
     }
   }
 

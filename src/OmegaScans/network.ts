@@ -1,9 +1,4 @@
-import {
-  URL,
-  PaperbackInterceptor,
-  type Request,
-  type Response,
-} from "@paperback/types";
+import { URL, PaperbackInterceptor, type Request, type Response } from "@paperback/types";
 import { CompositeInterceptor } from "paperback-interceptors";
 import {
   type ApiRequestConfig,
@@ -96,7 +91,13 @@ export class OmegaScansAPI {
     };
     return this.buildApiRequest<SectionSeries>(params);
   }
-
+  /*
+  async getNovel(mangaSlug: string, chapterSlug: string) {
+    const url = `https://omegascans.org/series/${mangaSlug}/${chapterSlug}`;
+    const html = await Application.scheduleRequest({url:url,method:"GET"})
+    return Application.arrayBufferToUTF8String(html[1]);
+  }
+ */
   async getMangaPages(mangaSlug: string, chapterSlug: string) {
     const params: ApiRequestConfig = {
       path: ["chapter", `${mangaSlug}`, `${chapterSlug}`],
