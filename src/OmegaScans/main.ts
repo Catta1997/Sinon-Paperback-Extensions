@@ -3,9 +3,6 @@ import {
   type Chapter,
   type ChapterDetails,
   type ChapterProviding,
-  type CloudflareBypassRequestProviding,
-  type Cookie,
-  CookieStorageInterceptor,
   type DiscoverSection,
   type DiscoverSectionItem,
   type DiscoverSectionProviding,
@@ -13,24 +10,37 @@ import {
   type Extension,
   type MangaProviding,
   type PagedResults,
-  type Request,
   type SearchQuery,
   type SearchResultItem,
   type SearchResultsProviding,
+  type SortingOption,
   type SourceManga,
 } from "@paperback/types";
 import { MainInterceptor } from "./network";
-import type { OmegaScansMetadata } from "./model";
+import type { OmegaScansMetadata, OmegaScansSearchMetadata } from "./model";
 import { JsonParser } from "./parser";
+import OmegaScansAdvancedSearchForm from "./search";
 
 type OmegaScansImplementation = Extension &
   SearchResultsProviding &
   MangaProviding &
   ChapterProviding &
-  DiscoverSectionProviding &
-  CloudflareBypassRequestProviding;
+  DiscoverSectionProviding;
 
 export class OmegaScansExtension implements OmegaScansImplementation {
+  async getAdvancedSearchForm(searchQuery: SearchQuery<OmegaScansSearchMetadata>) {
+    return new OmegaScansAdvancedSearchForm(searchQuery);
+  }
+  async getSortingOptions(_query: SearchQuery<OmegaScansSearchMetadata>): Promise<SortingOption[]> {
+    return [
+      { id: "$", label: "Default" },
+      { id: "latest$asc", label: "Latest ↑" },
+      { id: "latest$desc", label: "Latest ↓" },
+      { id: "day_views$asc", label: "Daily Views ↑" },
+      { id: "day_views$desc", label: "Daily Views ↓" },
+    ];
+  }
+
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return [
       {
@@ -43,18 +53,38 @@ export class OmegaScansExtension implements OmegaScansImplementation {
         title: "Latest Novel",
         type: DiscoverSectionType.featured,
       },
+      {
+        id: "genres",
+        title: "Genres",
+        type: DiscoverSectionType.genres,
+      },
+      {
+        id: "trendingDaily",
+        title: "Trending Daily",
+        type: DiscoverSectionType.prominentCarousel,
+      },
+      {
+        id: "trendingWeekly",
+        title: "Trending Weekly",
+        type: DiscoverSectionType.prominentCarousel,
+      },
     ];
   }
   async getDiscoverSectionItems(
     section: DiscoverSection,
     metadata?: OmegaScansMetadata,
   ): Promise<PagedResults<DiscoverSectionItem>> {
-    const page = metadata?.page ?? 1;
     switch (section.id) {
       case "latestComic":
-        return this.parser.getSections("Comic", page, "latest", metadata);
+        return this.parser.getSections("Comic", "latest", metadata);
       case "latestNovel":
-        return this.parser.getSections("Novel", page, "latest", metadata);
+        return this.parser.getSections("Novel", "latest", metadata);
+      case "trendingDaily":
+        return this.parser.getTrendingSections("daily");
+      case "trendingWeekly":
+        return this.parser.getTrendingSections("weekly");
+      case "genres":
+        return this.parser.getGenresSections();
       default:
         return { items: [], metadata: metadata };
     }
@@ -65,35 +95,11 @@ export class OmegaScansExtension implements OmegaScansImplementation {
     bufferInterval: 1,
     ignoreImages: true,
   });
-  cookieStorageInterceptor = new CookieStorageInterceptor({
-    storage: "stateManager",
-  });
   mainInterceptor = new MainInterceptor("main");
   parser = new JsonParser();
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
-    this.cookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
-  }
-
-  async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
-    for (const cookie of cookies) {
-      if (cookie.name == "cf_clearance") {
-        this.cookieStorageInterceptor.setCookie(cookie);
-      }
-    }
-  }
-
-  async cloudflareBypassCompleted(
-    _request: Request,
-    cookies: Cookie[],
-    _localStorage: Record<string, string>,
-  ): Promise<void> {
-    for (const cookie of cookies) {
-      if (cookie.name == "cf_clearance") {
-        this.cookieStorageInterceptor.setCookie(cookie);
-      }
-    }
   }
 
   getMangaDetails(mangaId: string): Promise<SourceManga> {
@@ -104,8 +110,7 @@ export class OmegaScansExtension implements OmegaScansImplementation {
     if (chapter.sourceManga.mangaInfo.contentType === "comic") {
       return this.parser.getMangaPages(chapter.sourceManga.mangaId, chapter.chapterId);
     } else {
-      return { id: chapter.chapterId, mangaId: chapter.sourceManga.mangaId, pages: [] };
-      // return this.parser.getNovel(chapter.sourceManga.mangaId, chapter.chapterId);
+      return this.parser.getNovel(chapter.sourceManga.mangaId, chapter.chapterId);
     }
   }
 
@@ -114,10 +119,11 @@ export class OmegaScansExtension implements OmegaScansImplementation {
   }
 
   getSearchResults(
-    query: SearchQuery<{}>,
+    query: SearchQuery<OmegaScansSearchMetadata>,
     metadata: OmegaScansMetadata,
+    sortingOption: SortingOption,
   ): Promise<PagedResults<SearchResultItem>> {
-    return this.parser.getSearchResult(query.title, metadata);
+    return this.parser.getSearchResult(query, metadata, sortingOption);
   }
 }
 

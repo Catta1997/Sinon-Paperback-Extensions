@@ -1,6 +1,13 @@
-export const DOMAIN = "https://api.omegascans.org";
+import type { JSONObject } from "@paperback/types";
+
+export const API = "https://api.omegascans.org";
 
 export type OmegaScansMetadata = { page: number };
+
+export interface OmegaScansSearchMetadata extends JSONObject {
+  tags_ids?: string[];
+  series_type?: string[];
+}
 
 export interface ChapterPages {
   chapter: {
@@ -13,6 +20,7 @@ export interface ElementInfo {
   id: number;
   title: string;
   series_slug: string;
+  author?: string;
   thumbnail: string;
   description: string;
   series_type: string;
@@ -50,7 +58,8 @@ export interface Trending {
   latest_chapter: null | string;
 }
 
-export interface SectionSeries {
+export interface SearchResult {
+  meta: { last_page: number };
   data: SectionElement[];
 }
 
@@ -62,6 +71,8 @@ interface SectionElement {
   created_at: string;
   updated_at: string;
   series_slug: string;
+  rating?: number;
+  status?: string;
   free_chapters: ChapterElement[];
 }
 
@@ -71,6 +82,13 @@ export interface ApiRequestConfig {
   headers?: Record<string, string>;
 }
 
-export interface SearchResult extends SectionSeries {
-  meta: { last_page: number };
+export interface Tags {
+  id: number;
+  name: string;
 }
+
+export interface NovelContent {
+  chapter: { chapter_content: string };
+}
+
+export type Info = { symbol: string; text: string };

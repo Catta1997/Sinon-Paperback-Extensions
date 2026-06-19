@@ -3,14 +3,13 @@ import { ContentRating, type ExtensionInfo, SourceIntents } from "@paperback/typ
 export default {
   name: "OmegaScans",
   description: "Extension that pulls content from Omegascans.org/",
-  version: "1.0.0-alpha.2",
+  version: "1.0.0-alpha.3",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
   capabilities: [
     SourceIntents.SEARCH_RESULT_PROVIDING |
       SourceIntents.CHAPTER_PROVIDING |
-      SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
-    SourceIntents.DISCOVER_SECTION_PROVIDING,
+      SourceIntents.DISCOVER_SECTION_PROVIDING,
   ],
   badges: [],
   developers: [

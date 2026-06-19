@@ -1,13 +1,23 @@
-import { URL, PaperbackInterceptor, type Request, type Response } from "@paperback/types";
+import {
+  URL,
+  PaperbackInterceptor,
+  type Request,
+  type Response,
+  type SearchQuery,
+  type SortingOption,
+} from "@paperback/types";
 import { CompositeInterceptor } from "paperback-interceptors";
 import {
   type ApiRequestConfig,
   type ChapterList,
   type ChapterPages,
-  DOMAIN,
+  API,
   type ElementInfo,
+  type NovelContent,
+  type OmegaScansSearchMetadata,
   type SearchResult,
-  type SectionSeries,
+  type Tags,
+  type Trending,
 } from "./model";
 
 export class MainInterceptor extends PaperbackInterceptor {
@@ -16,7 +26,7 @@ export class MainInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
-      referer: DOMAIN,
+      referer: API,
       "user-agent": await Application.getDefaultUserAgent(),
     };
     return request;
@@ -43,7 +53,7 @@ export class OmegaScansAPI {
   }
 
   private async buildApiRequest<T>(api: ApiRequestConfig): Promise<T> {
-    const url = new URL(DOMAIN);
+    const url = new URL(API);
     const paths = Array.isArray(api.path) ? api.path : [api.path];
     paths.forEach((p) => url.addPathComponent(p));
     if (api.query) {
@@ -89,15 +99,14 @@ export class OmegaScansAPI {
         orderBy: order,
       },
     };
-    return this.buildApiRequest<SectionSeries>(params);
+    return this.buildApiRequest<SearchResult>(params);
   }
-  /*
   async getNovel(mangaSlug: string, chapterSlug: string) {
-    const url = `https://omegascans.org/series/${mangaSlug}/${chapterSlug}`;
-    const html = await Application.scheduleRequest({url:url,method:"GET"})
-    return Application.arrayBufferToUTF8String(html[1]);
+    const params: ApiRequestConfig = {
+      path: ["chapter", `${mangaSlug}`, `${chapterSlug}`],
+    };
+    return this.buildApiRequest<NovelContent>(params);
   }
- */
   async getMangaPages(mangaSlug: string, chapterSlug: string) {
     const params: ApiRequestConfig = {
       path: ["chapter", `${mangaSlug}`, `${chapterSlug}`],
@@ -105,15 +114,43 @@ export class OmegaScansAPI {
     return this.buildApiRequest<ChapterPages>(params);
   }
 
-  async getSearchResult(query: string, page: number) {
+  async getSearchResult(
+    query: SearchQuery<OmegaScansSearchMetadata>,
+    page: number,
+    sortingOption: SortingOption,
+  ) {
+    const [sort, order] = sortingOption.id.split("$");
     const params: ApiRequestConfig = {
       path: ["query"],
       query: {
         adult: "true",
-        query_string: query,
+        query_string: query.title,
         page: page.toString(),
+        ...(order.length ? { order: order } : {}),
+        ...(sort.length ? { orderBy: sort } : {}),
+        ...(query.metadata?.tags_ids?.length
+          ? { tags_ids: `[${query.metadata.tags_ids.join(",")}]` }
+          : {}),
+        ...(query.metadata?.series_type ? { series_type: query.metadata.series_type } : {}),
       },
     };
     return this.buildApiRequest<SearchResult>(params);
+  }
+
+  async getTrending(type: string) {
+    const params: ApiRequestConfig = {
+      path: ["trending"],
+      query: {
+        type: type,
+      },
+    };
+    return this.buildApiRequest<Trending[]>(params);
+  }
+
+  async getTags() {
+    const params: ApiRequestConfig = {
+      path: ["tags"],
+    };
+    return this.buildApiRequest<Tags[]>(params);
   }
 }
