@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-18T17:36:57.451Z",
+  "buildTime": "2026-06-19T08:56:05.461Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.92",
     "types": "1.0.0-alpha.92"
@@ -304,12 +304,11 @@
     {
       "name": "OmegaScans",
       "description": "Extension that pulls content from Omegascans.org/",
-      "version": "1.0.0-alpha.2",
+      "version": "1.0.0-alpha.3",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
-        81,
-        4
+        69
       ],
       "badges": [],
       "developers": [
