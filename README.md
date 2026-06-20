@@ -14,6 +14,7 @@ Manga:
 - HastaTeamDDT (🇮🇹)
 - HentaiHand (🔞 | Multi-Language)
 - LupiTeam (🇮🇹)
+- OmegaScans (🔞)
 - PhoenixScans (🇮🇹)
 - RokuHentai (🔞 | Multi-Language)
 - TuttoAnimeManga (🇮🇹)
