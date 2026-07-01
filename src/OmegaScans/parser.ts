@@ -63,7 +63,10 @@ export class JsonParser {
       imageUrl: element.thumbnail,
       title: element.title,
       infoItems: [
-        { symbol: "star.fill", text: (Math.round((element.rating ?? 0) * 100) / 100 *2).toString() },
+        {
+          symbol: "star.fill",
+          text: ((Math.round((element.rating ?? 0) * 100) / 100) * 2).toString(),
+        },
         { symbol: "book.fill", text: element.status?.toString() ?? "" },
       ],
       summary: decodeHTML(element.description).replace(/<[^>]*>/g, ""),
@@ -158,7 +161,7 @@ export class JsonParser {
       items: manga.data.map((item) => ({
         mangaId: item.series_slug,
         title: item.title,
-        subtitle: `★ ${(Math.round((item.rating ?? 0) * 100) / 100) *2}`,
+        subtitle: `★ ${(Math.round((item.rating ?? 0) * 100) / 100) * 2}`,
         imageUrl: item.thumbnail,
         contentRating: ContentRating.ADULT,
       })),

@@ -26,7 +26,6 @@ Novel:
 
 - NovelBuddy (ENG)
 - NovelsOnline (ENG)
-- LNori (ENG)
 
 ## Issues
 
