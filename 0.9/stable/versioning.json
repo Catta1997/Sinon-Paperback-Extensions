@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-06-29T10:21:01.617Z",
+  "buildTime": "2026-07-01T14:56:02.001Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.92",
     "types": "1.0.0-alpha.92"
@@ -203,30 +203,6 @@
       "id": "HentaiHand"
     },
     {
-      "name": "LNori",
-      "description": "Extension that pulls content from LNori.",
-      "version": "1.0.4",
-      "icon": "icon.png",
-      "contentRating": "SAFE",
-      "capabilities": [
-        101
-      ],
-      "badges": [
-        {
-          "label": "Novel",
-          "textColor": "#ffffff",
-          "backgroundColor": "#3baf4b"
-        }
-      ],
-      "developers": [
-        {
-          "name": "Catta1997",
-          "github": "https://github.com/Catta1997"
-        }
-      ],
-      "id": "LNori"
-    },
-    {
       "name": "LupiTeam",
       "description": "Extension that pulls manga from LupiTeam.",
       "version": "1.0.3",
@@ -284,7 +260,7 @@
       "icon": "icon.png",
       "contentRating": "SAFE",
       "capabilities": [
-        101
+        69
       ],
       "badges": [
         {
