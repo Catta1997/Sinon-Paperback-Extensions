@@ -2,7 +2,7 @@ import { basePbConfig } from "../EHentaiGeneral/config";
 
 const pbConfig = basePbConfig;
 
-pbConfig.name = "EHentai";
-pbConfig.description = "Extension that pulls content from EHentai.org";
+pbConfig.name = "ExHentai";
+pbConfig.description = "Extension that pulls content from ExHentai.org";
 
 export default pbConfig;

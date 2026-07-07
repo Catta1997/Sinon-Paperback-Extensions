@@ -1,4 +1,5 @@
 import {
+  getAccountID,
   getDefaultArtist,
   getDefaultCharacter,
   getDefaultCosplayer,
@@ -10,9 +11,20 @@ import {
   getDefaultParody,
   getDefLangStatus,
   languageFilterAll,
+  loggedIn,
   typeFilter,
 } from "../utils";
-import { Form, InputRow, Section, SelectRow, StepperRow } from "@paperback/types";
+import {
+  ButtonRow,
+  CloudflareError,
+  Form,
+  FormConfirmationError,
+  InputRow,
+  LabelRow,
+  Section,
+  SelectRow,
+  StepperRow,
+} from "@paperback/types";
 import { mainRateLimiter } from "../network";
 
 export class SettingsForm extends Form {
@@ -25,8 +37,30 @@ export class SettingsForm extends Form {
       id: tag.id,
       title: `${tag.flag} ${tag.value}`,
     }));
-
     return [
+      Section(
+        {
+          id: "account",
+          header: "Account Settings",
+        },
+        [
+          ButtonRow("login", {
+            title: "Login",
+            isHidden: loggedIn(),
+            onSelect: Application.Selector(this as SettingsForm, "handleLoginButton"),
+          }),
+          LabelRow("logged", {
+            title: "Logged in as",
+            subtitle: getAccountID(),
+            isHidden: !loggedIn(),
+          }),
+          ButtonRow("logout", {
+            title: "Logout",
+            isHidden: !loggedIn(),
+            onSelect: Application.Selector(this as SettingsForm, "handleLogoutButton"),
+          }),
+        ],
+      ),
       Section(
         {
           id: "update_settings",
@@ -146,6 +180,22 @@ export class SettingsForm extends Form {
         "512",
       ]
     );
+  }
+
+  async handleLoginButton(): Promise<void> {
+    throw new CloudflareError({ url: "https://e-hentai.org/bounce_login.php", method: "GET" });
+  }
+
+  async handleLogoutButton(): Promise<void> {
+    throw new FormConfirmationError(
+      Application.Selector(this as SettingsForm, "handleLogoutConfirm"),
+      "Do you want to logout?",
+    );
+  }
+
+  async handleLogoutConfirm() {
+    Application.setSecureState(undefined, "ipb_pass_hash");
+    Application.setSecureState(undefined, "ipb_member_id");
   }
 
   async handleDefLangStatusChange(value: string[]): Promise<void> {

@@ -176,6 +176,7 @@ type BaseMetadata = {
   rating?: number;
   minPages?: number;
   maxPages?: number;
+  favoriteID?: string;
 };
 type FilterMetadata = Partial<Record<FilterKey, string[]>>;
 export type SearchMetadata = BaseMetadata & FilterMetadata;
@@ -224,7 +225,7 @@ export function getDefaultMixed() {
 export function getDefaultGroup() {
   return ((Application.getState("_group") as string | undefined) ?? "").split(",").filter(Boolean);
 }
-export function getDefaultMetadata(): SearchMetadata {
+export function getDefaultMetadata(favoriteID: string = ""): SearchMetadata {
   const character = getDefaultCharacter();
   const female = getDefaultFemale();
   const male = getDefaultMale();
@@ -248,5 +249,18 @@ export function getDefaultMetadata(): SearchMetadata {
     ...(parody.length > 0 && { parody }),
     ...(mixed.length > 0 && { mixed }),
     ...(group.length > 0 && { group }),
+    ...(favoriteID.length > 0 && { favoriteID }),
   };
+}
+
+export function getAccountID() {
+  return (Application.getSecureState("ipb_member_id") as string) ?? "";
+}
+
+export function getPassHash() {
+  return (Application.getSecureState("ipb_pass_hash") as string) ?? "";
+}
+
+export function loggedIn() {
+  return getPassHash().length > 0 && getAccountID().length > 0;
 }

@@ -7,7 +7,7 @@ import {
   type SearchQuery,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { type Metadata, type SearchMetadata } from "./utils";
+import { getAccountID, getPassHash, type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
 import { CompositeInterceptor, Interceptor } from "paperback-interceptors";
 
@@ -43,10 +43,19 @@ export class MainInterceptor extends PaperbackInterceptor {
         }
       }
     } else if (request.url.includes(`${BASE_URL}/g/`)) {
-      request.headers = { Cookie: "nw=1" };
+      request.cookies = { nw: "1" };
     } else {
-      request.headers = { Cookie: "sl=dm_2" };
+      request.cookies = { sl: "dm_2" };
     }
+    request.headers = {
+      "user-agent": await Application.getDefaultUserAgent(),
+      ...request.headers,
+    };
+    request.cookies = {
+      ipb_member_id: getAccountID(),
+      ipb_pass_hash: getPassHash(),
+      ...request.cookies,
+    };
     return request;
   }
 
@@ -78,6 +87,16 @@ export class Requests {
     });
     return query;
   }
+
+  async favoriteRequest(favLink: string) {
+    const data = await Application.scheduleRequest({
+      url: favLink,
+      method: "GET",
+    });
+
+    return Application.arrayBufferToUTF8String(data[1]);
+  }
+
   async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
@@ -187,6 +206,25 @@ export class Requests {
       method: "GET",
     });
     return Application.arrayBufferToUTF8String(data[1]);
+  }
+  async getFevList() {
+    const data = await Application.scheduleRequest({
+      url: `${BASE_URL}/favorites.php`,
+      method: "GET",
+    });
+    const html = Application.arrayBufferToUTF8String(data[1]);
+    const $ = cheerio.load(html);
+    const favorites = $("div.fp")
+      .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
+      .map((_, el) => {
+        const $el = $(el);
+        return {
+          id: $el.attr("onclick")?.match(/'([^']+)'/)?.[1] ?? "",
+          value: $el.children("div").eq(2).text().trim(),
+        };
+      })
+      .get();
+    return favorites;
   }
 }
 

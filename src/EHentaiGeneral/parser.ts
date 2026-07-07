@@ -12,7 +12,13 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { Requests } from "./network";
-import { type GalleryInfo, getLangFlag, type Metadata, type SearchMetadata } from "./utils";
+import {
+  type GalleryInfo,
+  getDefaultMetadata,
+  getLangFlag,
+  type Metadata,
+  type SearchMetadata,
+} from "./utils";
 import { BASE_URL } from "./main";
 
 const network = new Requests();
@@ -86,7 +92,12 @@ export class Parser {
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
-    const html = await network.searchRequest(query, metadata);
+    let html = "";
+    if (query.metadata?.favoriteID && query.metadata.favoriteID.length > 0) {
+      html = await network.favoriteRequest(query.metadata.favoriteID);
+    } else {
+      html = await network.searchRequest(query, metadata);
+    }
     const $ = cheerio.load(html);
     const results: SearchResultItem[] = this.parseTable($).map((item) => ({
       mangaId: item.url?.replaceAll(`${BASE_URL}/g/`, "") ?? "",
@@ -122,6 +133,21 @@ export class Parser {
   async parseRecent() {
     const html = await network.getSection(false);
     return this.parseDiscover(html, "simpleCarouselItem");
+  }
+
+  async parseFavorite(): Promise<PagedResults<DiscoverSectionItem>> {
+    const favs = await network.getFevList();
+    return {
+      items: favs.map((favorite) => ({
+        type: "genresCarouselItem",
+        searchQuery: {
+          title: "",
+          metadata: getDefaultMetadata(favorite.id),
+        },
+        name: favorite.value,
+        contentRating: ContentRating.ADULT,
+      })),
+    };
   }
 
   private async parseDiscover(
@@ -295,8 +321,8 @@ export class Parser {
 
     for (const html of htmlPages) {
       const $ = cheerio.load(html);
-      $("a[href^='https://e-hentai.org/s/']").each((_, el) => {
-        if (results.length >= totalImages) return;
+      $(`a[href^="${BASE_URL}/s/"]`).each((_, el) => {
+        if (results.length >= totalImages) return false;
         const url = $(el).attr("href");
         if (url) results.push(url);
       });

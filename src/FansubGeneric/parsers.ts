@@ -14,7 +14,7 @@ import {
 } from "@paperback/types";
 import FansubGeneral from "./main";
 import type { ComicDetailResponse, ComicListItem, ComicsListResponse } from "./models";
-import type { SearchMetadata } from "../EHentai/utils";
+import type { SearchMetadata } from "../EHentaiGeneral/utils";
 
 export class FansubGeneralParsers {
   async parseSearchResults(

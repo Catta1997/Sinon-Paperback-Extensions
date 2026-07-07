@@ -13,7 +13,7 @@ import * as cheerio from "cheerio";
 import { Requests } from "./network";
 import { type MangaCardInfo, type RokuMetadata } from "./utils";
 import { DOMAIN } from "./main";
-import type { SearchMetadata } from "../EHentai/utils";
+import type { SearchMetadata } from "../EHentaiGeneral/utils";
 
 const requestMaker = new Requests();
 
