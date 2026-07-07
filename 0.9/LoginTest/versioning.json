@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-07-07T09:31:55.790Z",
+  "buildTime": "2026-07-07T09:41:04.398Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.92",
     "types": "1.0.0-alpha.92"
@@ -38,12 +38,16 @@
     },
     {
       "name": "EHentai",
-      "description": "Extension that pulls content from E-Hentai.",
-      "version": "1.0.9",
+      "description": "Extension that pulls content from EHentai.org",
+      "version": "1.1.1",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
-        101
+        16,
+        32,
+        4,
+        64,
+        1
       ],
       "badges": [],
       "developers": [
@@ -53,6 +57,28 @@
         }
       ],
       "id": "EHentai"
+    },
+    {
+      "name": "ExHentai",
+      "description": "Extension that pulls content from ExHentai.org",
+      "version": "1.1.1",
+      "icon": "icon.png",
+      "contentRating": "ADULT",
+      "capabilities": [
+        16,
+        32,
+        4,
+        64,
+        1
+      ],
+      "badges": [],
+      "developers": [
+        {
+          "name": "Catta1997",
+          "github": "https://github.com/Catta1997"
+        }
+      ],
+      "id": "ExHentai"
     },
     {
       "name": "FMTeam",
