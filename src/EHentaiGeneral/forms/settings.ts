@@ -11,7 +11,7 @@ import {
   getDefaultParody,
   getDefLangStatus,
   languageFilterAll,
-  loggedIn,
+  isLoggedIn,
   typeFilter,
 } from "../utils";
 import {
@@ -46,17 +46,17 @@ export class SettingsForm extends Form {
         [
           ButtonRow("login", {
             title: "Login",
-            isHidden: loggedIn(),
+            isHidden: isLoggedIn(),
             onSelect: Application.Selector(this as SettingsForm, "handleLoginButton"),
           }),
           LabelRow("logged", {
             title: "Logged in as",
             subtitle: getAccountID(),
-            isHidden: !loggedIn(),
+            isHidden: !isLoggedIn(),
           }),
           ButtonRow("logout", {
             title: "Logout",
-            isHidden: !loggedIn(),
+            isHidden: !isLoggedIn(),
             onSelect: Application.Selector(this as SettingsForm, "handleLogoutButton"),
           }),
         ],
@@ -72,7 +72,8 @@ export class SettingsForm extends Form {
             title: "Contents",
             subtitle: "Default value for content type, affect search and sections",
             value: this.getHideTypeStatus(),
-            options: types,
+            layout: "list",
+            items: types,
             minItemCount: 1,
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
@@ -100,7 +101,8 @@ export class SettingsForm extends Form {
             title: "Default Languages",
             subtitle: "Default languages",
             value: getDefLangStatus(),
-            options: languages,
+            layout: "list",
+            items: languages,
             minItemCount: 0,
             maxItemCount: languages.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleDefLangStatusChange"),
@@ -183,7 +185,11 @@ export class SettingsForm extends Form {
   }
 
   async handleLoginButton(): Promise<void> {
-    throw new CloudflareError({ url: "https://e-hentai.org/bounce_login.php", method: "GET" });
+    try {
+      throw new CloudflareError({ url: "https://e-hentai.org/bounce_login.php", method: "GET" });
+    } finally {
+      this.reloadForm();
+    }
   }
 
   async handleLogoutButton(): Promise<void> {
@@ -196,6 +202,7 @@ export class SettingsForm extends Form {
   async handleLogoutConfirm() {
     Application.setSecureState(undefined, "ipb_pass_hash");
     Application.setSecureState(undefined, "ipb_member_id");
+    this.reloadForm();
   }
 
   async handleDefLangStatusChange(value: string[]): Promise<void> {

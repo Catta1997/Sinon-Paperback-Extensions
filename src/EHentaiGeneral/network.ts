@@ -226,6 +226,40 @@ export class Requests {
       .get();
     return favorites;
   }
+
+  async getFavoriteSelected(mangaid: string) {
+    const [gid, t] = mangaid.split("/");
+    const page = await Application.scheduleRequest({
+      url: `https://e-hentai.org/gallerypopups.php?gid=${gid}&t=${t}&act=addfav`,
+      method: "GET",
+    });
+    const html = Application.arrayBufferToUTF8String(page[1]);
+    const $ = cheerio.load(html);
+    const favList = $('input[type="radio"][name="favcat"]');
+    if (favList.length === 10) {
+      return {
+        id: "",
+        value: "",
+      };
+    }
+    const checked = favList.filter("[checked]");
+    if (checked.length) {
+      const id = checked.attr("id")!;
+
+      const labelDiv = $(`div[onclick*="${id}"]`)
+        .filter((_, el) => $(el).text().trim().length > 0)
+        .first();
+      return {
+        id: id.replace("fav", "https://exhentai.org/favorites.php?favcat="),
+        value: labelDiv.text().trim(),
+      };
+    } else {
+      return {
+        id: "",
+        value: "",
+      };
+    }
+  }
 }
 
 export class ImageURLInterceptor extends Interceptor {

@@ -14,16 +14,26 @@ import {
   type Cookie,
   type ExtensionImpl,
   CookieStorageInterceptor,
+  type ManagedCollection,
+  type ManagedCollectionChangeset,
+  type SortingOption,
+  type UpdateManager,
+  type ChapterReadActionQueueProcessingResult,
+  type MangaProgress,
+  type TrackedMangaChapterReadAction,
 } from "@paperback/types";
 import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
-import { MainInterceptor, mainRateLimiter } from "./network";
+import { MainInterceptor, mainRateLimiter, Requests } from "./network";
 import { Parser } from "./parser";
 import { getAccountID, getDefaultMetadata, type Metadata, type SearchMetadata } from "./utils";
 import { basePbConfig } from "./config";
+import { FavoriteForm } from "./forms/favorite";
 
 const parser = new Parser();
+const network = new Requests();
 export let BASE_URL = "";
+
 export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfig> {
   async getSettingsForm(): Promise<Form> {
     return new SettingsForm();
@@ -99,6 +109,7 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   ): Promise<AdvancedSearchForm> {
     return new EHentaiAdvancedSearchForm(searchQuery);
   }
+
   getSearchResults(
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
@@ -112,6 +123,7 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
     return parser.parseChapters(sourceManga);
   }
+
   getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
     return parser.scrapeAllChapterPages(chapter);
   }
@@ -120,9 +132,27 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   cookieStorageInterceptor = new CookieStorageInterceptor({
     storage: "stateManager",
   });
+
   protected constructor(domain: string) {
     BASE_URL = domain;
   }
+
+  async getMangaProgressManagementForm(sourceManga: SourceManga): Promise<Form> {
+    const faves = await network.getFevList();
+    const selected = await network.getFavoriteSelected(sourceManga.mangaId);
+    console.log(JSON.stringify(selected, null, 2));
+    return new FavoriteForm(faves, selected, sourceManga.mangaId);
+  }
+  async getMangaProgress(sourceManga: SourceManga): Promise<MangaProgress | undefined> {
+    const selected = await network.getFavoriteSelected(sourceManga.mangaId);
+    throw new Error(selected.value);
+  }
+  processChapterReadActionQueue(
+    actions: TrackedMangaChapterReadAction[],
+  ): Promise<ChapterReadActionQueueProcessingResult> {
+    throw new Error("Method not implemented.");
+  }
+
   async initialise(): Promise<void> {
     mainRateLimiter.registerInterceptor();
     this.mainInterceptor.registerInterceptor();

@@ -261,6 +261,6 @@ export function getPassHash() {
   return (Application.getSecureState("ipb_pass_hash") as string) ?? "";
 }
 
-export function loggedIn() {
+export function isLoggedIn() {
   return getPassHash().length > 0 && getAccountID().length > 0;
 }
