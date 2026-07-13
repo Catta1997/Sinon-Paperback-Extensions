@@ -32,7 +32,7 @@
     "oxlint-tsgolint": "^0.24.0",
     "paperback-interceptors": "github:Catta1997/paperback-interceptors",
     "stemmer": "^2.0.1",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "upng-js": "^2.1.0"
   },
   "repositoryName": "Sinon's Extensions (0.9)"
