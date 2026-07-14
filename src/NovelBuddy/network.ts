@@ -22,8 +22,8 @@ import { fixVoidElements } from "../novelUtils";
 export class NovelBuddyNetwork {
   constructor() {}
 
-  private api = "https://api.novelbuddy.com/";
-  private domain = "https://novelbuddy.com/";
+  private api = "https://api.novelbuddy.me/";
+  private domain = "https://novelbuddy.me/";
   getGenresData(genres: Record<string, "included" | "excluded">) {
     return Object.entries(genres).reduce(
       (acc, [genre, status]) => {
