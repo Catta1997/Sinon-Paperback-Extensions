@@ -16,7 +16,7 @@ import {
 } from "../utils";
 import {
   ButtonRow,
-  CloudflareError,
+  type Cookie,
   Form,
   FormConfirmationError,
   InputRow,
@@ -24,6 +24,7 @@ import {
   Section,
   SelectRow,
   StepperRow,
+  WebViewRow,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 
@@ -44,10 +45,15 @@ export class SettingsForm extends Form {
           header: "Account Settings",
         },
         [
-          ButtonRow("login", {
+          WebViewRow("loginRow", {
             title: "Login",
+            request: {
+              url: "https://e-hentai.org/bounce_login.php",
+              method: "GET",
+            },
             isHidden: isLoggedIn(),
-            onSelect: Application.Selector(this as SettingsForm, "handleLoginButton"),
+            onComplete: Application.Selector(this as SettingsForm, "handleLogin"),
+            onCancel: Application.Selector(this as SettingsForm, "handleLoginCancel"),
           }),
           LabelRow("logged", {
             title: "Logged in as",
@@ -184,12 +190,23 @@ export class SettingsForm extends Form {
     );
   }
 
-  async handleLoginButton(): Promise<void> {
-    try {
-      throw new CloudflareError({ url: "https://e-hentai.org/bounce_login.php", method: "GET" });
-    } finally {
-      this.reloadForm();
-    }
+  async handleLogin(cookies: Cookie[]): Promise<void> {
+    console.log("Login")
+    cookies.forEach((cookie) => {
+      console.log(cookie.name)
+      if (cookie.name == "ipb_member_id") {
+        Application.setSecureState(cookie.value, "ipb_member_id");
+      }
+      if (cookie.name == "ipb_pass_hash") {
+        Application.setSecureState(cookie.value, "ipb_pass_hash");
+      }
+    });
+    this.reloadForm();
+  }
+
+  async handleLoginCancel(): Promise<void> {
+    console.log("LoginCancel")
+    this.reloadForm();
   }
 
   async handleLogoutButton(): Promise<void> {

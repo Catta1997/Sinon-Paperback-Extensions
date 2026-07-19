@@ -11,7 +11,7 @@ import {
   type SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { Requests } from "./network";
+import { Network } from "./network";
 import {
   type GalleryInfo,
   getDefaultMetadata,
@@ -21,7 +21,7 @@ import {
 } from "./utils";
 import { BASE_URL } from "./main";
 
-const network = new Requests();
+const network = new Network();
 export class Parser {
   private capitalLetter(str: string): string {
     return str
@@ -286,9 +286,9 @@ export class Parser {
     const posted = this.getRow($, "Posted:");
     const lengthRaw = this.getRow($, "Length:");
     const favsRaw = this.getRow($, "Favorited:");
-    const ratingAverage = parseFloat(
-      $("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim(),
-    );
+    const ratingAverage =
+      parseFloat($("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim()) ??
+      0.0;
     return {
       category: category,
       uploader: {
@@ -330,5 +330,23 @@ export class Parser {
     }
 
     return results;
+  }
+
+  async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
+    let html = await network.favoriteRequest(favoriteID);
+    const $ = cheerio.load(html);
+    const results = this.parseTable($).map((item) => ({
+      mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
+      title: this.parseTitle(item.title),
+    }));
+    if (results.length === 0) {
+      return [];
+    }
+    const mangas: SourceManga[] = [];
+    for (const item of results) {
+      mangas.push(await this.parseMangaDetail(item.mangaId));
+    }
+    await this.parseMangaDetail(results[0].mangaId);
+    return mangas;
   }
 }

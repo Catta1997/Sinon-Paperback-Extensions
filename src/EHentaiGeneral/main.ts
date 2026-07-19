@@ -16,22 +16,23 @@ import {
   CookieStorageInterceptor,
   type ManagedCollection,
   type ManagedCollectionChangeset,
-  type SortingOption,
-  type UpdateManager,
-  type ChapterReadActionQueueProcessingResult,
-  type MangaProgress,
-  type TrackedMangaChapterReadAction,
 } from "@paperback/types";
 import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
-import { MainInterceptor, mainRateLimiter, Requests } from "./network";
+import { MainInterceptor, mainRateLimiter, Network, ImageURLInterceptor } from "./network";
 import { Parser } from "./parser";
-import { getAccountID, getDefaultMetadata, type Metadata, type SearchMetadata } from "./utils";
+import {
+  getAccountID,
+  getDefaultMetadata,
+  isLoggedIn,
+  type Metadata,
+  type SearchMetadata,
+} from "./utils";
 import { basePbConfig } from "./config";
-import { FavoriteForm } from "./forms/favorite";
+import { addToFavorite, deleteFromFavorite } from "./collections";
 
 const parser = new Parser();
-const network = new Requests();
+const network = new Network();
 export let BASE_URL = "";
 
 export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfig> {
@@ -95,12 +96,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
       if (cookie.name == "cf_clearance") {
         this.cookieStorageInterceptor.setCookie(cookie);
       }
-      if (cookie.name == "ipb_member_id") {
-        Application.setSecureState(cookie.value, "ipb_member_id");
-      }
-      if (cookie.name == "ipb_pass_hash") {
-        Application.setSecureState(cookie.value, "ipb_pass_hash");
-      }
     });
   }
 
@@ -129,6 +124,7 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   }
 
   mainInterceptor = new MainInterceptor("main");
+  imageInterceptor = new ImageURLInterceptor("image");
   cookieStorageInterceptor = new CookieStorageInterceptor({
     storage: "stateManager",
   });
@@ -137,25 +133,37 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     BASE_URL = domain;
   }
 
-  async getMangaProgressManagementForm(sourceManga: SourceManga): Promise<Form> {
-    const faves = await network.getFevList();
-    const selected = await network.getFavoriteSelected(sourceManga.mangaId);
-    console.log(JSON.stringify(selected, null, 2));
-    return new FavoriteForm(faves, selected, sourceManga.mangaId);
+  async getManagedLibraryCollections(): Promise<ManagedCollection[]> {
+    if (!isLoggedIn()) {
+      throw new Error("You need to be logged in");
+    }
+    const favorites = await network.getFevList();
+    return favorites.map((fav) => ({ id: fav.id, title: fav.value }));
   }
-  async getMangaProgress(sourceManga: SourceManga): Promise<MangaProgress | undefined> {
-    const selected = await network.getFavoriteSelected(sourceManga.mangaId);
-    throw new Error(selected.value);
+
+  async commitManagedCollectionChanges(changeset: ManagedCollectionChangeset): Promise<void> {
+    if (!isLoggedIn()) {
+      throw new Error("You need to be logged in");
+    }
+    for (const manga of changeset.additions) {
+      await addToFavorite(manga.mangaId, changeset.collection.id);
+    }
+    for (const manga of changeset.deletions) {
+      await deleteFromFavorite(manga.mangaId);
+    }
   }
-  processChapterReadActionQueue(
-    actions: TrackedMangaChapterReadAction[],
-  ): Promise<ChapterReadActionQueueProcessingResult> {
-    throw new Error("Method not implemented.");
+
+  getSourceMangaInManagedCollection(managedCollection: ManagedCollection): Promise<SourceManga[]> {
+    if (!isLoggedIn()) {
+      throw new Error("You need to be logged in");
+    }
+    return parser.parseFavoriteList(managedCollection.id);
   }
 
   async initialise(): Promise<void> {
     mainRateLimiter.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
+    this.imageInterceptor.registerInterceptor();
     this.cookieStorageInterceptor.registerInterceptor();
   }
 }

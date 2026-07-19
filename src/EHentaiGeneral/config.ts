@@ -12,7 +12,8 @@ export const basePbConfig = {
     SourceIntents.DISCOVER_SECTION_PROVIDING,
     SourceIntents.SEARCH_RESULT_PROVIDING,
     SourceIntents.CHAPTER_PROVIDING,
-    SourceIntents.PROGRESS_PROVIDING,
+    //   SourceIntents.PROGRESS_PROVIDING,
+    SourceIntents.MANAGED_COLLECTION_PROVIDING,
   ],
   badges: [],
   developers: [

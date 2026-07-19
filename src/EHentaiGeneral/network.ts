@@ -5,11 +5,11 @@ import {
   type Request,
   type Response,
   type SearchQuery,
+  CloudflareError,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { getAccountID, getPassHash, type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL } from "./main";
-import { CompositeInterceptor, Interceptor } from "paperback-interceptors";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
   numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
@@ -17,8 +17,6 @@ export const mainRateLimiter = new BasicRateLimiter("main", {
   ignoreImages: true,
 });
 export class MainInterceptor extends PaperbackInterceptor {
-  interceptors = new CompositeInterceptor([new ImageURLInterceptor()]);
-
   private validImgExtensions = [".jpg", ".jpeg", ".png", ".webp"];
 
   isImageUrl(url: string): boolean {
@@ -31,7 +29,6 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
   }
   override async interceptRequest(request: Request): Promise<Request> {
-    // image URL
     if (this.isImageUrl(request.url)) {
       if (request.headers && request.headers["nl-link"]) {
         if (request.headers["first"]) {
@@ -64,11 +61,56 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    const cfMitigated = response.headers?.["cf-mitigated"];
+    if (cfMitigated === "challenge") {
+      throw new CloudflareError({
+        url: `https://forums.e-hentai.org/`,
+        method: request.method ?? "GET",
+        headers: {
+          "user-agent": await Application.getDefaultUserAgent(),
+        },
+      });
+    }
+    return data;
   }
 }
 
-export class Requests {
+export class ImageURLInterceptor extends PaperbackInterceptor {
+  override async interceptRequest(request: Request): Promise<Request> {
+    return request;
+  }
+  override async interceptResponse(
+    request: Request,
+    _response: Response,
+    data: ArrayBuffer,
+  ): Promise<ArrayBuffer> {
+    if (!request.url.includes(`${BASE_URL}/s/`)) {
+      return data;
+    }
+
+    const html = Application.arrayBufferToUTF8String(data);
+
+    const $ = cheerio.load(html);
+    const div = $("#i3");
+    const image = div.find("img#img");
+
+    const newPage = image.attr("onerror") ?? "";
+    const match = newPage.match(/'(\d+-\d+)'/);
+
+    if (match?.[1]) {
+      request.headers = {
+        "nl-link": `${request.url}?nl=${match[1]}`,
+        first: "1",
+      };
+    }
+
+    request.url = image.attr("src") ?? request.url;
+
+    return (await Application.scheduleRequest(request))[1];
+  }
+}
+
+export class Network {
   buildFilter(query: string, filter: { id: string; value: string[] }) {
     filter.value.forEach((filterValue) => {
       if (filterValue.startsWith("-")) {
@@ -214,7 +256,7 @@ export class Requests {
     });
     const html = Application.arrayBufferToUTF8String(data[1]);
     const $ = cheerio.load(html);
-    const favorites = $("div.fp")
+    return $("div.fp")
       .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
       .map((_, el) => {
         const $el = $(el);
@@ -224,7 +266,6 @@ export class Requests {
         };
       })
       .get();
-    return favorites;
   }
 
   async getFavoriteSelected(mangaid: string) {
@@ -259,37 +300,5 @@ export class Requests {
         value: "",
       };
     }
-  }
-}
-
-export class ImageURLInterceptor extends Interceptor {
-  protected async interceptResponse(
-    request: Request,
-    response: Response,
-    data: ArrayBuffer,
-  ): Promise<ArrayBuffer> {
-    if (!request.url.includes(`${BASE_URL}/s/`)) {
-      return data;
-    }
-
-    const html = Application.arrayBufferToUTF8String(data);
-
-    const $ = cheerio.load(html);
-    const div = $("#i3");
-    const image = div.find("img#img");
-
-    const newPage = image.attr("onerror") ?? "";
-    const match = newPage.match(/'(\d+-\d+)'/);
-
-    if (match?.[1]) {
-      request.headers = {
-        "nl-link": `${request.url}?nl=${match[1]}`,
-        first: "1",
-      };
-    }
-
-    request.url = image.attr("src") ?? request.url;
-
-    return (await Application.scheduleRequest(request))[1];
   }
 }
