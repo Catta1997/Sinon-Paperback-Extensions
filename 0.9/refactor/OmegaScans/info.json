@@ -1,1 +1,1 @@
-{"name":"OmegaScans","description":"Extension that pulls content from Omegascans.org/","version":"1.0.0-alpha.3","icon":"icon.png","contentRating":"ADULT","capabilities":[69],"badges":[],"developers":[{"name":"Catta1997","github":"https://github.com/Catta1997"}],"id":"OmegaScans"}
+{"name":"OmegaScans","description":"Extension that pulls content from Omegascans.org","version":"1.0.0-alpha.4","icon":"icon.png","contentRating":"ADULT","capabilities":[64,1,4],"badges":[],"developers":[{"name":"Catta1997","github":"https://github.com/Catta1997"}],"id":"OmegaScans"}
