@@ -11,11 +11,15 @@ import {
   type SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { Requests } from "./network";
-import { type GalleryInfo, getLangFlag, type Metadata, type SearchMetadata } from "./utils";
-import { BASE_URL } from "./main";
+import {
+  type GalleryInfo,
+  getDefaultMetadata,
+  getLangFlag,
+  type Metadata,
+  type SearchMetadata,
+} from "./utils";
+import { BASE_URL, network } from "./main";
 
-const network = new Requests();
 export class Parser {
   private capitalLetter(str: string): string {
     return str
@@ -40,6 +44,10 @@ export class Parser {
       lang: string;
       artist: string;
       subtitle: string;
+      category: string;
+      pages: string;
+      date:string;
+      rating: number
     }[] = [];
     $("tr")
       .has("td.gl1e")
@@ -48,8 +56,25 @@ export class Parser {
         const title = container.find("div.glink").text().trim();
         const url = container.find("a").first().attr("href") ?? "";
         const image = container.find("img").attr("src") ?? "";
+        const category = container.find(".gl3e .cn").text().trim();
+        const date = container.find("div[id^='posted_']").text().trim();
+        const pages = container.find(".gl3e > div")
+          .filter((_, el) => $(el).text().trim().endsWith("pages"))
+          .first()
+          .text()
+          .trim();
         let artist = "";
-        let lang = "";
+        let rating = 0
+        const style = container.find("div.ir").attr("style") ?? "";
+        const match = style.match(/background-position:\s*(-?\d+)px\s+(-?\d+)px/);
+        if (match) {
+          const x = parseInt(match[1], 10);       // 0
+          const y = Math.abs(parseInt(match[2], 10)); // 21
+          const xIndex = (x + 80) / 16;
+          const yOffset = Math.abs(y) === 21 ? 0.5 : 0;
+          rating = xIndex-yOffset;
+        }
+        let lang = `Japanese ${getLangFlag("japanese")}`;
         container.find("td.tc").each((i, td) => {
           if ($(td).text().trim() === "artist:") {
             artist = $(td).next("td").find("div").first().text().trim();
@@ -62,7 +87,7 @@ export class Parser {
               .get()
               .filter((text) => text && text.toLowerCase() !== "translated");
             lang = langTexts
-              .map((text) => getLangFlag(text))
+              .map((text) => `${text} ${getLangFlag(text)}`)
               .filter(Boolean)
               .join(" ");
           }
@@ -77,6 +102,10 @@ export class Parser {
           lang: lang,
           artist: artist,
           subtitle: subtitle,
+          pages: pages,
+          category: category,
+          date: date,
+          rating: rating
         });
       });
     return results;
@@ -86,7 +115,12 @@ export class Parser {
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
-    const html = await network.searchRequest(query, metadata);
+    let html = "";
+    if (query.metadata?.favoriteID && query.metadata.favoriteID.length > 0) {
+      html = await network.favoriteRequest(query.metadata.favoriteID);
+    } else {
+      html = await network.searchRequest(query, metadata);
+    }
     const $ = cheerio.load(html);
     const results: SearchResultItem[] = this.parseTable($).map((item) => ({
       mangaId: item.url?.replaceAll(`${BASE_URL}/g/`, "") ?? "",
@@ -116,26 +150,43 @@ export class Parser {
 
   async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
     const html = await network.getSection(true);
-    return this.parseDiscover(html, "prominentCarouselItem");
+    return this.parseDiscover(html);
   }
 
   async parseRecent() {
     const html = await network.getSection(false);
-    return this.parseDiscover(html, "simpleCarouselItem");
+    return this.parseDiscover(html);
   }
 
-  private async parseDiscover(
-    html: string,
-    type: "prominentCarouselItem" | "simpleCarouselItem",
-  ): Promise<PagedResults<DiscoverSectionItem>> {
+  async parseFavorite(): Promise<PagedResults<DiscoverSectionItem>> {
+    const favs = await network.getFevList();
+    return {
+      items: favs.map((favorite) => ({
+        type: "genresCarouselItem",
+        searchQuery: {
+          title: "",
+          metadata: getDefaultMetadata(favorite.id),
+        },
+        name: favorite.value,
+        contentRating: ContentRating.ADULT,
+      })),
+    };
+  }
+
+  private async parseDiscover(html: string): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
 
     return {
       items: this.parseTable($).map((item) => ({
-        type,
+        type: "featuredCarouselItem",
         mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
         title: this.parseTitle(item.title),
-        subtitle: item.subtitle,
+        supertitle: this.capitalLetter(item.artist),
+        summary: `Language: ${item.lang}\nCategory: ${item.category}\nDate: ${item.date}`,
+        infoItems: [
+          { symbol: "star.fill", text: String(item.rating) },
+          { symbol: "book.pages", text: item.pages },
+        ],
         imageUrl: item.image,
         contentRating: ContentRating.ADULT,
       })),
@@ -186,7 +237,7 @@ export class Parser {
         tags.map((t) => {
           if (t.title !== "Translated") {
             if (getLangFlag(t.title.toLowerCase()).length > 0) {
-              languages.push(`${getLangFlag(t.title.toLowerCase())} ${t.title}`);
+              languages.push(`${t.title} ${getLangFlag(t.title.toLowerCase())}`);
             }
           }
         });
@@ -260,9 +311,9 @@ export class Parser {
     const posted = this.getRow($, "Posted:");
     const lengthRaw = this.getRow($, "Length:");
     const favsRaw = this.getRow($, "Favorited:");
-    const ratingAverage = parseFloat(
-      $("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim(),
-    );
+    const ratingAverage =
+      parseFloat($("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim()) ??
+      0.0;
     return {
       category: category,
       uploader: {
@@ -295,8 +346,8 @@ export class Parser {
 
     for (const html of htmlPages) {
       const $ = cheerio.load(html);
-      $("a[href^='https://e-hentai.org/s/']").each((_, el) => {
-        if (results.length >= totalImages) return;
+      $(`a[href^="${BASE_URL}/s/"]`).each((_, el) => {
+        if (results.length >= totalImages) return false;
         const url = $(el).attr("href");
         if (url) results.push(url);
       });
@@ -304,5 +355,23 @@ export class Parser {
     }
 
     return results;
+  }
+
+  async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
+    let html = await network.favoriteRequest(favoriteID);
+    const $ = cheerio.load(html);
+    const results = this.parseTable($).map((item) => ({
+      mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
+      title: this.parseTitle(item.title),
+    }));
+    if (results.length === 0) {
+      return [];
+    }
+    const mangas: SourceManga[] = [];
+    for (const item of results) {
+      mangas.push(await this.parseMangaDetail(item.mangaId));
+    }
+    await this.parseMangaDetail(results[0].mangaId);
+    return mangas;
   }
 }

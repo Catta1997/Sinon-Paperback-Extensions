@@ -6,7 +6,6 @@ import {
   type SearchQuery,
   type SortingOption,
 } from "@paperback/types";
-import { CompositeInterceptor } from "paperback-interceptors";
 import {
   type ApiRequestConfig,
   type ChapterList,
@@ -21,8 +20,6 @@ import {
 } from "./model";
 
 export class MainInterceptor extends PaperbackInterceptor {
-  interceptors = new CompositeInterceptor([]);
-
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -37,7 +34,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    return data;
   }
 }
 

@@ -7,11 +7,8 @@ import {
 } from "@paperback/types";
 import { type RokuMetadata, type SearchJson } from "./utils";
 import { DOMAIN } from "./main";
-import { CompositeInterceptor } from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
-  interceptors = new CompositeInterceptor([]);
-
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -26,7 +23,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    return data;
   }
 }
 

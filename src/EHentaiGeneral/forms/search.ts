@@ -15,7 +15,7 @@ import {
   type FilterKey,
   filterKeys,
   getDefaultMetadata,
-  languageFilterAll,
+  languageAll,
   type SearchMetadata,
   typeFilter,
 } from "../utils";
@@ -131,8 +131,8 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
         allowEmptySelection: true,
-        maximum: languageFilterAll.length,
-        items: languageFilterAll.map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
+        maximum: languageAll.length,
+        items: languageAll.map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleLanguagesChange",

@@ -13,7 +13,6 @@ import {
 import { OmegaScansAPI } from "./network";
 import type { OmegaScansMetadata, OmegaScansSearchMetadata } from "./model";
 import { fixVoidElements } from "../novelUtils";
-import { decodeHTML } from "entities";
 import { genres } from "./filters";
 
 export class JsonParser {
@@ -23,7 +22,7 @@ export class JsonParser {
     const manga = await this.api.getMangaInfo(mangaId);
     const info: MangaInfo = {
       thumbnailUrl: manga.thumbnail,
-      synopsis: decodeHTML(manga.description).replace(/<[^>]*>/g, ""),
+      synopsis: Application.decodeHTMLEntities(manga.description).replace(/<[^>]*>/g, ""),
       primaryTitle: manga.title,
       secondaryTitles: [manga.alternative_names],
       contentRating: ContentRating.ADULT,
@@ -69,7 +68,7 @@ export class JsonParser {
         },
         { symbol: "book.fill", text: element.status?.toString() ?? "" },
       ],
-      summary: decodeHTML(element.description).replace(/<[^>]*>/g, ""),
+      summary: Application.decodeHTMLEntities(element.description).replace(/<[^>]*>/g, ""),
       ContentRating: ContentRating.ADULT,
     }));
     return {
@@ -85,7 +84,7 @@ export class JsonParser {
       mangaId: `${element.series_slug}`,
       imageUrl: element.thumbnail,
       title: element.title,
-      summary: decodeHTML(element.description).replace(/<[^>]*>/g, ""),
+      summary: Application.decodeHTMLEntities(element.description).replace(/<[^>]*>/g, ""),
       ContentRating: ContentRating.ADULT,
     }));
     return { items: sections };

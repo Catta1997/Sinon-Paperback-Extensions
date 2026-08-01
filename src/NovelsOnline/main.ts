@@ -1,34 +1,30 @@
 import {
   type Chapter,
   type ChapterDetails,
-  type ChapterProviding,
   type DiscoverSection,
   type DiscoverSectionItem,
-  type DiscoverSectionProviding,
   DiscoverSectionType,
-  type Extension,
-  type MangaProviding,
+  type ExtensionImpl,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
-  type SearchResultsProviding,
   type SourceManga,
 } from "@paperback/types";
 
 import { Parser } from "./parser";
 import type { Metadata, SearchMetadata } from "./models";
-
-type NovelsOnlineImplementation = Extension &
-  DiscoverSectionProviding &
-  SearchResultsProviding &
-  MangaProviding &
-  ChapterProviding;
+import { CloudflareInterceptor, HttpErrorInterceptor } from "paperback-interceptors";
+import { MainInterceptor } from "./network";
+import type basePbConfig from "./pbconfig";
 
 const parser = new Parser();
 
 export const BASE_URL = "https://novelsonline.org";
 
-export class NovelsOnlineExtension implements NovelsOnlineImplementation {
+export class NovelsOnlineExtension implements ExtensionImpl<typeof basePbConfig> {
+  mainInterceptor = new MainInterceptor("main");
+  httpInterceptor = new HttpErrorInterceptor("http");
+  cloudflareInterceptor = new CloudflareInterceptor({ url: BASE_URL }, "cloudflare");
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return [
       {
@@ -71,7 +67,11 @@ export class NovelsOnlineExtension implements NovelsOnlineImplementation {
     return parser.parseChapter(chapter);
   }
 
-  async initialise(): Promise<void> {}
+  async initialise(): Promise<void> {
+    this.mainInterceptor.registerInterceptor();
+    this.cloudflareInterceptor.registerInterceptor();
+    this.httpInterceptor.registerInterceptor();
+  }
 }
 
 export const NovelsOnline = new NovelsOnlineExtension();

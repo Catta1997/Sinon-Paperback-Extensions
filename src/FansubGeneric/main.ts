@@ -10,15 +10,13 @@ import {
   type SearchQuery,
   type SearchResultItem,
   type SourceManga,
-  type ChapterProviding,
-  type DiscoverSectionProviding,
-  type Extension,
-  type MangaProviding,
-  type SearchResultsProviding,
+  type ExtensionImpl,
 } from "@paperback/types";
 import { APIRequests, MainInterceptor } from "./network";
 import { FansubGeneralParsers } from "./parsers";
 import type { BaseMetadata } from "./models";
+import { HttpErrorInterceptor, CloudflareInterceptor } from "paperback-interceptors";
+import { basePbConfig } from "./basePbConfig";
 
 export interface FansubGenericParams {
   name: string;
@@ -27,14 +25,7 @@ export interface FansubGenericParams {
   english?: boolean;
 }
 
-abstract class FansubGeneral
-  implements
-    Extension,
-    SearchResultsProviding,
-    MangaProviding,
-    ChapterProviding,
-    DiscoverSectionProviding
-{
+abstract class FansubGeneral implements ExtensionImpl<typeof basePbConfig> {
   readonly name: string;
   public base_url = "";
   public english = false;
@@ -43,6 +34,8 @@ abstract class FansubGeneral
   requestManager: APIRequests;
   mainRateLimiter: BasicRateLimiter;
   mainInterceptor: MainInterceptor;
+  cloudflareInterceptor: CloudflareInterceptor;
+  httpErrorInterceptor: HttpErrorInterceptor;
 
   protected constructor(params: FansubGenericParams) {
     this.name = params.name;
@@ -58,6 +51,8 @@ abstract class FansubGeneral
       ignoreImages: true,
     });
     this.mainInterceptor = new MainInterceptor(this.base_url, "main");
+    this.cloudflareInterceptor = new CloudflareInterceptor({ url: this.base_url }, "cloudflare");
+    this.httpErrorInterceptor = new HttpErrorInterceptor("httpError");
   }
   getMangaDetails(mangaId: string): Promise<SourceManga> {
     return this.parser.parseMangaDetails(mangaId, this);
@@ -66,6 +61,8 @@ abstract class FansubGeneral
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
+    this.cloudflareInterceptor.registerInterceptor();
+    this.httpErrorInterceptor.registerInterceptor();
   }
 
   getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {

@@ -1,15 +1,18 @@
 import { ContentRating, type ExtensionInfo, SourceIntents } from "@paperback/types";
 
-export default {
-  name: "OmegaScans",
-  description: "Extension that pulls content from Omegascans.org",
-  version: "1.0.0-alpha.4",
+export const basePbConfig = {
+  name: "EHentai",
+  description: "Extension that pulls content from E-Hentai.",
+  version: "1.1.0",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
   capabilities: [
+    SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
+    SourceIntents.SETTINGS_FORM_PROVIDING,
+    SourceIntents.DISCOVER_SECTION_PROVIDING,
     SourceIntents.SEARCH_RESULT_PROVIDING,
     SourceIntents.CHAPTER_PROVIDING,
-    SourceIntents.DISCOVER_SECTION_PROVIDING,
+    SourceIntents.MANAGED_COLLECTION_PROVIDING,
   ],
   badges: [],
   developers: [
