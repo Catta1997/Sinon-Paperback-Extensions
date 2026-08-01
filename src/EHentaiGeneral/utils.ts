@@ -61,6 +61,10 @@ export function getDefLangStatus(): string[] {
   return (Application.getState("_languages") as string[] | undefined) ?? [];
 }
 
+export function getDefLangGloablStatus(): string[] {
+  return (Application.getState("_globalLanguages") as string[] | undefined) ?? [];
+}
+
 export function getLanguageFilter() {
   const languages = languageAll;
   languages.unshift({ id: "all", value: "All", flag: "All" });

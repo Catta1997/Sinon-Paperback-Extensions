@@ -149,13 +149,18 @@ export class Parser {
     };
   }
 
-  async parseFeatured(): Promise<PagedResults<DiscoverSectionItem>> {
-    const html = await network.getSection(true);
+  async parseFeatured(metadata:Metadata): Promise<PagedResults<DiscoverSectionItem>> {
+    const html = await network.getSection("",metadata);
     return this.parseDiscover(html);
   }
 
-  async parseRecent() {
-    const html = await network.getSection(false);
+  async parseRecent(metadata:Metadata) {
+    const html = await network.getSection("popular",metadata);
+    return this.parseDiscover(html);
+  }
+
+  async parseWatched(metadata:Metadata) {
+    const html = await network.getSection("watched",metadata);
     return this.parseDiscover(html);
   }
 
@@ -176,8 +181,13 @@ export class Parser {
 
   private async parseDiscover(html: string): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
-    const date = Date.parse("2026-05-01 12:00");
-
+    let nextValue = "";
+    const nextEl = $("#unext");
+    if (nextEl.is("a")) {
+      const href = nextEl.attr("href") ?? "";
+      const match = href.match(/next=([^&]+)/);
+      nextValue = match && match[1] ? match[1] : "";
+    }
     return {
       items: this.parseTable($).map((item) => ({
         type: "featuredCarouselItem",
@@ -192,6 +202,7 @@ export class Parser {
         imageUrl: item.image,
         contentRating: ContentRating.ADULT,
       })),
+      metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
     };
   }
 

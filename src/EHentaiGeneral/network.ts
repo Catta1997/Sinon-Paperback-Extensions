@@ -7,7 +7,7 @@ import {
   type SearchQuery,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { type Metadata, type SearchMetadata } from "./utils";
+import {getDefLangGloablStatus, getDefLangStatus, type Metadata, type SearchMetadata} from "./utils";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -73,8 +73,8 @@ export class MainInterceptor extends PaperbackInterceptor {
       }
       throw new Error(loggedIn ? "An Error occurred. Try re-login." : "Please log in on settings");
     }
-    if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404){
-      throw new Error("This Content is no More Available")
+    if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404) {
+      throw new Error("This Content is no More Available");
     }
     return data;
   }
@@ -225,14 +225,25 @@ export class Network {
     return Application.arrayBufferToUTF8String(data[1]);
   }
 
-  async getSection(popular: boolean) {
+  async getSection(path: string = "", metadata: Metadata) {
     const filterValue = (Application.getState("_type") as string[]) ?? [];
     const ratingSum = filterValue.reduce((acc, val) => acc + Number(val), 0);
     const url = new URL(BASE_URL);
-    if (popular) {
-      url.setPath("popular");
+    if (path.length>0) {
+      url.setPath(path);
     }
+    if (metadata?.page) {
+      url.setQueryItem("next", metadata.page);
+    }
+    const languageFilter = Object.fromEntries(
+        getDefLangGloablStatus().map((language) => [language, "included"]),
+    ) as Record<string, "included" | "excluded">
+
+    const languageFilterMap = Object.entries(languageFilter ?? {}).map(
+        ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
+    );
     url.setQueryItem("f_cats", String(1023 - ratingSum));
+    url.setQueryItem("f_search", this.buildFilter("",{id: "language", value: languageFilterMap,}));
     const data = await Application.scheduleRequest({
       url: url.toString(),
       method: "GET",

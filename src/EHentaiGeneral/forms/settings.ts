@@ -7,7 +7,7 @@ import {
   getDefaultMale,
   getDefaultMixed,
   getDefaultOther,
-  getDefaultParody,
+  getDefaultParody, getDefLangGloablStatus,
   getDefLangStatus,
   languageAll,
   typeFilter,
@@ -100,6 +100,16 @@ export class SettingsForm extends Form {
             minItemCount: 1,
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
+          }),
+          SelectRow("def_languages", {
+            title: "Languages for Sections",
+            subtitle: "This settings will not be applied to 'Popular' and 'Favorite' Sections",
+            value: getDefLangGloablStatus(),
+            layout: "list",
+            items: languages,
+            minItemCount: 0,
+            maxItemCount: languages.length,
+            onValueChange: Application.Selector(this as SettingsForm, "handleDefLangGlobalStatusChange"),
           }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
@@ -228,7 +238,9 @@ export class SettingsForm extends Form {
     loginManager.logOut();
     this.reloadForm();
   }
-
+  async handleDefLangGlobalStatusChange(value: string[]): Promise<void> {
+    await this.updateValue(value, "_globalLanguages");
+  }
   async handleDefLangStatusChange(value: string[]): Promise<void> {
     await this.updateValue(value, "_languages");
   }
