@@ -58,7 +58,7 @@ export class MainInterceptor extends PaperbackInterceptor {
   }
 
   override async interceptResponse(
-    _request: Request,
+    request: Request,
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
@@ -72,6 +72,9 @@ export class MainInterceptor extends PaperbackInterceptor {
         );
       }
       throw new Error(loggedIn ? "An Error occurred. Try re-login." : "Please log in on settings");
+    }
+    if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404){
+      throw new Error("This Content is no More Available")
     }
     return data;
   }
