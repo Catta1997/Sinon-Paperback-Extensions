@@ -32,7 +32,7 @@ export const parser = new Parser();
 export const loginManager = new LogInManager();
 export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfig> {
   async getSettingsForm(): Promise<Form> {
-    return new SettingsForm();
+    return new SettingsForm(await Application.getDefaultUserAgent());
   }
 
   async getDiscoverSections(): Promise<DiscoverSection[]> {

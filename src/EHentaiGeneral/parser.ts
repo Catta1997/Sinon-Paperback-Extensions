@@ -1,14 +1,14 @@
 import {
+  type Chapter,
   ContentRating,
   type DiscoverSectionItem,
   type MangaInfo,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
+  type SourceManga,
   type Tag,
   type TagSection,
-  type Chapter,
-  type SourceManga,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import {
@@ -46,8 +46,8 @@ export class Parser {
       subtitle: string;
       category: string;
       pages: string;
-      date:string;
-      rating: number
+      date: string;
+      rating: number;
     }[] = [];
     $("tr")
       .has("td.gl1e")
@@ -58,21 +58,22 @@ export class Parser {
         const image = container.find("img").attr("src") ?? "";
         const category = container.find(".gl3e .cn").text().trim();
         const date = container.find("div[id^='posted_']").text().trim();
-        const pages = container.find(".gl3e > div")
+        const pages = container
+          .find(".gl3e > div")
           .filter((_, el) => $(el).text().trim().endsWith("pages"))
           .first()
           .text()
           .trim();
         let artist = "";
-        let rating = 0
+        let rating = 0;
         const style = container.find("div.ir").attr("style") ?? "";
         const match = style.match(/background-position:\s*(-?\d+)px\s+(-?\d+)px/);
         if (match) {
-          const x = parseInt(match[1], 10);       // 0
+          const x = parseInt(match[1], 10); // 0
           const y = Math.abs(parseInt(match[2], 10)); // 21
           const xIndex = (x + 80) / 16;
           const yOffset = Math.abs(y) === 21 ? 0.5 : 0;
-          rating = xIndex-yOffset;
+          rating = xIndex - yOffset;
         }
         let lang = `Japanese ${getLangFlag("japanese")}`;
         container.find("td.tc").each((i, td) => {
@@ -105,7 +106,7 @@ export class Parser {
           pages: pages,
           category: category,
           date: date,
-          rating: rating
+          rating: rating,
         });
       });
     return results;
@@ -175,6 +176,7 @@ export class Parser {
 
   private async parseDiscover(html: string): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
+    const date = Date.parse("2026-05-01 12:00");
 
     return {
       items: this.parseTable($).map((item) => ({
@@ -182,7 +184,7 @@ export class Parser {
         mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
         title: this.parseTitle(item.title),
         supertitle: item.category,
-        summary: `Language: ${this.capitalLetter(item.lang)}${item.artist.length>0 ? `\nArtist: `+ this.capitalLetter(item.artist): ``}\nDate: ${item.date}`,
+        summary: `Language: ${this.capitalLetter(item.lang)}${item.artist.length > 0 ? `\nArtist: ` + this.capitalLetter(item.artist) : ``}\nDate: ${this.parseDate(item.date)}`,
         infoItems: [
           { symbol: "star.fill", text: String(item.rating) },
           { symbol: "book.pages", text: item.pages },
@@ -327,7 +329,7 @@ export class Parser {
         text: favsRaw,
       },
       rating: {
-        average: ratingAverage,
+        average: isNaN(ratingAverage) ? 0.0 : ratingAverage,
       },
     };
   }
@@ -373,5 +375,11 @@ export class Parser {
     }
     await this.parseMangaDetail(results[0].mangaId);
     return mangas;
+  }
+
+  parseDate(input: string) {
+    const [date, time] = input.split(" ");
+    const [year, month, day] = date.split("-");
+    return `${day}/${month}/${year} ${time}`;
   }
 }

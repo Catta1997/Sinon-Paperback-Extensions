@@ -29,6 +29,12 @@ import { mainRateLimiter } from "../network";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "../main";
 
 export class SettingsForm extends Form {
+  userAgent: string = "";
+  constructor(userAgent: string) {
+    super();
+    this.userAgent = userAgent;
+  }
+
   override getSections() {
     const types: { id: string; title: string }[] = typeFilter.map((tag) => ({
       id: tag.id,
@@ -50,6 +56,7 @@ export class SettingsForm extends Form {
             request: {
               url: "https://e-hentai.org/bounce_login.php",
               method: "GET",
+              headers: { "user-agent": this.userAgent },
             },
             isHidden: loginManager.isLoggedIn(),
             onComplete: Application.Selector(this as SettingsForm, "handleLogin"),
