@@ -38,14 +38,20 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     const discover_section: DiscoverSection[] = [];
     discover_section.push({
+      id: "Featured",
+      title: "Featured",
+      subtitle: "",
+      type: DiscoverSectionType.featured,
+    });
+    discover_section.push({
       id: "Popular",
       title: "Popular",
       subtitle: "",
       type: DiscoverSectionType.featured,
     });
     discover_section.push({
-      id: "Recent",
-      title: "Recent",
+      id: "Watched",
+      title: "Watched",
       subtitle: "",
       type: DiscoverSectionType.featured,
     });
@@ -62,13 +68,17 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
 
   async getDiscoverSectionItems(
     section: DiscoverSection,
+    metadata: Metadata,
   ): Promise<PagedResults<DiscoverSectionItem>> {
     switch (section.id) {
-      case "Popular": {
-        return parser.parseFeatured();
+      case "Featured": {
+        return parser.parseFeatured(metadata);
       }
-      case "Recent": {
-        return parser.parseRecent();
+      case "Popular": {
+        return parser.parseRecent(metadata);
+      }
+      case "Watched": {
+        return parser.parseWatched(metadata);
       }
       case "Favorite": {
         return parser.parseFavorite();
