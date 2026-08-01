@@ -2,22 +2,18 @@ import {
   type AdvancedSearchForm,
   type Chapter,
   type ChapterDetails,
-  type ChapterProviding,
   ContentRating,
   type DiscoverSection,
   type DiscoverSectionItem,
-  type DiscoverSectionProviding,
   DiscoverSectionType,
-  type Extension,
-  type MangaProviding,
+  type ExtensionImpl,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
-  type SearchResultsProviding,
   type SortingOption,
   type SourceManga,
 } from "@paperback/types";
-
+import type basePbConfig from "./pbconfig";
 import { NovelBuddyNetwork } from "./network";
 import { NovelBuddyParser } from "./parser";
 import type {
@@ -29,13 +25,7 @@ import type {
 import NovelBuddyAdvancedSearchForm from "./search";
 import { fetchGenres } from "./filters";
 
-type NovelBuddyImplementation = Extension &
-  SearchResultsProviding &
-  MangaProviding &
-  ChapterProviding &
-  DiscoverSectionProviding;
-
-export class NovelBuddyExtension implements NovelBuddyImplementation {
+export class NovelBuddyExtension implements ExtensionImpl<typeof basePbConfig> {
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return [
       {
@@ -132,7 +122,6 @@ export class NovelBuddyExtension implements NovelBuddyImplementation {
   }
 
   async getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-    console.log(sourceManga.mangaInfo.additionalInfo?.id);
     const id = sourceManga.mangaInfo.additionalInfo?.id ?? "";
     const cv = sourceManga.mangaInfo.additionalInfo?.cv ?? "";
     const chaptersRequest = await this.network.getChaptersList(id, cv);

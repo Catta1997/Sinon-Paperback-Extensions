@@ -2,30 +2,23 @@ import {
   BasicRateLimiter,
   type Chapter,
   type ChapterDetails,
-  type ChapterProviding,
-  type CloudflareBypassRequestProviding,
   type Cookie,
   CookieStorageInterceptor,
-  type Extension,
-  type MangaProviding,
+  type ExtensionImpl,
   type PagedResults,
   type Request,
   type SearchQuery,
   type SearchResultItem,
-  type SearchResultsProviding,
   type SourceManga,
 } from "@paperback/types";
-import { MainInterceptor } from "./network";
+import { DOMAIN, MainInterceptor } from "./network";
 import { JsonParser } from "./parsers";
+import { CloudflareInterceptor, HttpErrorInterceptor } from "paperback-interceptors";
+import type basePbConfig from "./pbconfig";
 
 const parse = new JsonParser();
-type HentaiHandImplementation = Extension &
-  SearchResultsProviding &
-  MangaProviding &
-  ChapterProviding &
-  CloudflareBypassRequestProviding;
 
-export class HentaiHandExtension implements HentaiHandImplementation {
+export class HentaiHandExtension implements ExtensionImpl<typeof basePbConfig> {
   mainRateLimiter = new BasicRateLimiter("main", {
     numberOfRequests: 5,
     bufferInterval: 1,
@@ -33,20 +26,17 @@ export class HentaiHandExtension implements HentaiHandImplementation {
   });
 
   mainInterceptor = new MainInterceptor("main");
+  cloudFlareInterceptor = new CloudflareInterceptor({ url: DOMAIN }, "cloudflare");
+  httpError = new HttpErrorInterceptor("httpCode");
   cookieStorageInterceptor = new CookieStorageInterceptor({
     storage: "stateManager",
   });
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
+    this.cloudFlareInterceptor.registerInterceptor();
+    this.httpError.registerInterceptor();
     this.cookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
-  }
-  async saveCloudflareBypassCookies(cookies: Cookie[]): Promise<void> {
-    for (const cookie of cookies) {
-      if (cookie.name == "cf_clearance") {
-        this.cookieStorageInterceptor.setCookie(cookie);
-      }
-    }
   }
 
   async cloudflareBypassCompleted(

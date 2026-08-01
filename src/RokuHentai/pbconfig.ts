@@ -3,13 +3,13 @@ import { ContentRating, SourceIntents, type ExtensionInfo } from "@paperback/typ
 export default {
   name: "RokuHentai",
   description: "Extension that pulls content from RokuHentai.com",
-  version: "1.0.0-alpha.6",
+  version: "1.0.0-alpha.7",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
   capabilities: [
-    SourceIntents.SEARCH_RESULT_PROVIDING |
-      SourceIntents.CHAPTER_PROVIDING |
-      SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
+    SourceIntents.SEARCH_RESULT_PROVIDING,
+    SourceIntents.CHAPTER_PROVIDING,
+    SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
   ],
   badges: [],
   developers: [

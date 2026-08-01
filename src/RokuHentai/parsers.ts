@@ -13,13 +13,12 @@ import * as cheerio from "cheerio";
 import { Requests } from "./network";
 import { type MangaCardInfo, type RokuMetadata } from "./utils";
 import { DOMAIN } from "./main";
-import type { SearchMetadata } from "../EHentai/utils";
 
 const requestMaker = new Requests();
 
 export class Parser {
   async parseSearchResult(
-    query: SearchQuery<SearchMetadata>,
+    query: SearchQuery<{}>,
     metadata: RokuMetadata,
   ): Promise<PagedResults<SearchResultItem>> {
     const items: SearchResultItem[] = [];

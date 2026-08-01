@@ -2,32 +2,24 @@ import {
   BasicRateLimiter,
   type Chapter,
   type ChapterDetails,
-  type ChapterProviding,
   type DiscoverSection,
   type DiscoverSectionItem,
-  type DiscoverSectionProviding,
   DiscoverSectionType,
-  type Extension,
-  type MangaProviding,
+  type ExtensionImpl,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
-  type SearchResultsProviding,
   type SortingOption,
   type SourceManga,
 } from "@paperback/types";
 import { MainInterceptor } from "./network";
-import type { OmegaScansMetadata, OmegaScansSearchMetadata } from "./model";
+import { API, type OmegaScansMetadata, type OmegaScansSearchMetadata } from "./model";
 import { JsonParser } from "./parser";
 import OmegaScansAdvancedSearchForm from "./search";
+import { CloudflareInterceptor, HttpErrorInterceptor } from "paperback-interceptors";
+import type basePbConfig from "./pbconfig";
 
-type OmegaScansImplementation = Extension &
-  SearchResultsProviding &
-  MangaProviding &
-  ChapterProviding &
-  DiscoverSectionProviding;
-
-export class OmegaScansExtension implements OmegaScansImplementation {
+export class OmegaScansExtension implements ExtensionImpl<typeof basePbConfig> {
   async getAdvancedSearchForm(searchQuery: SearchQuery<OmegaScansSearchMetadata>) {
     return new OmegaScansAdvancedSearchForm(searchQuery);
   }
@@ -96,10 +88,14 @@ export class OmegaScansExtension implements OmegaScansImplementation {
     ignoreImages: true,
   });
   mainInterceptor = new MainInterceptor("main");
+  cloudFlareInterceptor = new CloudflareInterceptor({ url: API }, "cloudflare");
+  httpErroreInterceptor = new HttpErrorInterceptor("httpError");
   parser = new JsonParser();
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
+    this.cloudFlareInterceptor.registerInterceptor();
+    this.httpErroreInterceptor.registerInterceptor();
   }
 
   getMangaDetails(mangaId: string): Promise<SourceManga> {

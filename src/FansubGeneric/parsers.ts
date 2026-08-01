@@ -13,12 +13,16 @@ import {
   type TagSection,
 } from "@paperback/types";
 import FansubGeneral from "./main";
-import type { ComicDetailResponse, ComicListItem, ComicsListResponse } from "./models";
-import type { SearchMetadata } from "../EHentai/utils";
+import type {
+  BaseMetadata,
+  ComicDetailResponse,
+  ComicListItem,
+  ComicsListResponse,
+} from "./models";
 
 export class FansubGeneralParsers {
   async parseSearchResults(
-    query: SearchQuery<SearchMetadata>,
+    query: SearchQuery<BaseMetadata>,
     source: FansubGeneral,
   ): Promise<PagedResults<SearchResultItem>> {
     const jsonRequest = await source.requestManager.apiSearchResult(query);

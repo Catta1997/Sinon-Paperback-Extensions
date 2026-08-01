@@ -8,17 +8,15 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import { type Metadata, type SearchMetadata } from "./utils";
-import { BASE_URL } from "./main";
-import { CompositeInterceptor, Interceptor } from "paperback-interceptors";
+import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
   numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
   bufferInterval: 0.5,
   ignoreImages: true,
 });
-export class MainInterceptor extends PaperbackInterceptor {
-  interceptors = new CompositeInterceptor([new ImageURLInterceptor()]);
 
+export class MainInterceptor extends PaperbackInterceptor {
   private validImgExtensions = [".jpg", ".jpeg", ".png", ".webp"];
 
   isImageUrl(url: string): boolean {
@@ -31,7 +29,6 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
   }
   override async interceptRequest(request: Request): Promise<Request> {
-    // image URL
     if (this.isImageUrl(request.url)) {
       if (request.headers && request.headers["nl-link"]) {
         if (request.headers["first"]) {
@@ -43,23 +40,79 @@ export class MainInterceptor extends PaperbackInterceptor {
         }
       }
     } else if (request.url.includes(`${BASE_URL}/g/`)) {
-      request.headers = { Cookie: "nw=1" };
+      request.cookies = {
+        nw: "1",
+        ...request.cookies,
+      };
     } else {
-      request.headers = { Cookie: "sl=dm_2" };
+      request.cookies = {
+        sl: "dm_2",
+        ...request.cookies,
+      };
     }
+    request.headers = {
+      "user-agent": await Application.getDefaultUserAgent(),
+      ...request.headers,
+    };
     return request;
   }
 
   override async interceptResponse(
-    request: Request,
+    _request: Request,
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    if (response.status >= 300 && response.status < 400) {
+      const loggedIn = loginManager.isLoggedIn();
+      if (REQUIRE_LOGIN) {
+        throw new Error(
+          loggedIn
+            ? "ExHentai denied access, your account may not be eligible yet (7-day wait) or your session expired. Try re-login."
+            : "Please log in to use ExHentai.",
+        );
+      }
+      throw new Error(loggedIn ? "An Error occurred. Try re-login." : "Please log in on settings");
+    }
+    return data;
   }
 }
 
-export class Requests {
+export class ImageURLInterceptor extends PaperbackInterceptor {
+  override async interceptRequest(request: Request): Promise<Request> {
+    return request;
+  }
+  override async interceptResponse(
+    request: Request,
+    _response: Response,
+    data: ArrayBuffer,
+  ): Promise<ArrayBuffer> {
+    if (!request.url.includes(`${BASE_URL}/s/`)) {
+      return data;
+    }
+
+    const html = Application.arrayBufferToUTF8String(data);
+
+    const $ = cheerio.load(html);
+    const div = $("#i3");
+    const image = div.find("img#img");
+
+    const newPage = image.attr("onerror") ?? "";
+    const match = newPage.match(/'(\d+-\d+)'/);
+
+    if (match?.[1]) {
+      request.headers = {
+        "nl-link": `${request.url}?nl=${match[1]}`,
+        first: "1",
+      };
+    }
+
+    request.url = image.attr("src") ?? request.url;
+
+    return (await Application.scheduleRequest(request))[1];
+  }
+}
+
+export class Network {
   buildFilter(query: string, filter: { id: string; value: string[] }) {
     filter.value.forEach((filterValue) => {
       if (filterValue.startsWith("-")) {
@@ -78,6 +131,16 @@ export class Requests {
     });
     return query;
   }
+
+  async favoriteRequest(favLink: string) {
+    const data = await Application.scheduleRequest({
+      url: favLink,
+      method: "GET",
+    });
+
+    return Application.arrayBufferToUTF8String(data[1]);
+  }
+
   async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
@@ -188,36 +251,40 @@ export class Requests {
     });
     return Application.arrayBufferToUTF8String(data[1]);
   }
-}
-
-export class ImageURLInterceptor extends Interceptor {
-  protected async interceptResponse(
-    request: Request,
-    response: Response,
-    data: ArrayBuffer,
-  ): Promise<ArrayBuffer> {
-    if (!request.url.includes(`${BASE_URL}/s/`)) {
-      return data;
-    }
-
-    const html = Application.arrayBufferToUTF8String(data);
-
+  async getFevList() {
+    const data = await Application.scheduleRequest({
+      url: `${BASE_URL}/favorites.php`,
+      method: "GET",
+    });
+    const html = Application.arrayBufferToUTF8String(data[1]);
     const $ = cheerio.load(html);
-    const div = $("#i3");
-    const image = div.find("img#img");
+    return $("div.fp")
+      .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
+      .map((_, el) => {
+        const $el = $(el);
+        return {
+          id: $el.attr("onclick")?.match(/'([^']+)'/)?.[1] ?? "",
+          value: $el.children("div").eq(2).text().trim(),
+        };
+      })
+      .get();
+  }
+  async addToFavorite(mangaid: string, cetegoryId: string) {
+    const favcat = cetegoryId.split("favcat=")[1];
+    const [gid, t] = mangaid.split("/");
+    await Application.scheduleRequest({
+      url: `${BASE_URL}/gallerypopups.php?gid=${gid}&t=${t}&act=addfav`,
+      method: "POST",
+      body: `favcat=${favcat}&favnote=&apply=Add+to+Favorites&update=1`,
+    });
+  }
 
-    const newPage = image.attr("onerror") ?? "";
-    const match = newPage.match(/'(\d+-\d+)'/);
-
-    if (match?.[1]) {
-      request.headers = {
-        "nl-link": `${request.url}?nl=${match[1]}`,
-        first: "1",
-      };
-    }
-
-    request.url = image.attr("src") ?? request.url;
-
-    return (await Application.scheduleRequest(request))[1];
+  async deleteFromFavorite(mangaid: string) {
+    const [gid, t] = mangaid.split("/");
+    await Application.scheduleRequest({
+      url: `${BASE_URL}/gallerypopups.php?gid=${gid}&t=${t}&act=addfav`,
+      method: "POST",
+      body: `favcat=favdel&favnote=&apply=Apply+Changes&update=1`,
+    });
   }
 }

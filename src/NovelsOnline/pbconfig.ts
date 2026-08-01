@@ -7,9 +7,9 @@ export default {
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   capabilities: [
-    SourceIntents.DISCOVER_SECTION_PROVIDING |
-      SourceIntents.SEARCH_RESULT_PROVIDING |
-      SourceIntents.CHAPTER_PROVIDING,
+    SourceIntents.DISCOVER_SECTION_PROVIDING,
+    SourceIntents.SEARCH_RESULT_PROVIDING,
+    SourceIntents.CHAPTER_PROVIDING,
   ],
   badges: [
     {

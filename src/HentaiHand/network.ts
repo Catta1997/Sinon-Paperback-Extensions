@@ -1,18 +1,9 @@
-import {
-  CloudflareError,
-  PaperbackInterceptor,
-  URL,
-  type Request,
-  type Response,
-} from "@paperback/types";
+import { PaperbackInterceptor, URL, type Request, type Response } from "@paperback/types";
 import type { GetMangaInfo, JSONSearch, MangaDetails, TagParsing } from "./models";
-import { CompositeInterceptor } from "paperback-interceptors";
 
-const DOMAIN = "https://hentaihand.com/";
+export const DOMAIN = "https://hentaihand.com/";
 let BASE_API = `${DOMAIN}api`;
 export class MainInterceptor extends PaperbackInterceptor {
-  interceptors = new CompositeInterceptor([]);
-
   override async interceptRequest(request: Request): Promise<Request> {
     request.headers = {
       ...request.headers,
@@ -27,46 +18,17 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    return data;
   }
 }
 
 export class ApiMaker {
-  private checkResponseError(request: Request, response: Response): void {
-    switch (response.status) {
-      case 200:
-        break;
-      case 400:
-        throw new Error("400 – Bad Request: The request was invalid.");
-      case 401:
-        throw new Error("401 – Unauthorized: Authentication is required.");
-      case 404:
-        throw new Error(`404 – Not Found: The resource ${response.url} was not found.`);
-      case 408:
-        throw new Error("408 – Request Timeout: The server took too long to respond.");
-      case 429:
-        throw new Error("429 – Too Many Requests: Rate limit exceeded.");
-      case 500:
-        throw new Error("500 – Internal Server Error: A server error occurred.");
-      case 502:
-        throw new Error("502 – Bad Gateway: Invalid response from upstream server.");
-      case 504:
-        throw new Error("504 – Gateway Timeout: Server response timed out.");
-      case 403:
-      case 503:
-        throw new CloudflareError(request, "Error Code: " + response.status);
-      default:
-        throw new Error(`Unexpected HTTP error: ${response.status}`);
-    }
-  }
-
   private async getDataFromRequest(api: string): Promise<string> {
     const request = {
       url: api,
       method: "GET",
     };
-    const [response, data] = await Application.scheduleRequest(request);
-    this.checkResponseError(request, response);
+    const [_, data] = await Application.scheduleRequest(request);
     return Application.arrayBufferToUTF8String(data);
   }
 

@@ -6,7 +6,6 @@ import {
   type Response,
 } from "@paperback/types";
 import type { BaseMetadata, ReadChapterResponse } from "./models";
-import { CompositeInterceptor } from "paperback-interceptors";
 
 export class MainInterceptor extends PaperbackInterceptor {
   private readonly base_url: string = "";
@@ -14,7 +13,6 @@ export class MainInterceptor extends PaperbackInterceptor {
     super(id);
     this.base_url = base_url;
   }
-  interceptors = new CompositeInterceptor([]);
 
   override async interceptRequest(request: Request): Promise<Request> {
     return {
@@ -27,7 +25,7 @@ export class MainInterceptor extends PaperbackInterceptor {
     response: Response,
     data: ArrayBuffer,
   ): Promise<ArrayBuffer> {
-    return this.interceptors.intercept(request, response, data);
+    return data;
   }
 }
 

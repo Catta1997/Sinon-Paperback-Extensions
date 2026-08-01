@@ -9,11 +9,24 @@ import {
   getDefaultOther,
   getDefaultParody,
   getDefLangStatus,
-  languageFilterAll,
+  languageAll,
   typeFilter,
 } from "../utils";
-import { Form, InputRow, Section, SelectRow, StepperRow } from "@paperback/types";
+import {
+  ButtonRow,
+  CloudflareError,
+  type Cookie,
+  Form,
+  FormConfirmationError,
+  InputRow,
+  LabelRow,
+  Section,
+  SelectRow,
+  StepperRow,
+  WebViewRow,
+} from "@paperback/types";
 import { mainRateLimiter } from "../network";
+import { BASE_URL, loginManager, REQUIRE_LOGIN } from "../main";
 
 export class SettingsForm extends Form {
   override getSections() {
@@ -21,12 +34,49 @@ export class SettingsForm extends Form {
       id: tag.id,
       title: tag.value,
     }));
-    const languages: { id: string; title: string }[] = languageFilterAll.map((tag) => ({
+    const languages: { id: string; title: string }[] = languageAll.map((tag) => ({
       id: tag.id,
       title: `${tag.flag} ${tag.value}`,
     }));
-
     return [
+      Section(
+        {
+          id: "account",
+          header: "Account Settings",
+        },
+        [
+          WebViewRow("loginRow", {
+            title: "Login",
+            request: {
+              url: "https://e-hentai.org/bounce_login.php",
+              method: "GET",
+            },
+            isHidden: loginManager.isLoggedIn(),
+            onComplete: Application.Selector(this as SettingsForm, "handleLogin"),
+            onCancel: Application.Selector(this as SettingsForm, "handleLoginCancel"),
+          }),
+          LabelRow("logged", {
+            title: "Logged in as",
+            subtitle:
+              (Application.getSecureState(`${BASE_URL}_username`) as string) ??
+              loginManager.getAccountID(),
+            isHidden: !loginManager.isLoggedIn(),
+          }),
+          ButtonRow("logout", {
+            title: "Logout",
+            isHidden: !loginManager.isLoggedIn(),
+            onSelect: Application.Selector(this as SettingsForm, "handleLogoutButton"),
+          }),
+          ...(REQUIRE_LOGIN
+            ? [
+                LabelRow("loginInfo", {
+                  title: "Warning",
+                  subtitle: "Account must be at least 7-days old to work",
+                }),
+              ]
+            : []),
+        ],
+      ),
       Section(
         {
           id: "update_settings",
@@ -38,7 +88,8 @@ export class SettingsForm extends Form {
             title: "Contents",
             subtitle: "Default value for content type, affect search and sections",
             value: this.getHideTypeStatus(),
-            options: types,
+            layout: "list",
+            items: types,
             minItemCount: 1,
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
@@ -66,7 +117,8 @@ export class SettingsForm extends Form {
             title: "Default Languages",
             subtitle: "Default languages",
             value: getDefLangStatus(),
-            options: languages,
+            layout: "list",
+            items: languages,
             minItemCount: 0,
             maxItemCount: languages.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleDefLangStatusChange"),
@@ -146,6 +198,28 @@ export class SettingsForm extends Form {
         "512",
       ]
     );
+  }
+
+  async handleLogin(cookies: Cookie[]): Promise<void> {
+    await loginManager.logIn(cookies);
+    Application.invalidateDiscoverSections();
+    this.reloadForm();
+  }
+
+  async handleLoginCancel(): Promise<void> {
+    this.reloadForm();
+  }
+
+  async handleLogoutButton(): Promise<void> {
+    throw new FormConfirmationError(
+      Application.Selector(this as SettingsForm, "handleLogoutConfirm"),
+      "Do you want to logout?",
+    );
+  }
+
+  async handleLogoutConfirm() {
+    loginManager.logOut();
+    this.reloadForm();
   }
 
   async handleDefLangStatusChange(value: string[]): Promise<void> {
