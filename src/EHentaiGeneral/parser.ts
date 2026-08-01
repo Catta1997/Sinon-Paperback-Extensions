@@ -181,8 +181,8 @@ export class Parser {
         type: "featuredCarouselItem",
         mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
         title: this.parseTitle(item.title),
-        supertitle: this.capitalLetter(item.artist),
-        summary: `Language: ${item.lang}\nCategory: ${item.category}\nDate: ${item.date}`,
+        supertitle: item.category,
+        summary: `Language: ${this.capitalLetter(item.lang)}${item.artist.length>0 ? `\nArtist: `+ this.capitalLetter(item.artist): ``}\nDate: ${item.date}`,
         infoItems: [
           { symbol: "star.fill", text: String(item.rating) },
           { symbol: "book.pages", text: item.pages },
