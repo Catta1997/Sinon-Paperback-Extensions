@@ -24,46 +24,23 @@ import { Parser } from "./parser";
 import { getDefaultMetadata, LogInManager, type Metadata, type SearchMetadata } from "./utils";
 import { basePbConfig } from "./config";
 import { CloudflareInterceptor } from "paperback-interceptors";
+import { SectionsOrder } from "paperback-sections";
+import { getSections } from "./models";
 
 export let BASE_URL = "";
 export let REQUIRE_LOGIN = false;
 export const network = new Network();
 export const parser = new Parser();
 export const loginManager = new LogInManager();
+export const sections = new SectionsOrder(getSections());
+
 export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfig> {
   async getSettingsForm(): Promise<Form> {
     return new SettingsForm(await Application.getDefaultUserAgent());
   }
 
   async getDiscoverSections(): Promise<DiscoverSection[]> {
-    const discover_section: DiscoverSection[] = [];
-    discover_section.push({
-      id: "Featured",
-      title: "Featured",
-      subtitle: "",
-      type: DiscoverSectionType.featured,
-    });
-    discover_section.push({
-      id: "Popular",
-      title: "Popular",
-      subtitle: "",
-      type: DiscoverSectionType.featured,
-    });
-    if (loginManager.isLoggedIn()) {
-      discover_section.push({
-        id: "Watched",
-        title: "Watched",
-        subtitle: "",
-        type: DiscoverSectionType.featured,
-      });
-      discover_section.push({
-        id: "Favorite",
-        title: "Favorite",
-        subtitle: "",
-        type: DiscoverSectionType.genres,
-      });
-    }
-    return discover_section;
+    return sections.getFilteredSections();
   }
 
   async getDiscoverSectionItems(
@@ -78,9 +55,15 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
         return parser.parseRecent(metadata);
       }
       case "Watched": {
+        if (!loginManager.isLoggedIn()) {
+          throw new Error("This Section is only available with Log-In");
+        }
         return parser.parseWatched(metadata);
       }
       case "Favorite": {
+        if (!loginManager.isLoggedIn()) {
+          throw new Error("This Section is only available with Log-In");
+        }
         return parser.parseFavorite();
       }
       default:

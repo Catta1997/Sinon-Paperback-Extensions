@@ -31,6 +31,7 @@
     "oxlint": "^1.76.0",
     "oxlint-tsgolint": "^7.0.2001",
     "paperback-interceptors": "github:Catta1997/paperback-interceptors",
+    "paperback-sections": "github:Catta1997/paperback-sections",
     "stemmer": "^2.0.1",
     "typescript": "^7.0.2",
     "upng-js": "^2.1.0"
