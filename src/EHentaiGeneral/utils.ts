@@ -302,7 +302,7 @@ export class LogInManager {
       cookie.domain = "forums.e-hentai.org";
       this.loginCookieStorageInterceptor.setCookie(cookie);
     }
-    const [a, b] = await Application.scheduleRequest({
+    const [_, b] = await Application.scheduleRequest({
       url: `https://forums.e-hentai.org/index.php?showuser=${this.getAccountID()}`,
       method: "GET",
       headers: { "user-agent": await Application.getDefaultUserAgent() },

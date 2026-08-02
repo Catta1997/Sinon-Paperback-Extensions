@@ -9,7 +9,6 @@ import {
 import * as cheerio from "cheerio";
 import {
   getDefLangGloablStatus,
-  getDefLangStatus,
   type Metadata,
   type SearchMetadata,
 } from "./utils";
