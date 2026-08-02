@@ -7,7 +7,12 @@ import {
   type SearchQuery,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import {getDefLangGloablStatus, getDefLangStatus, type Metadata, type SearchMetadata} from "./utils";
+import {
+  getDefLangGloablStatus,
+  getDefLangStatus,
+  type Metadata,
+  type SearchMetadata,
+} from "./utils";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -229,21 +234,24 @@ export class Network {
     const filterValue = (Application.getState("_type") as string[]) ?? [];
     const ratingSum = filterValue.reduce((acc, val) => acc + Number(val), 0);
     const url = new URL(BASE_URL);
-    if (path.length>0) {
+    if (path.length > 0) {
       url.setPath(path);
     }
     if (metadata?.page) {
       url.setQueryItem("next", metadata.page);
     }
     const languageFilter = Object.fromEntries(
-        getDefLangGloablStatus().map((language) => [language, "included"]),
-    ) as Record<string, "included" | "excluded">
+      getDefLangGloablStatus().map((language) => [language, "included"]),
+    ) as Record<string, "included" | "excluded">;
 
     const languageFilterMap = Object.entries(languageFilter ?? {}).map(
-        ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
+      ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
     );
     url.setQueryItem("f_cats", String(1023 - ratingSum));
-    url.setQueryItem("f_search", this.buildFilter("",{id: "language", value: languageFilterMap,}));
+    url.setQueryItem(
+      "f_search",
+      this.buildFilter("", { id: "language", value: languageFilterMap }),
+    );
     const data = await Application.scheduleRequest({
       url: url.toString(),
       method: "GET",

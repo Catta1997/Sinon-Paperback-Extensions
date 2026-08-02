@@ -7,7 +7,8 @@ import {
   getDefaultMale,
   getDefaultMixed,
   getDefaultOther,
-  getDefaultParody, getDefLangGloablStatus,
+  getDefaultParody,
+  getDefLangGloablStatus,
   getDefLangStatus,
   languageAll,
   typeFilter,
@@ -109,7 +110,10 @@ export class SettingsForm extends Form {
             items: languages,
             minItemCount: 0,
             maxItemCount: languages.length,
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefLangGlobalStatusChange"),
+            onValueChange: Application.Selector(
+              this as SettingsForm,
+              "handleDefLangGlobalStatusChange",
+            ),
           }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
