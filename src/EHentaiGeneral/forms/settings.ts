@@ -15,7 +15,6 @@ import {
 } from "../utils";
 import {
   ButtonRow,
-  CloudflareError,
   type Cookie,
   Form,
   FormConfirmationError,
@@ -25,9 +24,11 @@ import {
   SelectRow,
   StepperRow,
   WebViewRow,
+  EditSection,
+  NavigationRow,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
-import { BASE_URL, loginManager, REQUIRE_LOGIN } from "../main";
+import { BASE_URL, loginManager, REQUIRE_LOGIN, sections } from "../main";
 
 export class SettingsForm extends Form {
   userAgent: string = "";
@@ -129,6 +130,19 @@ export class SettingsForm extends Form {
       ),
       Section(
         {
+          id: "sections_section",
+          header: "Section Order",
+        },
+        [
+          NavigationRow("sectionOrder", {
+            title: "Sections Order",
+            subtitle: "Sections Order",
+            form: sections.getSettings(),
+          }),
+        ],
+      ),
+      Section(
+        {
           id: "default_value",
           footer: "Separate filters with `,`",
           header: "Default Search Filter",
@@ -225,10 +239,12 @@ export class SettingsForm extends Form {
     await loginManager.logIn(cookies);
     Application.invalidateDiscoverSections();
     this.reloadForm();
+    return;
   }
 
   async handleLoginCancel(): Promise<void> {
     this.reloadForm();
+    return;
   }
 
   async handleLogoutButton(): Promise<void> {

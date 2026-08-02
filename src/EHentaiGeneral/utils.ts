@@ -288,6 +288,11 @@ export class LogInManager {
     return this.AUTH_COOKIE_NAMES.has(cookie.name);
   }
 
+  checkLoginCookie(cookies: Cookie[]) {
+    const cookieNames = new Set(cookies.map((c) => c.name));
+    return [...this.AUTH_COOKIE_NAMES].every((name) => cookieNames.has(name));
+  }
+
   isLoggedIn(): boolean {
     return [...this.AUTH_COOKIE_NAMES].every((name) => this.isCookieValid(name));
   }
@@ -310,13 +315,15 @@ export class LogInManager {
   }
 
   async logIn(cookies: Cookie[]): Promise<void> {
-    await this.getUsername(cookies);
-    cookies
-      .filter((cookie) => this.isAuthCookie(cookie))
-      .forEach((cookie) => {
-        cookie.domain = BASE_URL.split("https://")[1];
-        this.loginCookieStorageInterceptor.setCookie(cookie);
-      });
+    if (this.checkLoginCookie(cookies)) {
+      cookies
+        .filter((cookie) => this.isAuthCookie(cookie))
+        .forEach((cookie) => {
+          cookie.domain = BASE_URL.split("https://")[1];
+          this.loginCookieStorageInterceptor.setCookie(cookie);
+        });
+      await this.getUsername(cookies);
+    }
     Application.invalidateDiscoverSections();
   }
 
