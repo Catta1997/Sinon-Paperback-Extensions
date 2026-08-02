@@ -1,7 +1,6 @@
 import {
   type DiscoverSection,
   type DiscoverSectionItem,
-  DiscoverSectionType,
   Form,
   type Request,
   type Response,

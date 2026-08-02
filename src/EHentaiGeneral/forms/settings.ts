@@ -24,7 +24,6 @@ import {
   SelectRow,
   StepperRow,
   WebViewRow,
-  EditSection,
   NavigationRow,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
