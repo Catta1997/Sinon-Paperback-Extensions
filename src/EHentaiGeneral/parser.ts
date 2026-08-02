@@ -149,18 +149,18 @@ export class Parser {
     };
   }
 
-  async parseFeatured(metadata:Metadata): Promise<PagedResults<DiscoverSectionItem>> {
-    const html = await network.getSection("",metadata);
+  async parseFeatured(metadata: Metadata): Promise<PagedResults<DiscoverSectionItem>> {
+    const html = await network.getSection("", metadata);
     return this.parseDiscover(html);
   }
 
-  async parseRecent(metadata:Metadata) {
-    const html = await network.getSection("popular",metadata);
+  async parseRecent(metadata: Metadata) {
+    const html = await network.getSection("popular", metadata);
     return this.parseDiscover(html);
   }
 
-  async parseWatched(metadata:Metadata) {
-    const html = await network.getSection("watched",metadata);
+  async parseWatched(metadata: Metadata) {
+    const html = await network.getSection("watched", metadata);
     return this.parseDiscover(html);
   }
 

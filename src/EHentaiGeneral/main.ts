@@ -49,13 +49,13 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
       subtitle: "",
       type: DiscoverSectionType.featured,
     });
-    discover_section.push({
-      id: "Watched",
-      title: "Watched",
-      subtitle: "",
-      type: DiscoverSectionType.featured,
-    });
     if (loginManager.isLoggedIn()) {
+      discover_section.push({
+        id: "Watched",
+        title: "Watched",
+        subtitle: "",
+        type: DiscoverSectionType.featured,
+      });
       discover_section.push({
         id: "Favorite",
         title: "Favorite",
