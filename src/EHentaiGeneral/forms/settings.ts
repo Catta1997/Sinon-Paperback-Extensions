@@ -1,18 +1,4 @@
-import {
-  capitalLetter,
-  getDefaultArtist,
-  getDefaultCharacter,
-  getDefaultCosplayer,
-  getDefaultFemale,
-  getDefaultGroup,
-  getDefaultMale,
-  getDefaultMixed,
-  getDefaultOther,
-  getDefaultParody,
-  getDefLangGloablStatus,
-  getDefLangStatus,
-  getLanguages,
-} from "../utils";
+import { capitalLetter, getDefLangGloablStatus, getDefLangStatus, getLanguages } from "../utils";
 import {
   ButtonRow,
   type Cookie,
@@ -25,11 +11,10 @@ import {
   StepperRow,
   WebViewRow,
   NavigationRow,
-  EditSection,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 import { BASE_URL, loginManager, REQUIRE_LOGIN, sections } from "../main";
-import { type FilterKey, filterKeys, languageAll, typeFilter } from "../models";
+import { filterKeys, typeFilter } from "../models";
 
 export class SettingsForm extends Form {
   onValueChangeLabelProxy = new Proxy(this, {
@@ -238,19 +223,21 @@ export class SettingsForm extends Form {
     this.reloadForm();
   }
   async handleDefLangGlobalStatusChange(value: string[]): Promise<void> {
-    if (value.length > 0) {
+    const wasAll = getDefLangGloablStatus().includes("all");
+    if (wasAll && value.length > 1) {
       value = value.filter((t) => t !== "all");
     }
-    if (value.length === languageAll.length) {
+    if (!wasAll && value.includes("all")) {
       value = ["all"];
     }
     await this.updateValue(value, "_globalLanguages");
   }
   async handleDefLangStatusChange(value: string[]): Promise<void> {
-    if (value.length > 0) {
+    const wasAll = getDefLangStatus().includes("all");
+    if (wasAll && value.length > 1) {
       value = value.filter((t) => t !== "all");
     }
-    if (value.length === languageAll.length) {
+    if (!wasAll && value.includes("all")) {
       value = ["all"];
     }
     await this.updateValue(value, "_languages");
