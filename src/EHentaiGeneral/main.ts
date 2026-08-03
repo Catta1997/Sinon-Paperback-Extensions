@@ -18,20 +18,26 @@ import {
 } from "@paperback/types";
 import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
-import { MainInterceptor, mainRateLimiter, Network, ImageURLInterceptor } from "./network";
+import {
+  MainInterceptor,
+  mainRateLimiter,
+  Network,
+  ImageURLInterceptor,
+  LogInManager,
+} from "./network";
 import { Parser } from "./parser";
-import { getDefaultMetadata, LogInManager, type Metadata, type SearchMetadata } from "./utils";
+import { getDefaultMetadata, type Metadata, type SearchMetadata } from "./utils";
 import { basePbConfig } from "./config";
 import { CloudflareInterceptor } from "paperback-interceptors";
 import { SectionsOrder } from "paperback-sections";
-import { getSections } from "./models";
+import { discoverSection } from "./models";
 
 export let BASE_URL = "";
 export let REQUIRE_LOGIN = false;
 export const network = new Network();
 export const parser = new Parser();
 export const loginManager = new LogInManager();
-export const sections = new SectionsOrder(getSections());
+export const sections = new SectionsOrder(discoverSection);
 
 export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfig> {
   async getSettingsForm(): Promise<Form> {
@@ -78,8 +84,13 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     _request: Request,
     cookies: Cookie[],
     _localStorage: Record<string, string>,
-  ) {
-    await loginManager.logIn(cookies);
+  ): Promise<void> {
+    for (const cookie of cookies) {
+      if (cookie.name == "cf_clearance") {
+        cookie.domain = "forum.e-hentai.org";
+        loginManager.loginCookieStorageInterceptor.setCookie(cookie);
+      }
+    }
   }
 
   async getAdvancedSearchForm(

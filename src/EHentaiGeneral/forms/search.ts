@@ -11,14 +11,8 @@ import {
   StepperRow,
   TriStateSelectRow,
 } from "@paperback/types";
-import {
-  type FilterKey,
-  filterKeys,
-  getDefaultMetadata,
-  languageAll,
-  type SearchMetadata,
-  typeFilter,
-} from "../utils";
+import { getDefaultMetadata, getLanguages, type SearchMetadata } from "../utils";
+import { type FilterKey, filterKeys, typeFilter } from "../models";
 
 class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   onValueChangeLabelProxy = new Proxy(this, {
@@ -131,8 +125,8 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
         allowEmptySelection: true,
-        maximum: languageAll.length,
-        items: languageAll.map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
+        maximum: getLanguages().length,
+        items: getLanguages().map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleLanguagesChange",

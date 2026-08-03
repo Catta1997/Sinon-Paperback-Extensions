@@ -5,13 +5,11 @@ import {
   type Request,
   type Response,
   type SearchQuery,
+  CookieStorageInterceptor,
+  type Cookie,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import {
-  getDefLangGloablStatus,
-  type Metadata,
-  type SearchMetadata,
-} from "./utils";
+import { getDefLangGloablStatus, type Metadata, type SearchMetadata } from "./utils";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -122,6 +120,9 @@ export class ImageURLInterceptor extends PaperbackInterceptor {
 export class Network {
   buildFilter(query: string, filter: { id: string; value: string[] }) {
     filter.value.forEach((filterValue) => {
+      if(filter.id === "language" &&  filter.value[0] === "all") {
+        return
+      }
       if (filterValue.startsWith("-")) {
         query += ` -${filter.id}:${filterValue.split("-")[1]}`;
       } else {
@@ -307,5 +308,85 @@ export class Network {
       method: "POST",
       body: `favcat=favdel&favnote=&apply=Apply+Changes&update=1`,
     });
+  }
+}
+
+export class LogInManager {
+  loginCookieStorageInterceptor = new CookieStorageInterceptor({
+    storage: "stateManager",
+  });
+  private readonly AUTH_COOKIE_NAMES = new Set(["ipb_member_id", "ipb_pass_hash"]);
+
+  private getCookie(name: string) {
+    return this.loginCookieStorageInterceptor.cookies.find((cookie) => cookie.name === name);
+  }
+
+  private isCookieValid(name: string): boolean {
+    const cookie = this.getCookie(name);
+    if (!cookie) {
+      return false;
+    }
+    const valid = cookie.expires ? cookie.expires > new Date() : false;
+    if (!valid) {
+      this.logOut();
+    }
+    return valid;
+  }
+
+  getAccountID(): string {
+    return this.isCookieValid("ipb_member_id")
+      ? (this.getCookie("ipb_member_id")?.value ?? "")
+      : "";
+  }
+
+  private isAuthCookie(cookie: Cookie): boolean {
+    return this.AUTH_COOKIE_NAMES.has(cookie.name);
+  }
+
+  checkLoginCookie(cookies: Cookie[]) {
+    const cookieNames = new Set(cookies.map((c) => c.name));
+    return [...this.AUTH_COOKIE_NAMES].every((name) => cookieNames.has(name));
+  }
+
+  isLoggedIn(): boolean {
+    return [...this.AUTH_COOKIE_NAMES].every((name) => this.isCookieValid(name));
+  }
+
+  async getUsername(cookies: Cookie[]) {
+    for (const cookie of cookies) {
+      cookie.domain = "forums.e-hentai.org";
+      this.loginCookieStorageInterceptor.setCookie(cookie);
+    }
+    const [_, b] = await Application.scheduleRequest({
+      url: `https://forums.e-hentai.org/index.php?showuser=${this.getAccountID()}`,
+      method: "GET",
+      headers: { "user-agent": await Application.getDefaultUserAgent() },
+    });
+    const html = Application.arrayBufferToUTF8String(b);
+    const match = html.match(/Viewing Profile: (\w*)/);
+    const username = match?.[1];
+    Application.setSecureState(username, `${BASE_URL}_username`);
+    console.log(username);
+  }
+
+  async logIn(cookies: Cookie[]): Promise<void> {
+    if (this.checkLoginCookie(cookies)) {
+      await this.getUsername(cookies);
+      cookies
+        .filter((cookie) => this.isAuthCookie(cookie))
+        .forEach((cookie) => {
+          cookie.domain = BASE_URL.split("https://")[1];
+          this.loginCookieStorageInterceptor.setCookie(cookie);
+        });
+    }
+    Application.invalidateDiscoverSections();
+  }
+
+  logOut(): void {
+    this.loginCookieStorageInterceptor.cookies.forEach((cookie) => {
+      this.loginCookieStorageInterceptor.deleteCookie(cookie);
+    });
+    Application.setSecureState(undefined, `${BASE_URL}_username`);
+    Application.invalidateDiscoverSections();
   }
 }
