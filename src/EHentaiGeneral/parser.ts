@@ -12,23 +12,16 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import {
-  type GalleryInfo,
+  capitalLetter,
   getDefaultMetadata,
   getLangFlag,
   type Metadata,
   type SearchMetadata,
 } from "./utils";
 import { BASE_URL, network } from "./main";
+import type { GalleryInfo } from "./models";
 
 export class Parser {
-  private capitalLetter(str: string): string {
-    return str
-      .toLowerCase()
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.substring(1))
-      .join(" ");
-  }
-
   private parseTitle(str: string): string {
     return str
       .replaceAll(/(\[.*?]|\(.*?\))/g, "")
@@ -93,7 +86,7 @@ export class Parser {
               .join(" ");
           }
         });
-        const subtitle = this.capitalLetter(
+        const subtitle = capitalLetter(
           [lang, artist].filter((v) => v.trim().length > 0).join(" | "),
         );
         results.push({
@@ -194,7 +187,7 @@ export class Parser {
         mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
         title: this.parseTitle(item.title),
         supertitle: item.category,
-        summary: `Language: ${this.capitalLetter(item.lang)}${item.artist.length > 0 ? `\nArtist: ` + this.capitalLetter(item.artist) : ``}\nDate: ${this.parseDate(item.date)}`,
+        summary: `Language: ${capitalLetter(item.lang)}${item.artist.length > 0 ? `\nArtist: ` + capitalLetter(item.artist) : ``}\nDate: ${this.parseDate(item.date)}`,
         infoItems: [
           { symbol: "star.fill", text: String(item.rating) },
           { symbol: "book.pages", text: item.pages },
@@ -218,7 +211,7 @@ export class Parser {
       tags: [
         {
           id: additionalMangaInfo.category.toLowerCase().replaceAll(" ", "_"),
-          title: this.capitalLetter(additionalMangaInfo.category),
+          title: capitalLetter(additionalMangaInfo.category),
         },
       ],
     });
@@ -232,7 +225,7 @@ export class Parser {
         .find('td div[class^="gt"] > a')
         .map((i, a) => ({
           id: $(a).attr("id") ?? "",
-          title: this.capitalLetter($(a).text().trim().replaceAll(/\s+/g, " ").trim()),
+          title: capitalLetter($(a).text().trim().replaceAll(/\s+/g, " ").trim()),
         }))
         .get();
       const artistTag = tags.find((tag) => tag.id.includes("ta_artist"));
@@ -242,7 +235,7 @@ export class Parser {
       if (category !== "artist" && category !== "language") {
         tagSectionList.push({
           id: category ?? "",
-          title: this.capitalLetter(category ?? ""),
+          title: capitalLetter(category ?? ""),
           tags: tags,
         });
       }
@@ -265,7 +258,7 @@ export class Parser {
     const info: MangaInfo = {
       thumbnailUrl: imageUrl ?? "",
       synopsis: "",
-      artist: this.capitalLetter(artist),
+      artist: capitalLetter(artist),
       rating: additionalMangaInfo.rating.average / 500,
       secondaryTitles: [this.parseTitle(secondaryTitle)],
       primaryTitle: this.parseTitle(title),

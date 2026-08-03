@@ -1,4 +1,5 @@
 import {
+  capitalLetter,
   getDefaultArtist,
   getDefaultCharacter,
   getDefaultCosplayer,
@@ -10,8 +11,7 @@ import {
   getDefaultParody,
   getDefLangGloablStatus,
   getDefLangStatus,
-  languageAll,
-  typeFilter,
+  getLanguages,
 } from "../utils";
 import {
   ButtonRow,
@@ -25,26 +25,57 @@ import {
   StepperRow,
   WebViewRow,
   NavigationRow,
+  EditSection,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 import { BASE_URL, loginManager, REQUIRE_LOGIN, sections } from "../main";
+import { type FilterKey, filterKeys, languageAll, typeFilter } from "../models";
 
 export class SettingsForm extends Form {
+  onValueChangeLabelProxy = new Proxy(this, {
+    has(target, p) {
+      return typeof p === "string" && p.startsWith("onHandle_") ? true : Object.hasOwn(target, p);
+    },
+
+    get(target, p) {
+      if (typeof p === "string" && p.startsWith("onHandle_")) {
+        const rowId = p.slice("onHandle_".length);
+        return async (value?: any) => {
+          await target.onHandle(rowId, value);
+        };
+      }
+      // @ts-ignore
+      return target[p];
+    },
+  });
   userAgent: string = "";
   constructor(userAgent: string) {
     super();
     this.userAgent = userAgent;
   }
-
   override getSections() {
     const types: { id: string; title: string }[] = typeFilter.map((tag) => ({
       id: tag.id,
       title: tag.value,
     }));
-    const languages: { id: string; title: string }[] = languageAll.map((tag) => ({
+    const languages: { id: string; title: string }[] = getLanguages().map((tag) => ({
       id: tag.id,
       title: `${tag.flag} ${tag.value}`,
     }));
+    const inputSections = filterKeys.map((filter) =>
+      InputRow(`${filter}`, {
+        title: `${capitalLetter(filter)}`,
+        value: ((Application.getState(`_${filter}`) as string | undefined) ?? "")
+          .split(",")
+          .filter(Boolean)
+          .join(","),
+        onValueChange: Application.Selector(
+          this.onValueChangeLabelProxy,
+          // @ts-expect-error
+          `onHandle_${filter}`,
+        ),
+      }),
+    );
     return [
       Section(
         {
@@ -94,7 +125,7 @@ export class SettingsForm extends Form {
         [
           SelectRow("hide_type", {
             title: "Contents",
-            subtitle: "Default value for content type, affect search and sections",
+            subtitle: "content type, affect search and sections",
             value: this.getHideTypeStatus(),
             layout: "list",
             items: types,
@@ -148,8 +179,7 @@ export class SettingsForm extends Form {
         },
         [
           SelectRow("def_languages", {
-            title: "Default Languages",
-            subtitle: "Default languages",
+            title: "Language",
             value: getDefLangStatus(),
             layout: "list",
             items: languages,
@@ -157,57 +187,7 @@ export class SettingsForm extends Form {
             maxItemCount: languages.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleDefLangStatusChange"),
           }),
-          InputRow("character", {
-            title: "Default value for `character` filter",
-            value: getDefaultCharacter().join(","),
-            onValueChange: Application.Selector(
-              this as SettingsForm,
-              "handleDefaultCharacterChange",
-            ),
-          }),
-          InputRow("male", {
-            title: "Default value for `male` filter",
-            value: getDefaultMale().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultMaleChange"),
-          }),
-          InputRow("female", {
-            title: "Default value for `female` filter",
-            value: getDefaultFemale().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultFemaleChange"),
-          }),
-          InputRow("other", {
-            title: "Default value for `other` filter",
-            value: getDefaultOther().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultOtherChange"),
-          }),
-          InputRow("parody", {
-            title: "Default value for `parody` filter",
-            value: getDefaultParody().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultParodyChange"),
-          }),
-          InputRow("artist", {
-            title: "Default value for `artist` filter",
-            value: getDefaultArtist().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultArtistChange"),
-          }),
-          InputRow("mixed", {
-            title: "Default value for `mixed` filter",
-            value: getDefaultMixed().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultMixedChange"),
-          }),
-          InputRow("cosplayer", {
-            title: "Default value for `cosplayer` filter",
-            value: getDefaultCosplayer().join(","),
-            onValueChange: Application.Selector(
-              this as SettingsForm,
-              "handleDefaultCosplayerChange",
-            ),
-          }),
-          InputRow("group", {
-            title: "Default value for `group` filter",
-            value: getDefaultGroup().join(","),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDefaultGroupChange"),
-          }),
+          ...inputSections,
         ],
       ),
     ];
@@ -258,9 +238,21 @@ export class SettingsForm extends Form {
     this.reloadForm();
   }
   async handleDefLangGlobalStatusChange(value: string[]): Promise<void> {
+    if (value.length > 0) {
+      value = value.filter((t) => t !== "all");
+    }
+    if (value.length === languageAll.length) {
+      value = ["all"];
+    }
     await this.updateValue(value, "_globalLanguages");
   }
   async handleDefLangStatusChange(value: string[]): Promise<void> {
+    if (value.length > 0) {
+      value = value.filter((t) => t !== "all");
+    }
+    if (value.length === languageAll.length) {
+      value = ["all"];
+    }
     await this.updateValue(value, "_languages");
   }
   async handleHideTypeStatusChange(value: string[]): Promise<void> {
@@ -292,6 +284,11 @@ export class SettingsForm extends Form {
   }
   async handleDefaultGroupChange(value: string): Promise<void> {
     await this.updateValue(value, "_group");
+  }
+  async onHandle(type: string, value: string): Promise<void> {
+    console.log(type);
+    console.log(value);
+    await this.updateValue(value, `_${type}`);
   }
 
   getRateFormsValue(): number {
