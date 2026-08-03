@@ -120,8 +120,8 @@ export class ImageURLInterceptor extends PaperbackInterceptor {
 export class Network {
   buildFilter(query: string, filter: { id: string; value: string[] }) {
     filter.value.forEach((filterValue) => {
-      if(filter.id === "language" &&  filter.value[0] === "all") {
-        return
+      if (filter.id === "language" && filter.value[0] === "all") {
+        return;
       }
       if (filterValue.startsWith("-")) {
         query += ` -${filter.id}:${filterValue.split("-")[1]}`;

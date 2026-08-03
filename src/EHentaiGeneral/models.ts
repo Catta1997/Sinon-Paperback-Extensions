@@ -186,13 +186,13 @@ export type BaseMetadata = {
 
 export type FilterKey = (typeof filterKeys)[number];
 export const filterKeys = [
-  "other",
-  "female",
-  "male",
-  "character",
-  "parody",
   "artist",
-  "mixed",
+  "character",
   "cosplayer",
+  "female",
   "group",
+  "male",
+  "mixed",
+  "other",
+  "parody",
 ] as const;
