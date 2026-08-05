@@ -222,6 +222,7 @@ export class SettingsForm extends Form {
     loginManager.logOut();
     this.reloadForm();
   }
+
   async handleDefLangGlobalStatusChange(value: string[]): Promise<void> {
     const wasAll = getDefLangGloablStatus().includes("all");
     if (wasAll && value.length > 1) {
@@ -232,6 +233,7 @@ export class SettingsForm extends Form {
     }
     await this.updateValue(value, "_globalLanguages");
   }
+
   async handleDefLangStatusChange(value: string[]): Promise<void> {
     const wasAll = getDefLangStatus().includes("all");
     if (wasAll && value.length > 1) {
@@ -242,36 +244,11 @@ export class SettingsForm extends Form {
     }
     await this.updateValue(value, "_languages");
   }
+
   async handleHideTypeStatusChange(value: string[]): Promise<void> {
     await this.updateValue(value, "_type");
   }
-  async handleDefaultCharacterChange(value: string): Promise<void> {
-    await this.updateValue(value, "_character");
-  }
-  async handleDefaultFemaleChange(value: string): Promise<void> {
-    await this.updateValue(value, "_female");
-  }
-  async handleDefaultMaleChange(value: string): Promise<void> {
-    await this.updateValue(value, "_male");
-  }
-  async handleDefaultOtherChange(value: string): Promise<void> {
-    await this.updateValue(value, "_other");
-  }
-  async handleDefaultParodyChange(value: string): Promise<void> {
-    await this.updateValue(value, "_parody");
-  }
-  async handleDefaultArtistChange(value: string): Promise<void> {
-    await this.updateValue(value, "_artist");
-  }
-  async handleDefaultMixedChange(value: string): Promise<void> {
-    await this.updateValue(value, "_mixed");
-  }
-  async handleDefaultCosplayerChange(value: string): Promise<void> {
-    await this.updateValue(value, "_cosplayer");
-  }
-  async handleDefaultGroupChange(value: string): Promise<void> {
-    await this.updateValue(value, "_group");
-  }
+
   async onHandle(type: string, value: string): Promise<void> {
     console.log(type);
     console.log(value);

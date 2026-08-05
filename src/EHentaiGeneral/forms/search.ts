@@ -11,7 +11,7 @@ import {
   StepperRow,
   TriStateSelectRow,
 } from "@paperback/types";
-import { getDefaultMetadata, getLanguages, type SearchMetadata } from "../utils";
+import { capitalLetter, getDefaultMetadata, getLanguages, type SearchMetadata } from "../utils";
 import { type FilterKey, filterKeys, typeFilter } from "../models";
 
 class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
@@ -78,6 +78,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   override getSections(): FormSectionElement<unknown>[] {
     const inputSections = filterKeys.map((filter) =>
       EditSection(`${filter}`, {
+        header: capitalLetter(filter),
         allowAddition: false,
         allowDeletion: true,
         allowReorder: false,
@@ -92,19 +93,19 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     );
     return [
-      Section("type", this.getTypeFilter()),
-      Section("language", this.getLanguageFilter()),
-      Section("rating", this.getRatingFilter()),
+      Section({ id: "type", header: "Type" }, this.getTypeFilter()),
+      Section({ id: "language", header: "Language" }, this.getLanguageFilter()),
+      Section({ id: "rating", header: "Minimum Rating" }, this.getRatingFilter()),
+      Section({ id: "minPagesFilter", header: "Minimum Pages" }, this.getMinPagesFilter()),
+      Section({ id: "maxPagesFilter", header: "Maximum Pages" }, this.getMaxPagesFilter()),
       ...inputSections,
-      Section("minPagesFilter", this.getMinPagesFilter()),
-      Section("maxPagesFilter", this.getMaxPagesFilter()),
     ];
   }
   getTypeFilter(): FormItemElement<unknown>[] {
     return [
       SelectRow("genres", {
-        title: "Type",
-        subtitle: "Select the genre(s) to include/exclude in search results",
+        title: "Content type",
+        subtitle: "Select the type(s) to include in search results",
         value:
           this.searchMetadata.type && this.searchMetadata.type.length > 0
             ? this.searchMetadata.type
@@ -120,8 +121,8 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     return [
       TriStateSelectRow("language", {
         layout: "list",
-        title: "Languages",
-        subtitle: "Select the language(s) to include in search results",
+        title: "Content languages",
+        subtitle: "Select the language(s) to include/exlude in search results",
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
         allowEmptySelection: true,
@@ -138,7 +139,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     const values = this.searchMetadata[type] as string[] | undefined;
     return [
       InputRow(type, {
-        title: `Add ${type} filter`,
+        title: `Add filter`,
         value: "",
         onValueChange: Application.Selector(
           this.onValueChangeLabelProxy,
@@ -162,7 +163,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   getRatingFilter(): FormItemElement<unknown>[] {
     return [
       StepperRow(`rating`, {
-        title: "Rating",
+        title: "Minimum rating of content",
         value: this.searchMetadata.rating ?? 0,
         minValue: 0,
         maxValue: 5,
@@ -178,7 +179,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   getMinPagesFilter(): FormItemElement<unknown>[] {
     return [
       StepperRow(`minPages`, {
-        title: "Min Pages",
+        title: "Minimum content pages",
         value: this.searchMetadata.minPages ?? 0,
         minValue: 0,
         maxValue: this.searchMetadata.maxPages ? this.searchMetadata.maxPages - 20 : 999,
@@ -198,7 +199,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     const minMaxVale = min != 0 && max < 10;
     return [
       StepperRow(`maxPages`, {
-        title: "Max Pages",
+        title: "Maximum content pages",
         value: this.searchMetadata.maxPages ?? 0,
         minValue: 0,
         maxValue: 999,
@@ -252,9 +253,11 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   }
   async handleMaxPagesChange(value: number): Promise<void> {
     this.searchMetadata.maxPages = value;
+    this.reloadForm();
   }
   async handleMinPagesChange(value: number): Promise<void> {
     this.searchMetadata.minPages = value;
+    this.reloadForm();
   }
 }
 
