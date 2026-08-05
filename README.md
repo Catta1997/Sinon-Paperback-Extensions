@@ -9,6 +9,7 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 Manga:
 
 - E-Hentai (🔞 | Multi-Language)
+- ExHentai (🔞 | Multi-Language)
 - GTOTheGreatSite (🇮🇹)
 - HastaTeam (🇮🇹)
 - HastaTeamDDT (🇮🇹)
