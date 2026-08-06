@@ -1,4 +1,12 @@
-import { capitalLetter, getDefLangGloablStatus, getDefLangStatus, getLanguages } from "../utils";
+import {
+  capitalLetter,
+  getDefLangGloablStatus,
+  getDefLangStatus,
+  getDisabledCustomLang,
+  getDisabledCustomTags,
+  getDisabledCustomUploader,
+  getLanguages,
+} from "../utils";
 import {
   ButtonRow,
   type Cookie,
@@ -11,6 +19,8 @@ import {
   StepperRow,
   WebViewRow,
   NavigationRow,
+  TriStateSelectRow,
+  ToggleRow,
 } from "@paperback/types";
 import { mainRateLimiter } from "../network";
 import { BASE_URL, loginManager, REQUIRE_LOGIN, sections } from "../main";
@@ -109,27 +119,14 @@ export class SettingsForm extends Form {
         },
         [
           SelectRow("hide_type", {
-            title: "Contents",
-            subtitle: "content type, affect search and sections",
+            title: "Type",
+            subtitle: "Affect search and sections",
             value: this.getHideTypeStatus(),
             layout: "list",
             items: types,
             minItemCount: 1,
             maxItemCount: types.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
-          }),
-          SelectRow("def_languages", {
-            title: "Languages for Sections",
-            subtitle: "This settings will not be applied to 'Popular' and 'Favorite' Sections",
-            value: getDefLangGloablStatus(),
-            layout: "list",
-            items: languages,
-            minItemCount: 0,
-            maxItemCount: languages.length,
-            onValueChange: Application.Selector(
-              this as SettingsForm,
-              "handleDefLangGlobalStatusChange",
-            ),
           }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
@@ -141,17 +138,53 @@ export class SettingsForm extends Form {
             loopOver: false,
             onValueChange: Application.Selector(this as SettingsForm, "handleRateStatusChange"),
           }),
+          ToggleRow("custom_len", {
+            title: "Languages",
+            subtitle: "Disable custom filter for languages",
+            value: getDisabledCustomLang(),
+            isHidden: !loginManager.isLoggedIn(),
+            onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomLan"),
+          }),
+          ToggleRow("custom_upl", {
+            title: "Uploader",
+            subtitle: "Disable custom filter for uploader",
+            value: getDisabledCustomUploader(),
+            isHidden: !loginManager.isLoggedIn(),
+            onValueChange: Application.Selector(
+              this as SettingsForm,
+              "handleDisableCustomUploader",
+            ),
+          }),
+          ToggleRow("custom_tags", {
+            title: "Tags",
+            subtitle: "Disable custom filter for tags",
+            value: getDisabledCustomTags(),
+            isHidden: !loginManager.isLoggedIn(),
+            onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomTags"),
+          }),
         ],
       ),
       Section(
         {
           id: "sections_section",
-          header: "Section Order",
+          header: "Sections",
         },
         [
+          TriStateSelectRow("def_languages", {
+            title: "Languages",
+            subtitle: "This settings will not be applied to 'Popular' and 'Favorite' Sections",
+            value: getDefLangGloablStatus(),
+            layout: "list",
+            items: languages,
+            allowExclusion: true,
+            allowEmptySelection: false,
+            onValueChange: Application.Selector(
+              this as SettingsForm,
+              "handleDefLangGlobalStatusChange",
+            ),
+          }),
           NavigationRow("sectionOrder", {
             title: "Sections Order",
-            subtitle: "Sections Order",
             form: sections.getSettings(),
           }),
         ],
@@ -163,13 +196,14 @@ export class SettingsForm extends Form {
           header: "Default Search Filter",
         },
         [
-          SelectRow("def_languages", {
+          TriStateSelectRow("def_languages", {
             title: "Language",
             value: getDefLangStatus(),
             layout: "list",
             items: languages,
-            minItemCount: 0,
-            maxItemCount: languages.length,
+            allowExclusion: true,
+            allowEmptySelection: false,
+            maximum: languages.length,
             onValueChange: Application.Selector(this as SettingsForm, "handleDefLangStatusChange"),
           }),
           ...inputSections,
@@ -223,24 +257,40 @@ export class SettingsForm extends Form {
     this.reloadForm();
   }
 
-  async handleDefLangGlobalStatusChange(value: string[]): Promise<void> {
-    const wasAll = getDefLangGloablStatus().includes("all");
-    if (wasAll && value.length > 1) {
-      value = value.filter((t) => t !== "all");
+  async handleDefLangGlobalStatusChange(
+    value: Record<string, "included" | "excluded">,
+  ): Promise<void> {
+    const previous = getDefLangGloablStatus() ?? { all: "included" };
+    if (value.all === "excluded") {
+      value.all = "included";
     }
-    if (!wasAll && value.includes("all")) {
-      value = ["all"];
+    const hadAll = previous.all === "included";
+    const hasAll = value.all === "included";
+    if (!hadAll && hasAll) {
+      value = { all: "included" };
+    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
+      delete value.all;
+    }
+    if (Object.keys(value).length === 0) {
+      value = { all: "included" };
     }
     await this.updateValue(value, "_globalLanguages");
   }
 
-  async handleDefLangStatusChange(value: string[]): Promise<void> {
-    const wasAll = getDefLangStatus().includes("all");
-    if (wasAll && value.length > 1) {
-      value = value.filter((t) => t !== "all");
+  async handleDefLangStatusChange(value: Record<string, "included" | "excluded">): Promise<void> {
+    const previous = getDefLangStatus() ?? { all: "included" };
+    if (value.all === "excluded") {
+      value.all = "included";
     }
-    if (!wasAll && value.includes("all")) {
-      value = ["all"];
+    const hadAll = previous.all === "included";
+    const hasAll = value.all === "included";
+    if (!hadAll && hasAll) {
+      value = { all: "included" };
+    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
+      delete value.all;
+    }
+    if (Object.keys(value).length === 0) {
+      value = { all: "included" };
     }
     await this.updateValue(value, "_languages");
   }
@@ -265,5 +315,17 @@ export class SettingsForm extends Form {
   async handleRateStatusChange(value: number): Promise<void> {
     await this.updateValue(value, "RateFilter");
     mainRateLimiter.options.numberOfRequests = value;
+  }
+
+  async handleDisableCustomLan(value: boolean): Promise<void> {
+    await this.updateValue(value, "_custom_lang");
+  }
+
+  async handleDisableCustomUploader(value: boolean): Promise<void> {
+    await this.updateValue(value, "_custom_upl");
+  }
+
+  async handleDisableCustomTags(value: boolean): Promise<void> {
+    await this.updateValue(value, "_custom_tags");
   }
 }

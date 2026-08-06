@@ -9,7 +9,13 @@ import {
   type Cookie,
 } from "@paperback/types";
 import * as cheerio from "cheerio";
-import { getDefLangGloablStatus, type Metadata, type SearchMetadata } from "./utils";
+import {
+  getDefLangGloablStatus,
+  getDisabledCustomTags,
+  getDisabledCustomUploader,
+  type Metadata,
+  type SearchMetadata,
+} from "./utils";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
@@ -214,6 +220,15 @@ export class Network {
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
+    if (getDisabledCustomUploader()) {
+      url.setQueryItem("f_sfu", "on");
+    }
+    if (getDisabledCustomTags()) {
+      url.setQueryItem("f_sft", "on");
+    }
+    if (getDisabledCustomUploader()) {
+      url.setQueryItem("f_sfl", "on");
+    }
     const min = query.metadata?.minPages ?? 0;
     const max = query.metadata?.maxPages ?? 0;
     if (isValid(min)) url.setQueryItem("f_spf", String(min));
@@ -240,9 +255,7 @@ export class Network {
     if (metadata?.page) {
       url.setQueryItem("next", metadata.page);
     }
-    const languageFilter = Object.fromEntries(
-      getDefLangGloablStatus().map((language) => [language, "included"]),
-    ) as Record<string, "included" | "excluded">;
+    const languageFilter = getDefLangGloablStatus();
 
     const languageFilterMap = Object.entries(languageFilter ?? {}).map(
       ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
@@ -252,6 +265,15 @@ export class Network {
       "f_search",
       this.buildFilter("", { id: "language", value: languageFilterMap }),
     );
+    if (getDisabledCustomUploader()) {
+      url.setQueryItem("f_sfu", "on");
+    }
+    if (getDisabledCustomTags()) {
+      url.setQueryItem("f_sft", "on");
+    }
+    if (getDisabledCustomUploader()) {
+      url.setQueryItem("f_sfl", "on");
+    }
     const data = await Application.scheduleRequest({
       url: url.toString(),
       method: "GET",

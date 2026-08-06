@@ -7,12 +7,20 @@ export function getLangFlag(lang: string) {
   return langFlag?.flag ?? "";
 }
 
-export function getDefLangStatus(): string[] {
-  return (Application.getState("_languages") as string[] | undefined) ?? ["all"];
+export function getDefLangStatus(): Record<string, "excluded" | "included"> {
+  return (
+    (Application.getState("_languages") as Record<string, "excluded" | "included"> | undefined) ?? {
+      all: "included",
+    }
+  );
 }
 
-export function getDefLangGloablStatus(): string[] {
-  return (Application.getState("_globalLanguages") as string[] | undefined) ?? ["all"];
+export function getDefLangGloablStatus(): Record<string, "excluded" | "included"> {
+  return (
+    (Application.getState("_globalLanguages") as
+      | Record<string, "excluded" | "included">
+      | undefined) ?? { all: "included" }
+  );
 }
 
 export function getLanguages() {
@@ -67,9 +75,7 @@ export function getDefaultMetadata(favoriteID: string = ""): SearchMetadata {
   const group = getDefaultGroup();
   return {
     type: (Application.getState("_type") as string[]) ?? [],
-    language: Object.fromEntries(
-      getDefLangStatus().map((language) => [language, "included"]),
-    ) as Record<string, "included" | "excluded">,
+    language: getDefLangStatus(),
     ...(character.length > 0 && { character }),
     ...(female.length > 0 && { female }),
     ...(male.length > 0 && { male }),
@@ -81,6 +87,18 @@ export function getDefaultMetadata(favoriteID: string = ""): SearchMetadata {
     ...(group.length > 0 && { group }),
     ...(favoriteID.length > 0 && { favoriteID }),
   };
+}
+
+export function getDisabledCustomLang() {
+  return (Application.getState("_custom_lang") as boolean | undefined) ?? false;
+}
+
+export function getDisabledCustomUploader() {
+  return (Application.getState("_custom_upl") as boolean | undefined) ?? false;
+}
+
+export function getDisabledCustomTags() {
+  return (Application.getState("_custom_tags") as boolean | undefined) ?? false;
 }
 
 export function capitalLetter(str: string): string {

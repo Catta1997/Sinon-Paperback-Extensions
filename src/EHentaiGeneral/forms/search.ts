@@ -125,7 +125,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         subtitle: "Select the language(s) to include/exlude in search results",
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
-        allowEmptySelection: true,
+        allowEmptySelection: false,
         maximum: getLanguages().length,
         items: getLanguages().map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
         onValueChange: Application.Selector(
@@ -221,9 +221,11 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     ];
   }
   async onHandle(type: string, value: string): Promise<void> {
-    const key = type as FilterKey;
-    const current = this.searchMetadata[key] ?? [];
-    this.searchMetadata[key] = [...current, value];
+    if (value.length > 0) {
+      const key = type as FilterKey;
+      const current = this.searchMetadata[key] ?? [];
+      this.searchMetadata[key] = [...current, value];
+    }
   }
   async onChange(rowId: string, value: string): Promise<void> {
     const [indexStr, type] = rowId.split("_");
@@ -246,6 +248,24 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
     this.searchMetadata.type = value;
   }
   async handleLanguagesChange(value: Record<string, "included" | "excluded">): Promise<void> {
+    const previous = this.searchMetadata.language ?? { all: "included" };
+    // "all" non può mai essere excluded
+    if (value.all === "excluded") {
+      value.all = "included";
+    }
+    const hadAll = previous.all === "included";
+    const hasAll = value.all === "included";
+    if (!hadAll && hasAll) {
+      // è stato appena selezionato "all"
+      value = { all: "included" };
+    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
+      // avevo "all" e ho selezionato una o più lingue
+      delete value.all;
+    }
+    // se non rimane nulla, torno ad "all"
+    if (Object.keys(value).length === 0) {
+      value = { all: "included" };
+    }
     this.searchMetadata.language = value;
   }
   async handleRatingChange(value: number): Promise<void> {
