@@ -101,6 +101,10 @@ export function getDisabledCustomTags() {
   return (Application.getState("_custom_tags") as boolean | undefined) ?? false;
 }
 
+export function getDebugMode() {
+  return (Application.getState("_debug") as boolean | undefined) ?? false;
+}
+
 export function capitalLetter(str: string): string {
   return str
     .toLowerCase()

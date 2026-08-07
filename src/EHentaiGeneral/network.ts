@@ -37,6 +37,9 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
   }
   override async interceptRequest(request: Request): Promise<Request> {
+    if (Application.filterAdultTitles || Application.filterMatureTitles) {
+      throw new Error("Content of this extension are hidden. Check Paperback content settings");
+    }
     if (this.isImageUrl(request.url)) {
       if (request.headers && request.headers["nl-link"]) {
         if (request.headers["first"]) {
@@ -343,22 +346,8 @@ export class LogInManager {
     return this.loginCookieStorageInterceptor.cookies.find((cookie) => cookie.name === name);
   }
 
-  private isCookieValid(name: string): boolean {
-    const cookie = this.getCookie(name);
-    if (!cookie) {
-      return false;
-    }
-    const valid = cookie.expires ? cookie.expires > new Date() : false;
-    if (!valid) {
-      this.logOut();
-    }
-    return valid;
-  }
-
   getAccountID(): string {
-    return this.isCookieValid("ipb_member_id")
-      ? (this.getCookie("ipb_member_id")?.value ?? "")
-      : "";
+    return this.getCookie("ipb_member_id")?.value ?? "ERROR";
   }
 
   private isAuthCookie(cookie: Cookie): boolean {
@@ -371,7 +360,13 @@ export class LogInManager {
   }
 
   isLoggedIn(): boolean {
-    return [...this.AUTH_COOKIE_NAMES].every((name) => this.isCookieValid(name));
+    const log = [...this.AUTH_COOKIE_NAMES].every(name => this.getCookie(name));
+    const username = (Application.getSecureState(`${BASE_URL}_username`) as string) ?? "";
+    if (username.length === 0) {
+      this.logOut()
+    }
+    return username.length > 0;
+    //[...this.AUTH_COOKIE_NAMES].every((name) => this.isCookieValid(name));
   }
 
   async getUsername(cookies: Cookie[]) {
@@ -388,7 +383,6 @@ export class LogInManager {
     const match = html.match(/Viewing Profile: (\w*)/);
     const username = match?.[1];
     Application.setSecureState(username, `${BASE_URL}_username`);
-    console.log(username);
   }
 
   async logIn(cookies: Cookie[]): Promise<void> {
@@ -400,8 +394,8 @@ export class LogInManager {
           cookie.domain = BASE_URL.split("https://")[1];
           this.loginCookieStorageInterceptor.setCookie(cookie);
         });
+      Application.invalidateDiscoverSections();
     }
-    Application.invalidateDiscoverSections();
   }
 
   logOut(): void {

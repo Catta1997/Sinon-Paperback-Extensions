@@ -1,5 +1,6 @@
 import {
   capitalLetter,
+  getDebugMode,
   getDefLangGloablStatus,
   getDefLangStatus,
   getDisabledCustomLang,
@@ -192,7 +193,6 @@ export class SettingsForm extends Form {
       Section(
         {
           id: "default_value",
-          footer: "Separate filters with `,`",
           header: "Default Search Filter",
         },
         [
@@ -207,6 +207,20 @@ export class SettingsForm extends Form {
             onValueChange: Application.Selector(this as SettingsForm, "handleDefLangStatusChange"),
           }),
           ...inputSections,
+        ],
+      ),
+      Section(
+        {
+          id: "debug_section",
+          header: "Debug",
+        },
+        [
+          ToggleRow("debug_toggle", {
+            title: "DEBUG",
+            value: getDebugMode(),
+            subtitle: "WARNING: turn debug on will make extension only throw debug error",
+            onValueChange: Application.Selector(this as SettingsForm, "handleDebugMode"),
+          }),
         ],
       ),
     ];
@@ -327,5 +341,9 @@ export class SettingsForm extends Form {
 
   async handleDisableCustomTags(value: boolean): Promise<void> {
     await this.updateValue(value, "_custom_tags");
+  }
+
+  async handleDebugMode(value: boolean): Promise<void> {
+    await this.updateValue(value, "_debug");
   }
 }

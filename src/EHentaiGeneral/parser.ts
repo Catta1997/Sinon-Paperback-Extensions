@@ -13,6 +13,7 @@ import {
 import * as cheerio from "cheerio";
 import {
   capitalLetter,
+  getDebugMode,
   getDefaultMetadata,
   getLangFlag,
   type Metadata,
@@ -102,6 +103,9 @@ export class Parser {
           rating: rating,
         });
       });
+    if (getDebugMode()) {
+      throw new Error(`results: ${results.length}`);
+    }
     return results;
   }
 
@@ -123,7 +127,10 @@ export class Parser {
       subtitle: item.subtitle,
       contentRating: ContentRating.ADULT,
     }));
-    if (results.length == 0) {
+    if (getDebugMode()) {
+      throw new Error(`results: ${results.length}`);
+    }
+    if (results.length === 0) {
       return {
         items: [],
         metadata: undefined,
@@ -153,6 +160,7 @@ export class Parser {
   }
 
   async parseWatched(metadata: Metadata) {
+    await Application.scheduleRequest({ url: `${BASE_URL}/mytags`, method: "GET" });
     const html = await network.getSection("watched", metadata);
     return this.parseDiscover(html);
   }
@@ -340,7 +348,12 @@ export class Parser {
 
   async scrapeAllChapterPagesList(chapter: Chapter) {
     const totalImages = Number(chapter?.additionalInfo?.pages ?? "0");
-    if (totalImages === 0) return [];
+    if (getDebugMode()) {
+      throw new Error(`totalImages: ${totalImages}`);
+    }
+    if (totalImages === 0) {
+      throw new Error("No pages found, total images 0");
+    } // return [];
     const IMAGES_PER_PAGE = 20;
     const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE);
     const pageUrls = Array.from(
@@ -359,25 +372,45 @@ export class Parser {
       });
       if (results.length >= totalImages) break;
     }
-
+    if (getDebugMode()) {
+      throw new Error(`results: ${results.length}`);
+    }
+    if (results.length === 0) {
+      throw new Error("No pages found, scraping error");
+    }
     return results;
   }
 
   async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
     let html = await network.favoriteRequest(favoriteID);
-    const $ = cheerio.load(html);
-    const results = this.parseTable($).map((item) => ({
-      mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
-      title: this.parseTitle(item.title),
-    }));
-    if (results.length === 0) {
-      return [];
-    }
+    let nextValue = "";
     const mangas: SourceManga[] = [];
-    for (const item of results) {
-      mangas.push(await this.parseMangaDetail(item.mangaId));
+    do {
+      const $ = cheerio.load(html);
+      const results = this.parseTable($).map((item) => ({
+        mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
+        title: this.parseTitle(item.title),
+      }));
+      if (results.length === 0) {
+        return mangas;
+      }
+      for (const item of results) {
+        mangas.push(await this.parseMangaDetail(item.mangaId));
+      }
+      const nextEl = $("#unext");
+      if (nextEl.is("a")) {
+        const href = nextEl.attr("href") ?? "";
+        const match = href.match(/next=([^&]+)/);
+        nextValue = match && match[1] ? match[1] : "";
+      }
+      html = `${html}/${nextValue}`;
+    } while (nextValue.length > 0);
+    if (getDebugMode()) {
+      throw new Error(`mangas: ${mangas.length}`);
     }
-    await this.parseMangaDetail(results[0].mangaId);
+    if (mangas.length === 0) {
+      throw new Error("No favorite found");
+    }
     return mangas;
   }
 
