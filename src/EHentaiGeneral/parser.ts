@@ -383,33 +383,40 @@ export class Parser {
 
   async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
     let html = await network.favoriteRequest(favoriteID);
-    let nextValue = "";
     const mangas: SourceManga[] = [];
-    do {
-      nextValue = "";
+    let results: { mangaId: string; title: string }[] = [];
+    while (true) {
       const $ = cheerio.load(html);
-      const results = this.parseTable($).map((item) => ({
-        mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
-        title: this.parseTitle(item.title),
-      }));
+      results.push(
+          ...this.parseTable($).map((item) => ({
+            mangaId: item.url?.replace(`${BASE_URL}/g/`, "") ?? "",
+            title: this.parseTitle(item.title),
+          })),
+      );
       if (results.length === 0) {
         return mangas;
       }
-      for (const item of results) {
-        try {
-          mangas.push(await this.parseMangaDetail(item.mangaId));
-        } catch (e) {
-          console.log(e);
-        }
+      const href = $("#unext").attr("href");
+      if (!href) {
+        break;
       }
-      const nextEl = $("#unext");
-      if (nextEl.is("a")) {
-        const href = nextEl.attr("href") ?? "";
-        const match = href.match(/next=([^&]+)/);
-        nextValue = match && match[1] ? match[1] : "";
+      const nextValue = href.match(/next=([^&]+)/)?.[1];
+      if (!nextValue) {
+        break;
       }
       html = await network.favoriteRequest(`${favoriteID}&next=${nextValue}`);
-    } while (nextValue.length > 0);
+    }
+    const parsedMangas = await Promise.all(
+      results.map(async ({ mangaId }) => {
+        try {
+          return await this.parseMangaDetail(mangaId);
+        } catch (e) {
+          console.log(`Failed to parse manga ${mangaId}`, e);
+          return null;
+        }
+      }),
+    );
+    mangas.push(...parsedMangas.filter((manga): manga is SourceManga => manga !== null));
     if (getDebugMode()) {
       throw new Error(`mangas: ${mangas.length}`);
     }
