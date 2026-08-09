@@ -360,10 +360,10 @@ export class LogInManager {
   }
 
   isLoggedIn(): boolean {
-    const log = [...this.AUTH_COOKIE_NAMES].every(name => this.getCookie(name));
+    const log = [...this.AUTH_COOKIE_NAMES].every((name) => this.getCookie(name));
     const username = (Application.getSecureState(`${BASE_URL}_username`) as string) ?? "";
     if (username.length === 0) {
-      this.logOut()
+      this.logOut();
     }
     return username.length > 0;
     //[...this.AUTH_COOKIE_NAMES].every((name) => this.isCookieValid(name));

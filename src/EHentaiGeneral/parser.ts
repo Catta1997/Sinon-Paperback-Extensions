@@ -386,6 +386,7 @@ export class Parser {
     let nextValue = "";
     const mangas: SourceManga[] = [];
     do {
+      nextValue = "";
       const $ = cheerio.load(html);
       const results = this.parseTable($).map((item) => ({
         mangaId: item.url ? item.url.replaceAll(`${BASE_URL}/g/`, "") : "",
@@ -395,7 +396,11 @@ export class Parser {
         return mangas;
       }
       for (const item of results) {
-        mangas.push(await this.parseMangaDetail(item.mangaId));
+        try {
+          mangas.push(await this.parseMangaDetail(item.mangaId));
+        } catch (e) {
+          console.log(e);
+        }
       }
       const nextEl = $("#unext");
       if (nextEl.is("a")) {
@@ -403,7 +408,7 @@ export class Parser {
         const match = href.match(/next=([^&]+)/);
         nextValue = match && match[1] ? match[1] : "";
       }
-      html = `${html}/${nextValue}`;
+      html = await network.favoriteRequest(`${favoriteID}&next=${nextValue}`);
     } while (nextValue.length > 0);
     if (getDebugMode()) {
       throw new Error(`mangas: ${mangas.length}`);
