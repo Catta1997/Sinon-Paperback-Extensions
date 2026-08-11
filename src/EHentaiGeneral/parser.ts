@@ -388,20 +388,12 @@ export class Parser {
     const selector = `a[href^="${BASE_URL}/s/"]`;
     for (const html of htmlPages) {
       const $ = cheerio.load(html);
-      $(selector).each((_, _el) => {
-        if (results.length >= totalImages) {
-          return false;
-        }
-        $(selector).each((_, el) => {
-          const url = $(el).attr("href");
-          if (url) {
-            results.push(url);
-          }
-        });
+      $(selector).each((_, el) => {
+        if (results.length >= totalImages) return false;
+        const url = $(el).attr("href");
+        if (url) results.push(url);
       });
-      if (results.length >= totalImages) {
-        break;
-      }
+      if (results.length >= totalImages) break;
     }
     if (getDebugMode()) {
       throw new Error(`results: ${results.length}`);
