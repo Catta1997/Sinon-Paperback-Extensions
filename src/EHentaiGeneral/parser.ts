@@ -45,11 +45,11 @@ export class Parser {
     }[] = [];
     $("tr")
       .has("td.gl1e")
-      .each((i, el) => {
+      .each((_, el) => {
         const container = $(el);
         const title = container.find("div.glink").text().trim();
         const url = container.find("a").first().attr("href") ?? "";
-        const image = container.find("img").attr("src") ?? "";
+        const image = container.find("img").first().attr("src") ?? "";
         const category = container.find(".gl3e .cn").text().trim();
         const date = container.find("div[id^='posted_']").text().trim();
         const pages = container
@@ -59,53 +59,61 @@ export class Parser {
           .text()
           .trim();
         let artist = "";
+        let lang = "";
         let rating = 0;
-        const style = container.find("div.ir").attr("style") ?? "";
-        const match = style.match(/background-position:\s*(-?\d+)px\s+(-?\d+)px/);
-        if (match) {
-          const x = parseInt(match[1], 10); // 0
-          const y = Math.abs(parseInt(match[2], 10)); // 21
-          const xIndex = (x + 80) / 16;
-          const yOffset = Math.abs(y) === 21 ? 0.5 : 0;
-          rating = xIndex - yOffset;
-        }
-        let lang = `Japanese ${getLangFlag("japanese")}`;
-        container.find("td.tc").each((i, td) => {
-          if ($(td).text().trim() === "artist:") {
-            artist = $(td).next("td").find("div").first().text().trim();
+        // Rating
+        const style = container.find("div.ir").attr("style");
+        if (style) {
+          const match = /background-position:\s*(-?\d+)px\s+(-?\d+)px/.exec(style);
+
+          if (match) {
+            const x = Number(match[1]);
+            const y = Number(match[2]);
+
+            rating = (x + 80) / 16 - (Math.abs(y) === 21 ? 0.5 : 0);
           }
-          if ($(td).text().trim() === "language:") {
-            const langTexts = $(td)
+        }
+        // Artist + language in one traversal
+        container.find("td.tc").each((_, td) => {
+          const cell = $(td);
+          const label = cell.text().trim();
+          if (label === "artist:") {
+            artist = cell.next("td").find("div").first().text().trim();
+          } else if (label === "language:") {
+            cell
               .next("td")
               .find("div.gt, div.gtl")
-              .map((_, el) => $(el).text().trim())
-              .get()
-              .filter((text) => text && text.toLowerCase() !== "translated");
-            lang = langTexts
-              .map((text) => `${text} ${getLangFlag(text)}`)
-              .filter(Boolean)
-              .join(" ");
+              .each((_, el) => {
+                const text = $(el).text().trim();
+
+                if (text && text.toLowerCase() !== "translated") {
+                  lang += `${lang ? " " : ""}${text} ${getLangFlag(text)}`;
+                }
+              });
           }
         });
-        const subtitle = capitalLetter(
-          [lang, artist].filter((v) => v.trim().length > 0).join(" | "),
-        );
+        if (!lang) {
+          lang = `Japanese ${getLangFlag("japanese")}`;
+        }
+
+        const subtitle = capitalLetter([lang, artist].filter(Boolean).join(" | "));
         results.push({
-          title: title,
-          image: image,
-          url: url,
-          lang: lang,
-          artist: artist,
-          subtitle: subtitle,
-          pages: pages,
-          category: category,
-          date: date,
-          rating: rating,
+          title,
+          image,
+          url,
+          lang,
+          artist,
+          subtitle,
+          pages,
+          category,
+          date,
+          rating,
         });
       });
     if (getDebugMode()) {
       throw new Error(`results: ${results.length}`);
     }
+
     return results;
   }
 
@@ -113,20 +121,22 @@ export class Parser {
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
-    let html = "";
-    if (query.metadata?.favoriteID && query.metadata.favoriteID.length > 0) {
-      html = await network.favoriteRequest(query.metadata.favoriteID);
-    } else {
-      html = await network.searchRequest(query, metadata);
-    }
+    const html = query.metadata?.favoriteID?.length
+      ? await network.favoriteRequest(query.metadata.favoriteID)
+      : await network.searchRequest(query, metadata);
     const $ = cheerio.load(html);
-    const results: SearchResultItem[] = this.parseTable($).map((item) => ({
-      mangaId: item.url?.replaceAll(`${BASE_URL}/g/`, "") ?? "",
-      title: this.parseTitle(item.title),
-      imageUrl: item.image,
-      subtitle: item.subtitle,
-      contentRating: ContentRating.ADULT,
-    }));
+    const parsed = this.parseTable($);
+    const results: SearchResultItem[] = Array.from({ length: parsed.length });
+    for (let i = 0; i < parsed.length; i++) {
+      const item = parsed[i];
+      results[i] = {
+        mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
+        title: this.parseTitle(item.title),
+        imageUrl: item.image,
+        subtitle: item.subtitle,
+        contentRating: ContentRating.ADULT,
+      };
+    }
     if (getDebugMode()) {
       throw new Error(`results: ${results.length}`);
     }
@@ -136,16 +146,17 @@ export class Parser {
         metadata: undefined,
       };
     }
-    let nextValue = "";
-    const nextEl = $("#unext");
-    if (nextEl.is("a")) {
-      const href = nextEl.attr("href") ?? "";
-      const match = href.match(/next=([^&]+)/);
-      nextValue = match && match[1] ? match[1] : "";
+    const href = $("#unext").attr("href");
+    if (!href) {
+      return {
+        items: results,
+        metadata: undefined,
+      };
     }
+    const nextValue = /next=([^&]+)/.exec(href)?.[1] ?? "";
     return {
       items: results,
-      metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
+      metadata: nextValue ? { page: nextValue } : undefined,
     };
   }
 
@@ -207,12 +218,13 @@ export class Parser {
     };
   }
 
-  async parseMangaDetail(mangaID: string): Promise<SourceManga> {
+  async parseMangaDetail(mangaID: string): Promise<any> {
     const html = await network.mangaDetailRequest(mangaID);
     const $ = cheerio.load(html);
-    let artist = "";
     const additionalMangaInfo = this.parseGalleryInfo($);
     const tagSectionList: TagSection[] = [];
+    const languages: string[] = [];
+    let artist = "";
     tagSectionList.push({
       id: "category",
       title: "Category",
@@ -223,65 +235,66 @@ export class Parser {
         },
       ],
     });
-    let languages: string[] = [];
-    $("#taglist tr").each((i, el) => {
+    $("#taglist tr").each((_, el) => {
       const row = $(el);
+      const categoryText = row.find("td.tc").text().trim();
+      const category = categoryText.split(":", 1)[0];
+      const tags: Tag[] = [];
+      row.find('td div[class^="gt"] > a').each((_, a) => {
+        const tagId = $(a).attr("id") ?? "";
+        const tagTitle = capitalLetter($(a).text().trim().replaceAll(/\s+/g, " "));
 
-      const category = row.find("td.tc").text().trim().split(":")[0];
-
-      const tags: Tag[] = row
-        .find('td div[class^="gt"] > a')
-        .map((i, a) => ({
-          id: $(a).attr("id") ?? "",
-          title: capitalLetter($(a).text().trim().replaceAll(/\s+/g, " ").trim()),
-        }))
-        .get();
-      const artistTag = tags.find((tag) => tag.id.includes("ta_artist"));
-      if (artistTag) {
-        artist = artistTag.title;
-      }
+        const tag: Tag = {
+          id: tagId,
+          title: tagTitle,
+        };
+        tags.push(tag);
+        if (tagId.includes("ta_artist")) {
+          artist = tagTitle;
+        }
+        if (category === "language" && tagTitle !== "Translated") {
+          const flag = getLangFlag(tagTitle.toLowerCase());
+          if (flag) {
+            languages.push(`${tagTitle} ${flag}`);
+          }
+        }
+      });
       if (category !== "artist" && category !== "language") {
         tagSectionList.push({
-          id: category ?? "",
-          title: capitalLetter(category ?? ""),
-          tags: tags,
-        });
-      }
-      if (category === "language") {
-        tags.map((t) => {
-          if (t.title !== "Translated") {
-            if (getLangFlag(t.title.toLowerCase()).length > 0) {
-              languages.push(`${t.title} ${getLangFlag(t.title.toLowerCase())}`);
-            }
-          }
+          id: category,
+          title: capitalLetter(category),
+          tags,
         });
       }
     });
     const style = $("#gd1 > div").attr("style") ?? "";
-    const match = style.match(/url\(([^)]+)\)/);
-    const imageUrl = match ? match[1] : "";
+    const imageUrl = /url\(([^)]+)\)/.exec(style)?.[1] ?? "";
     const title = $("#gn").text().trim();
     const secondaryTitle = $("#gj").text().trim();
-    const updateTime = additionalMangaInfo.posted.replaceAll(" ", "T");
+    const primaryTitle = this.parseTitle(title);
+    const secondaryParsedTitle = this.parseTitle(secondaryTitle);
     const info: MangaInfo = {
-      thumbnailUrl: imageUrl ?? "",
+      thumbnailUrl: imageUrl,
       synopsis: "",
       artist: capitalLetter(artist),
       rating: additionalMangaInfo.rating.average / 500,
-      secondaryTitles: [this.parseTitle(secondaryTitle)],
-      primaryTitle: this.parseTitle(title),
+      secondaryTitles: [secondaryParsedTitle],
+      primaryTitle,
       contentRating: ContentRating.ADULT,
       tagGroups: tagSectionList,
       additionalInfo: {
-        title: this.parseTitle(title).split("| ")[1] ?? "",
+        title: primaryTitle.split("| ")[1] ?? "",
         pages: additionalMangaInfo.length.pages.toString(),
         language: languages.join(" | "),
-        uploaded: updateTime,
+        uploaded: additionalMangaInfo.posted.replaceAll(" ", "T"),
         favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
       },
-      shareUrl: `https://e-hentai.org/g/${mangaID}`,
+      shareUrl: `https://${BASE_URL}/g/${mangaID}`,
     };
-    return { mangaId: mangaID, mangaInfo: info };
+    return {
+      mangaId: mangaID,
+      mangaInfo: info,
+    };
   }
 
   async parseChapters(sourceManga: SourceManga): Promise<Chapter[]> {
@@ -309,39 +322,49 @@ export class Parser {
       pages: images,
     };
   }
-  private getRow($: cheerio.CheerioAPI, label: string): string {
-    return $(`#gdd .gdt1:contains("${label}")`).next(".gdt2").text().trim();
-  }
+
   private parseGalleryInfo($: cheerio.CheerioAPI): GalleryInfo {
     const root = $("#gmid #gd3");
     const category = root.find("#gdc div").first().text().trim();
     let uploaderName = root.find("#gdn a").first().text().trim();
     const tags = $("#gmid #gd4");
-    tags.find("td.tc").each((i, td) => {
-      if ($(td).text().trim() === "artist:") {
+    tags.find("td.tc").each((_, td) => {
+      const label = $(td).text().trim();
+      if (label === "artist:") {
         uploaderName = $(td).next("td").find("div").first().text().trim();
+        return false;
       }
     });
-    const posted = this.getRow($, "Posted:");
-    const lengthRaw = this.getRow($, "Length:");
-    const favsRaw = this.getRow($, "Favorited:");
-    const ratingAverage =
-      parseFloat($("#rating_label").text().replaceAll("Average:", "").replaceAll(".", "").trim()) ??
-      0.0;
+    let posted = "";
+    let lengthPages = 0;
+    let favsText = "";
+    $("#gdd .gdt1").each((_, el) => {
+      const label = $(el).text().trim();
+      const value = $(el).next(".gdt2").text().trim();
+      if (label === "Posted:") {
+        posted = value;
+      } else if (label === "Length:") {
+        lengthPages = parseInt(value, 10) || 0;
+      } else if (label === "Favorited:") {
+        favsText = value;
+      }
+    });
+    const ratingText = $("#rating_label").text().replace("Average:", "").replaceAll(".", "").trim();
+    const ratingAverage = parseFloat(ratingText);
     return {
-      category: category,
+      category,
       uploader: {
         name: uploaderName,
       },
-      posted: posted,
+      posted,
       length: {
-        pages: parseInt(lengthRaw),
+        pages: lengthPages,
       },
       favs: {
-        text: favsRaw,
+        text: favsText,
       },
       rating: {
-        average: isNaN(ratingAverage) ? 0.0 : ratingAverage,
+        average: Number.isNaN(ratingAverage) ? 0 : ratingAverage,
       },
     };
   }
@@ -353,7 +376,7 @@ export class Parser {
     }
     if (totalImages === 0) {
       throw new Error("No pages found, total images 0");
-    } // return [];
+    }
     const IMAGES_PER_PAGE = 20;
     const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE);
     const pageUrls = Array.from(
@@ -362,15 +385,23 @@ export class Parser {
     );
     const htmlPages = await Promise.all(pageUrls.map((url) => network.getChapterPages(url)));
     const results: string[] = [];
-
+    const selector = `a[href^="${BASE_URL}/s/"]`;
     for (const html of htmlPages) {
       const $ = cheerio.load(html);
-      $(`a[href^="${BASE_URL}/s/"]`).each((_, el) => {
-        if (results.length >= totalImages) return false;
-        const url = $(el).attr("href");
-        if (url) results.push(url);
+      $(selector).each((_, _el) => {
+        if (results.length >= totalImages) {
+          return false;
+        }
+        $(selector).each((_, el) => {
+          const url = $(el).attr("href");
+          if (url) {
+            results.push(url);
+          }
+        });
       });
-      if (results.length >= totalImages) break;
+      if (results.length >= totalImages) {
+        break;
+      }
     }
     if (getDebugMode()) {
       throw new Error(`results: ${results.length}`);
@@ -388,10 +419,10 @@ export class Parser {
     while (true) {
       const $ = cheerio.load(html);
       results.push(
-          ...this.parseTable($).map((item) => ({
-            mangaId: item.url?.replace(`${BASE_URL}/g/`, "") ?? "",
-            title: this.parseTitle(item.title),
-          })),
+        ...this.parseTable($).map((item) => ({
+          mangaId: item.url?.replace(`${BASE_URL}/g/`, "") ?? "",
+          title: this.parseTitle(item.title),
+        })),
       );
       if (results.length === 0) {
         return mangas;

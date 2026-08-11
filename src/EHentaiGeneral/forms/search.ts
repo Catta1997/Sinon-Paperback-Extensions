@@ -249,20 +249,16 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   }
   async handleLanguagesChange(value: Record<string, "included" | "excluded">): Promise<void> {
     const previous = this.searchMetadata.language ?? { all: "included" };
-    // "all" non può mai essere excluded
     if (value.all === "excluded") {
       value.all = "included";
     }
     const hadAll = previous.all === "included";
     const hasAll = value.all === "included";
     if (!hadAll && hasAll) {
-      // è stato appena selezionato "all"
       value = { all: "included" };
     } else if (hadAll && hasAll && Object.keys(value).length > 1) {
-      // avevo "all" e ho selezionato una o più lingue
       delete value.all;
     }
-    // se non rimane nulla, torno ad "all"
     if (Object.keys(value).length === 0) {
       value = { all: "included" };
     }
