@@ -121,8 +121,9 @@ export class Parser {
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,
   ): Promise<PagedResults<SearchResultItem>> {
+    const page = metadata?.page ?? "";
     const html = query.metadata?.favoriteID?.length
-      ? await network.favoriteRequest(query.metadata.favoriteID)
+      ? await network.favoriteRequest(`${query.metadata.favoriteID}&next=${page}`)
       : await network.searchRequest(query, metadata);
     const $ = cheerio.load(html);
     const parsed = this.parseTable($);
