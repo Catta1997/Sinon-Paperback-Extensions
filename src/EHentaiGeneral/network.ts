@@ -93,6 +93,7 @@ export class MainInterceptor extends PaperbackInterceptor {
 
 export class ImageURLInterceptor extends PaperbackInterceptor {
   override async interceptRequest(request: Request): Promise<Request> {
+    request.headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:154.0) Gecko/20100101 Firefox/154.0"};
     return request;
   }
   override async interceptResponse(
