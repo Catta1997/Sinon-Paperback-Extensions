@@ -27,6 +27,20 @@ export const discoverSection: Record<string, DiscoverSection> = {
   },
 };
 
+export type MangaElement = {
+  title: string;
+  image: string;
+  url: string;
+  lang: string;
+  artist: string;
+  subtitle: string;
+  category: string;
+  pages: string;
+  date: string;
+  rating: number;
+  tags: string[];
+};
+
 export const languageAll = [
   { id: "chinese", value: "Chinese", flag: "🇨🇳" },
   { id: "english", value: "English", flag: "🇬🇧" },

@@ -20,7 +20,7 @@ import {
   type SearchMetadata,
 } from "./utils";
 import { BASE_URL, network } from "./main";
-import type { GalleryInfo } from "./models";
+import type { GalleryInfo, MangaElement } from "./models";
 
 export class Parser {
   private parseTitle(str: string): string {
@@ -31,21 +31,11 @@ export class Parser {
   }
 
   private parseTable($: cheerio.CheerioAPI) {
-    const results: {
-      title: string;
-      image: string;
-      url: string;
-      lang: string;
-      artist: string;
-      subtitle: string;
-      category: string;
-      pages: string;
-      date: string;
-      rating: number;
-    }[] = [];
+    const results: MangaElement[] = [];
     $("tr")
       .has("td.gl1e")
       .each((_, el) => {
+        const tags: string[] = [];
         const container = $(el);
         const title = container.find("div.glink").text().trim();
         const url = container.find("a").first().attr("href") ?? "";
@@ -77,6 +67,7 @@ export class Parser {
         container.find("td.tc").each((_, td) => {
           const cell = $(td);
           const label = cell.text().trim();
+
           if (label === "artist:") {
             artist = cell.next("td").find("div").first().text().trim();
           } else if (label === "language:") {
@@ -91,11 +82,20 @@ export class Parser {
                 }
               });
           }
+          cell
+            .next("td")
+            .find("[style]")
+            .each((_, el) => {
+              const text = $(el).text().trim();
+              if (text) {
+                tags.push(text);
+              }
+            });
         });
         if (!lang) {
           lang = `Japanese ${getLangFlag("japanese")}`;
         }
-
+        console.log(tags.join(";"));
         const subtitle = capitalLetter([lang, artist].filter(Boolean).join(" | "));
         results.push({
           title,
@@ -108,12 +108,13 @@ export class Parser {
           category,
           date,
           rating,
+          tags,
         });
       });
     if (getDebugMode()) {
       throw new Error(`results: ${results.length}`);
     }
-
+    console.log(JSON.stringify(results, null, 2));
     return results;
   }
 
@@ -163,18 +164,18 @@ export class Parser {
 
   async parseFeatured(metadata: Metadata): Promise<PagedResults<DiscoverSectionItem>> {
     const html = await network.getSection("", metadata);
-    return this.parseDiscover(html);
+    return this.parseDiscover(html, "featured");
   }
 
   async parseRecent(metadata: Metadata) {
     const html = await network.getSection("popular", metadata);
-    return this.parseDiscover(html);
+    return this.parseDiscover(html, "recent");
   }
 
   async parseWatched(metadata: Metadata) {
     await Application.scheduleRequest({ url: `${BASE_URL}/mytags`, method: "GET" });
     const html = await network.getSection("watched", metadata);
-    return this.parseDiscover(html);
+    return this.parseDiscover(html, "watched");
   }
 
   async parseFavorite(): Promise<PagedResults<DiscoverSectionItem>> {
@@ -192,7 +193,10 @@ export class Parser {
     };
   }
 
-  private async parseDiscover(html: string): Promise<PagedResults<DiscoverSectionItem>> {
+  private async parseDiscover(
+    html: string,
+    path: string,
+  ): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
     let nextValue = "";
     const nextEl = $("#unext");
@@ -207,7 +211,7 @@ export class Parser {
         mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
         title: this.parseTitle(item.title),
         supertitle: item.category,
-        summary: `Language: ${capitalLetter(item.lang)}${item.artist.length > 0 ? `\nArtist: ` + capitalLetter(item.artist) : ``}\nDate: ${this.parseDate(item.date)}`,
+        summary: this.generateSummary(item, path),
         infoItems: [
           { symbol: "star.fill", text: String(item.rating) },
           { symbol: "book.pages", text: item.pages },
@@ -217,6 +221,14 @@ export class Parser {
       })),
       metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
     };
+  }
+
+  generateSummary(item: MangaElement, path: string) {
+    if (path === "watched") {
+      return `Language: ${capitalLetter(item.lang)}\nWatched Tags: ${item.tags.map((tag) => capitalLetter(tag)).join(", ")}`;
+    } else {
+      return `Language: ${capitalLetter(item.lang)}${item.artist.length > 0 ? `\nArtist: ` + capitalLetter(item.artist) : ``}\nDate: ${this.parseDate(item.date)}`;
+    }
   }
 
   async parseMangaDetail(mangaID: string): Promise<any> {
