@@ -398,10 +398,9 @@ export class Parser {
     );
     const htmlPages = await Promise.all(pageUrls.map((url) => network.getChapterPages(url)));
     const results: string[] = [];
-    const selector = `a[href^="${BASE_URL}/s/"]`;
     for (const html of htmlPages) {
       const $ = cheerio.load(html);
-      $(selector).each((_, el) => {
+      $("#gdt a").each((_, el) => {
         if (results.length >= totalImages) return false;
         const url = $(el).attr("href");
         if (url) results.push(url);
