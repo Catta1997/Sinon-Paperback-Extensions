@@ -9,6 +9,7 @@ import {
   Section,
   SelectRow,
   StepperRow,
+  ToggleRow,
   TriStateSelectRow,
 } from "@paperback/types";
 import { capitalLetter, getDefaultMetadata, getLanguages, type SearchMetadata } from "../utils";
@@ -98,6 +99,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       Section({ id: "rating", header: "Minimum Rating" }, this.getRatingFilter()),
       Section({ id: "minPagesFilter", header: "Minimum Pages" }, this.getMinPagesFilter()),
       Section({ id: "maxPagesFilter", header: "Maximum Pages" }, this.getMaxPagesFilter()),
+      Section({ id: "expunged", header: "Expunged Galleries" }, this.getExpungedFilter()),
       ...inputSections,
     ];
   }
@@ -220,6 +222,18 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+  getExpungedFilter(): FormItemElement<unknown>[] {
+    return [
+      ToggleRow(`expungedGalleries`, {
+        title: "Browse Expunged Galleries",
+        value: this.searchMetadata.expunged ?? false,
+        onValueChange: Application.Selector(
+          this as EHentaiAdvancedSearchForm,
+          "handleExpungedChange",
+        ),
+      }),
+    ];
+  }
   async onHandle(type: string, value: string): Promise<void> {
     if (value.length > 0) {
       const key = type as FilterKey;
@@ -273,6 +287,10 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   }
   async handleMinPagesChange(value: number): Promise<void> {
     this.searchMetadata.minPages = value;
+    this.reloadForm();
+  }
+  async handleExpungedChange(value: boolean): Promise<void> {
+    this.searchMetadata.expunged = value;
     this.reloadForm();
   }
 }

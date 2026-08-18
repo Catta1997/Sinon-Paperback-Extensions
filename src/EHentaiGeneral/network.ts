@@ -11,6 +11,7 @@ import {
 import * as cheerio from "cheerio";
 import {
   getDefLangGloablStatus,
+  getDisabledCustomLang,
   getDisabledCustomTags,
   getDisabledCustomUploader,
   type Metadata,
@@ -137,20 +138,31 @@ export class Network {
         return;
       }
       if (filterValue.startsWith("-")) {
-        query += ` -${filter.id}:${filterValue.split("-")[1]}`;
+        query += ` -${filter.id}:${this.fixSpacedFilter(filterValue)}`;
       } else {
         if (filter.id === "language" && filter.value.length > 0) {
           if (filterValue.startsWith("-")) {
-            query += ` -~${filter.id}:${filterValue.split("-")[1]}`;
+            query += ` -${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(filterValue)}`;
           } else {
-            query += ` ~${filter.id}:${filterValue}`;
+            query += ` ${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(filterValue)}`;
           }
         } else {
-          query += ` ${filter.id}:${filterValue}`;
+          query += ` ${filter.id}:${this.fixSpacedFilter(filterValue)}`;
         }
       }
     });
     return query;
+  }
+
+  fixSpacedFilter(filter: string) {
+    let toApply = filter;
+    if (filter.includes("-")) {
+      toApply = filter.split("-")[1];
+    }
+    if (toApply.includes(" ")) {
+      toApply = `"${toApply}$"`;
+    }
+    return toApply;
   }
 
   async favoriteRequest(favLink: string) {
@@ -227,13 +239,16 @@ export class Network {
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
+    if (query.metadata?.expunged) {
+      url.setQueryItem("f_sh", "on");
+    }
     if (getDisabledCustomUploader()) {
       url.setQueryItem("f_sfu", "on");
     }
     if (getDisabledCustomTags()) {
       url.setQueryItem("f_sft", "on");
     }
-    if (getDisabledCustomUploader()) {
+    if (getDisabledCustomLang()) {
       url.setQueryItem("f_sfl", "on");
     }
     const min = query.metadata?.minPages ?? 0;

@@ -196,6 +196,7 @@ export type BaseMetadata = {
   minPages?: number;
   maxPages?: number;
   favoriteID?: string;
+  expunged?: boolean;
 };
 
 export type FilterKey = (typeof filterKeys)[number];
