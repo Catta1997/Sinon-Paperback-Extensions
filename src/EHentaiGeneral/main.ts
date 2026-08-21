@@ -80,19 +80,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     return parser.parseMangaDetail(mangaId);
   }
 
-  async cloudflareBypassCompleted(
-    _request: Request,
-    cookies: Cookie[],
-    _localStorage: Record<string, string>,
-  ): Promise<void> {
-    for (const cookie of cookies) {
-      if (cookie.name == "cf_clearance") {
-        cookie.domain = "forum.e-hentai.org";
-        loginManager.loginCookieStorageInterceptor.setCookie(cookie);
-      }
-    }
-  }
-
   async getAdvancedSearchForm(
     searchQuery: SearchQuery<SearchMetadata>,
   ): Promise<AdvancedSearchForm> {
@@ -119,10 +106,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
 
   mainInterceptor = new MainInterceptor("main");
   imageInterceptor = new ImageURLInterceptor("image");
-  cloudflareInterceptor = new CloudflareInterceptor(
-    { url: `https://forums.e-hentai.org/` },
-    "cloudflare",
-  );
 
   protected constructor(domain: string, requireLogIn: boolean) {
     BASE_URL = domain;
@@ -156,7 +139,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     loginManager.loginCookieStorageInterceptor.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
     this.imageInterceptor.registerInterceptor();
-    this.cloudflareInterceptor.registerInterceptor();
     Application.setRedirectHandler(
       Application.Selector(this as EHentaiGeneralExtension, "redirectHandler"),
     );

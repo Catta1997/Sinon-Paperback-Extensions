@@ -386,31 +386,15 @@ export class LogInManager {
     return username.length > 0;
   }
 
-  async getUsername(cookies: Cookie[]) {
-    for (const cookie of cookies) {
-      cookie.domain = "forums.e-hentai.org";
-      this.loginCookieStorageInterceptor.setCookie(cookie);
-    }
-    const [_, b] = await Application.scheduleRequest({
-      url: `https://forums.e-hentai.org/index.php?showuser=${this.getAccountID()}`,
-      method: "GET",
-      headers: { "user-agent": await Application.getDefaultUserAgent() },
-    });
-    const html = Application.arrayBufferToUTF8String(b);
-    const match = html.match(/Viewing Profile: (\w*)/);
-    const username = match?.[1];
-    Application.setSecureState(username, `${BASE_URL}_username`);
-  }
-
   async logIn(cookies: Cookie[]): Promise<void> {
     if (this.checkLoginCookie(cookies)) {
-      await this.getUsername(cookies);
       cookies
         .filter((cookie) => this.isAuthCookie(cookie))
         .forEach((cookie) => {
           cookie.domain = BASE_URL.split("https://")[1];
           this.loginCookieStorageInterceptor.setCookie(cookie);
         });
+      Application.setSecureState(this.getAccountID(), `${BASE_URL}_username`);
       Application.invalidateDiscoverSections();
     }
   }

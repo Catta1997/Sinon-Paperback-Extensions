@@ -92,9 +92,10 @@ export class SettingsForm extends Form {
           }),
           LabelRow("logged", {
             title: "Logged in as",
-            subtitle:
+            subtitle: `Account ID: ${
               (Application.getSecureState(`${BASE_URL}_username`) as string) ??
-              loginManager.getAccountID(),
+              loginManager.getAccountID()
+            }`,
             isHidden: !loginManager.isLoggedIn(),
           }),
           ButtonRow("logout", {

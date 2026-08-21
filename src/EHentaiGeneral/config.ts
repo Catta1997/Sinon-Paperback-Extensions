@@ -3,11 +3,10 @@ import { ContentRating, type ExtensionInfo, SourceIntents } from "@paperback/typ
 export const basePbConfig = {
   name: "EHentai",
   description: "Extension that pulls content from E-Hentai.",
-  version: "1.2.1",
+  version: "1.2.2",
   icon: "icon.png",
   contentRating: ContentRating.ADULT,
   capabilities: [
-    SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
     SourceIntents.SETTINGS_FORM_PROVIDING,
     SourceIntents.DISCOVER_SECTION_PROVIDING,
     SourceIntents.SEARCH_RESULT_PROVIDING,
