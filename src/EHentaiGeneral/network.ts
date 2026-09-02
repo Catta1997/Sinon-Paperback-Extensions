@@ -349,6 +349,7 @@ export class Network {
         return {
           id: $el.attr("onclick")?.match(/'([^']+)'/)?.[1] ?? "",
           value: $el.children("div").eq(2).text().trim(),
+          number: Number($el.children("div").eq(0).text().trim()) ?? 0,
         };
       })
       .get();

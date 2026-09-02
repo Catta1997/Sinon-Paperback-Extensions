@@ -15,6 +15,7 @@ import {
   capitalLetter,
   getDebugMode,
   getDefaultMetadata,
+  getHideEmptyFav,
   getLangFlag,
   type Metadata,
   type SearchMetadata,
@@ -248,7 +249,13 @@ export class Parser {
   }
 
   async parseFavorite(): Promise<PagedResults<DiscoverSectionItem>> {
-    const favs = await network.getFevList();
+    let favs = await network.getFevList();
+    if (getHideEmptyFav()) {
+      favs = favs.filter((fav) => fav.number > 0);
+    }
+    if (favs.length === 0) {
+      throw new Error(`All Favourites are empty`);
+    }
     return {
       items: favs.map((favorite) => ({
         type: "genresCarouselItem",

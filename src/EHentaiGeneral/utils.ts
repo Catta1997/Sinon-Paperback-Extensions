@@ -105,6 +105,10 @@ export function getDebugMode() {
   return (Application.getState("_debug") as boolean | undefined) ?? false;
 }
 
+export function getHideEmptyFav() {
+  return (Application.getState("_emptyFav") as boolean | undefined) ?? false;
+}
+
 export function capitalLetter(str: string): string {
   return str
     .toLowerCase()

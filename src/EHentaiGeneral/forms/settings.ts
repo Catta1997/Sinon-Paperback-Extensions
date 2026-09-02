@@ -185,6 +185,13 @@ export class SettingsForm extends Form {
               "handleDefLangGlobalStatusChange",
             ),
           }),
+          ToggleRow("emptyFavorite", {
+            value: false,
+            title: "Hide favorite sections with 0 elements",
+            subtitle:
+              "If this is enabled, on Favorite section you will see `Favorite` with 0 elements",
+            onValueChange: Application.Selector(this as SettingsForm, "handleEmptyFavorite"),
+          }),
           NavigationRow("sectionOrder", {
             title: "Sections Order",
             form: sections.getSettings(),
@@ -346,5 +353,9 @@ export class SettingsForm extends Form {
 
   async handleDebugMode(value: boolean): Promise<void> {
     await this.updateValue(value, "_debug");
+  }
+
+  async handleEmptyFavorite(value: boolean): Promise<void> {
+    await this.updateValue(value, "_emptyFav");
   }
 }
