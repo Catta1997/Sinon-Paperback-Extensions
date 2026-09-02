@@ -411,11 +411,10 @@ export class LogInManager {
         .filter((cookie) => this.isAuthCookie(cookie))
         .forEach((cookie) => {
           cookie.domain = BASE_URL.split("https://")[1];
+          this.loginCookieStorageInterceptor.setCookie(cookie);
           if (cookie.name === "igneous" && cookie.value.toLowerCase() === "mystery") {
-            console.log("Rilevato cookie 'igneous=mystery'. Removed");
-          }
-          if (!(cookie.name === "igneous" && cookie.value.toLowerCase() === "mystery")) {
-            this.loginCookieStorageInterceptor.setCookie(cookie);
+            console.log("Detected cookie 'igneous=mystery'. Removed");
+            this.loginCookieStorageInterceptor.deleteCookie(cookie);
           }
         });
       Application.setSecureState(this.getAccountID(), `${BASE_URL}_username`);
