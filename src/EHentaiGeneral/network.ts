@@ -10,6 +10,7 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import {
+  getDebugMode,
   getDefLangGloablStatus,
   getDisabledCustomLang,
   getDisabledCustomTags,
@@ -87,6 +88,23 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
     if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404) {
       throw new Error("This Content is no More Available");
+    }
+    if (getDebugMode()) {
+      if (request.headers) {
+        const chiavi = Object.keys(request.headers);
+        chiavi.forEach((chiave) => {
+          console.log(`header ${chiave} detected`);
+        });
+      }
+      if (request.cookies) {
+        const chiavi = Object.keys(request.cookies);
+        chiavi.forEach((chiave) => {
+          console.log(`cookie ${chiave} detected`);
+        });
+      }
+      console.log(
+        `Request to ${request.url}, m:${request.method} s:${response.status} bl:${data.byteLength}`,
+      );
     }
     return data;
   }

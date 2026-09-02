@@ -219,7 +219,7 @@ export class SettingsForm extends Form {
           ToggleRow("debug_toggle", {
             title: "DEBUG",
             value: getDebugMode(),
-            subtitle: "WARNING: turn debug on will make extension only throw debug error",
+            subtitle: "WARNING: turn debug on will make extension log a lot",
             onValueChange: Application.Selector(this as SettingsForm, "handleDebugMode"),
           }),
         ],
