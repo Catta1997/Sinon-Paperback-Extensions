@@ -91,20 +91,28 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
     if (getDebugMode()) {
       if (request.headers) {
-        const chiavi = Object.keys(request.headers);
-        chiavi.forEach((chiave) => {
-          console.log(`header ${chiave} detected`);
+        Object.entries(request.headers).forEach(([nome, valore]) => {
+          console.log(`header ${nome} detected (length: ${valore.length})`);
         });
       }
       if (request.cookies) {
-        const chiavi = Object.keys(request.cookies);
-        chiavi.forEach((chiave) => {
-          console.log(`cookie ${chiave} detected`);
+        Object.entries(request.cookies).forEach(([chiave, valore]) => {
+          console.log(`cookie ${chiave} detected (length: ${valore.length})`);
         });
       }
       console.log(
         `Request to ${request.url}, m:${request.method} s:${response.status} bl:${data.byteLength}`,
       );
+    }
+    if (request.cookies) {
+      Object.entries(request.cookies).forEach(([chiave, valore]) => {
+        if (chiave === "igneous" && valore.toLowerCase() === "mystery") {
+          console.log("Detected cookie 'igneous=mystery'. Removed");
+          if (request.cookies) {
+            delete request.cookies["igneous"];
+          }
+        }
+      });
     }
     return data;
   }
@@ -410,11 +418,9 @@ export class LogInManager {
       cookies
         .filter((cookie) => this.isAuthCookie(cookie))
         .forEach((cookie) => {
-          cookie.domain = BASE_URL.split("https://")[1];
-          this.loginCookieStorageInterceptor.setCookie(cookie);
-          if (cookie.name === "igneous" && cookie.value.toLowerCase() === "mystery") {
-            console.log("Detected cookie 'igneous=mystery'. Removed");
-            this.loginCookieStorageInterceptor.deleteCookie(cookie);
+          if (this.AUTH_COOKIE_NAMES.has(cookie.name)) {
+            cookie.domain = BASE_URL.split("https://")[1];
+            this.loginCookieStorageInterceptor.setCookie(cookie);
           }
         });
       Application.setSecureState(this.getAccountID(), `${BASE_URL}_username`);
