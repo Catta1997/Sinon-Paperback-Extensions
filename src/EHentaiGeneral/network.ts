@@ -39,6 +39,9 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
   }
   override async interceptRequest(request: Request): Promise<Request> {
+    if (!request.url.includes("inline")) {
+      await Application.scheduleRequest({ url: `${BASE_URL}/?inline_set=dm_e`, method: "GET" });
+    }
     if (Application.filterAdultTitles || Application.filterMatureTitles) {
       throw new Error("Content of this extension are hidden. Check Paperback content settings");
     }
