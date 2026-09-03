@@ -135,7 +135,7 @@ export class SettingsForm extends Form {
             title: "Rate Limit",
             subtitle: "Set Custom Rate Limit",
             value: this.getRateFormsValue(),
-            minValue: 5,
+            minValue: 1,
             maxValue: 100,
             stepValue: 1,
             loopOver: false,
