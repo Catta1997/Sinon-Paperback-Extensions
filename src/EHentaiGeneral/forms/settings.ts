@@ -1,5 +1,6 @@
 import {
   capitalLetter,
+  fixTableType,
   getDebugMode,
   getDefLangGloablStatus,
   getDefLangStatus,
@@ -163,6 +164,10 @@ export class SettingsForm extends Form {
             value: getDisabledCustomTags(),
             isHidden: !loginManager.isLoggedIn(),
             onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomTags"),
+          }),
+          ButtonRow("table_fix", {
+            title: "Fix Table Issue",
+            onSelect: Application.Selector(this as SettingsForm, "handleTableFix"),
           }),
         ],
       ),
@@ -357,5 +362,16 @@ export class SettingsForm extends Form {
 
   async handleEmptyFavorite(value: boolean): Promise<void> {
     await this.updateValue(value, "_emptyFav");
+  }
+
+  async handleTableFix(): Promise<void> {
+    throw new FormConfirmationError(
+      Application.Selector(this as SettingsForm, "handleTableFixConfirm"),
+      "Do you want to fix table view? WARNING: this will replace your account settings",
+    );
+  }
+
+  async handleTableFixConfirm() {
+    await fixTableType();
   }
 }

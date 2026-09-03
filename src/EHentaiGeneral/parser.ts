@@ -32,7 +32,18 @@ export class Parser {
       .trim();
   }
 
+  private checkTable($: cheerio.CheerioAPI) {
+    const $table = $("table.itg");
+    if ($table.length === 0) {
+      throw new Error("No Results Found");
+    } else if ($table.hasClass("glte")) {
+      return
+    } else {
+      throw new Error("Table Issue, please open extension settings and click on `Fix Table Issue`");
+    }
+  }
   private parseTable($: cheerio.CheerioAPI) {
+    this.checkTable($);
     const results: MangaElement[] = [];
     $("tr")
       .has("td.gl1e")
@@ -188,6 +199,7 @@ export class Parser {
 
     return results;
   }
+
   async parseSearchResults(
     query: SearchQuery<SearchMetadata>,
     metadata: Metadata,

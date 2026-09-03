@@ -21,8 +21,8 @@ import {
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
-  bufferInterval: 0.5,
+  numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 2,
+  bufferInterval: 1,
   ignoreImages: true,
 });
 
@@ -39,9 +39,6 @@ export class MainInterceptor extends PaperbackInterceptor {
     }
   }
   override async interceptRequest(request: Request): Promise<Request> {
-    if (!request.url.includes("inline")) {
-      await Application.scheduleRequest({ url: `${BASE_URL}/?inline_set=dm_e`, method: "GET" });
-    }
     if (Application.filterAdultTitles || Application.filterMatureTitles) {
       throw new Error("Content of this extension are hidden. Check Paperback content settings");
     }

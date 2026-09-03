@@ -1,4 +1,6 @@
 import { type BaseMetadata, type FilterKey, languageAll } from "./models";
+import type { PagedResults, SearchQuery } from "@paperback/types";
+import { BASE_URL } from "./main";
 
 export type Metadata = { page: string };
 
@@ -115,4 +117,8 @@ export function capitalLetter(str: string): string {
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.substring(1))
     .join(" ");
+}
+
+export async function fixTableType() {
+  await Application.scheduleRequest({ url: `${BASE_URL}/?inline_set=dm_e`, method: "GET" });
 }
