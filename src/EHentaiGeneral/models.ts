@@ -188,6 +188,7 @@ export interface GalleryInfo {
   rating: {
     average: number;
   };
+  synopsis: string;
 }
 export type BaseMetadata = {
   type?: string[];

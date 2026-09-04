@@ -1,6 +1,5 @@
 import {
   capitalLetter,
-  fixTableType,
   getDebugMode,
   getDefLangGloablStatus,
   getDefLangStatus,
@@ -8,6 +7,7 @@ import {
   getDisabledCustomTags,
   getDisabledCustomUploader,
   getLanguages,
+  tableFix,
 } from "../utils";
 import {
   ButtonRow,
@@ -165,9 +165,22 @@ export class SettingsForm extends Form {
             isHidden: !loginManager.isLoggedIn(),
             onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomTags"),
           }),
+        ],
+      ),
+      Section(
+        {
+          id: "table_fix_section",
+          header: "Account Settings",
+        },
+        [
           ButtonRow("table_fix", {
             title: "Fix Table Issue",
+            isHidden: !tableFix.needTableFix,
             onSelect: Application.Selector(this as SettingsForm, "handleTableFix"),
+          }),
+          LabelRow("table_fix_label", {
+            title: `Table fix is not needed`,
+            isHidden: tableFix.needTableFix,
           }),
         ],
       ),
@@ -327,8 +340,6 @@ export class SettingsForm extends Form {
   }
 
   async onHandle(type: string, value: string): Promise<void> {
-    console.log(type);
-    console.log(value);
     await this.updateValue(value, `_${type}`);
   }
 
@@ -367,11 +378,14 @@ export class SettingsForm extends Form {
   async handleTableFix(): Promise<void> {
     throw new FormConfirmationError(
       Application.Selector(this as SettingsForm, "handleTableFixConfirm"),
-      "Do you want to fix table view? WARNING: this will replace your account settings",
+      "Do you want to fix table view? WARNING: this will change your account `display mode` preferences",
     );
   }
 
   async handleTableFixConfirm() {
-    await fixTableType();
+    await Application.scheduleRequest({ url: `${BASE_URL}/?inline_set=dm_e`, method: "GET" });
+    tableFix.needTableFix = false;
+    this.reloadForm();
+    Application.invalidateDiscoverSections();
   }
 }

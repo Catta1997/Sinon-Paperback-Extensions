@@ -1,6 +1,4 @@
 import { type BaseMetadata, type FilterKey, languageAll } from "./models";
-import type { PagedResults, SearchQuery } from "@paperback/types";
-import { BASE_URL } from "./main";
 
 export type Metadata = { page: string };
 
@@ -119,6 +117,18 @@ export function capitalLetter(str: string): string {
     .join(" ");
 }
 
-export async function fixTableType() {
-  await Application.scheduleRequest({ url: `${BASE_URL}/?inline_set=dm_e`, method: "GET" });
+let needTableFix = false;
+export const tableFix = {
+  get needTableFix(): boolean {
+    return needTableFix;
+  },
+
+  set needTableFix(value: boolean) {
+    needTableFix = value;
+  },
+};
+export function debugPrint(...data: any[]) {
+  if (getDebugMode()) {
+    console.log(data);
+  }
 }

@@ -10,7 +10,7 @@ import {
 } from "@paperback/types";
 import * as cheerio from "cheerio";
 import {
-  getDebugMode,
+  debugPrint,
   getDefLangGloablStatus,
   getDisabledCustomLang,
   getDisabledCustomTags,
@@ -21,7 +21,7 @@ import {
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
-  numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 2,
+  numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
   bufferInterval: 1,
   ignoreImages: true,
 });
@@ -89,25 +89,23 @@ export class MainInterceptor extends PaperbackInterceptor {
     if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404) {
       throw new Error("This Content is no More Available");
     }
-    if (getDebugMode()) {
-      if (request.headers) {
-        Object.entries(request.headers).forEach(([nome, valore]) => {
-          console.log(`header ${nome} detected (length: ${valore.length})`);
-        });
-      }
-      if (request.cookies) {
-        Object.entries(request.cookies).forEach(([chiave, valore]) => {
-          console.log(`cookie ${chiave} detected (length: ${valore.length})`);
-        });
-      }
-      console.log(
-        `Request to ${request.url}, m:${request.method} s:${response.status} bl:${data.byteLength}`,
-      );
+    if (request.headers) {
+      Object.entries(request.headers).forEach(([nome, valore]) => {
+        debugPrint(`[Request] header ${nome} detected (length: ${valore.length})`);
+      });
     }
     if (request.cookies) {
       Object.entries(request.cookies).forEach(([chiave, valore]) => {
+        debugPrint(`[Request] cookie ${chiave} detected (length: ${valore.length})`);
+      });
+    }
+    debugPrint(
+      `[Request] Request to ${request.url}, m:${request.method} s:${response.status} bl:${data.byteLength}`,
+    );
+    if (request.cookies) {
+      Object.entries(request.cookies).forEach(([chiave, valore]) => {
         if (chiave === "igneous" && valore.toLowerCase() === "mystery") {
-          console.log("Detected cookie 'igneous=mystery'. Removed");
+          debugPrint(`[Request] Detected cookie "igneous=mystery". Removed`);
           if (request.cookies) {
             delete request.cookies["igneous"];
           }
@@ -158,23 +156,36 @@ export class ImageURLInterceptor extends PaperbackInterceptor {
 }
 
 export class Network {
+  private parseFilterValue(value: string) {
+    let negative = false;
+    let weak = false;
+    if (value.startsWith("-")) {
+      negative = true;
+      value = value.slice(1);
+    }
+    if (value.toLowerCase().startsWith("weak:")) {
+      weak = true;
+      value = value.slice(5);
+    }
+    return { value, negative, weak };
+  }
+
   buildFilter(query: string, filter: { id: string; value: string[] }) {
-    filter.value.forEach((filterValue) => {
-      if (filter.id === "language" && filter.value[0] === "all") {
-        return;
-      }
-      if (filterValue.startsWith("-")) {
-        query += ` -${filter.id}:${this.fixSpacedFilter(filterValue)}`;
-      } else {
-        if (filter.id === "language" && filter.value.length > 0) {
-          if (filterValue.startsWith("-")) {
-            query += ` -${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(filterValue)}`;
-          } else {
-            query += ` ${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(filterValue)}`;
-          }
+    if (filter.id === "language" && filter.value[0] === "all") {
+      return query;
+    }
+    filter.value.forEach((rawValue) => {
+      const { value, negative, weak } = this.parseFilterValue(rawValue);
+      if (filter.id === "language") {
+        if (negative) {
+          query += ` -${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
         } else {
-          query += ` ${filter.id}:${this.fixSpacedFilter(filterValue)}`;
+          query += ` ${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
         }
+      } else if (negative) {
+        query += ` -${weak ? "weak:" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
+      } else {
+        query += ` ${weak ? "weak:" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
       }
     });
     return query;
@@ -354,10 +365,11 @@ export class Network {
       .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
       .map((_, el) => {
         const $el = $(el);
+        const rating = Number($el.children("div").eq(0).text().trim());
         return {
           id: $el.attr("onclick")?.match(/'([^']+)'/)?.[1] ?? "",
           value: $el.children("div").eq(2).text().trim(),
-          number: Number($el.children("div").eq(0).text().trim()) ?? 0,
+          number: isNaN(rating) ? rating : 0,
         };
       })
       .get();

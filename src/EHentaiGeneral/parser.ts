@@ -13,14 +13,15 @@ import {
 import * as cheerio from "cheerio";
 import {
   capitalLetter,
-  getDebugMode,
+  debugPrint,
   getDefaultMetadata,
   getHideEmptyFav,
   getLangFlag,
   type Metadata,
   type SearchMetadata,
+  tableFix,
 } from "./utils";
-import { BASE_URL, network } from "./main";
+import { BASE_URL, loginManager, network } from "./main";
 import type { GalleryInfo, MangaElement } from "./models";
 
 export class Parser {
@@ -35,15 +36,18 @@ export class Parser {
   private checkTable($: cheerio.CheerioAPI) {
     const $table = $("table.itg");
     if ($table.length === 0) {
-      throw new Error("No Results Found");
+      return false;
     } else if ($table.hasClass("glte")) {
-      return
+      return true;
     } else {
+      tableFix.needTableFix = true;
       throw new Error("Table Issue, please open extension settings and click on `Fix Table Issue`");
     }
   }
   private parseTable($: cheerio.CheerioAPI) {
-    this.checkTable($);
+    if (!this.checkTable($)) {
+      return [];
+    }
     const results: MangaElement[] = [];
     $("tr")
       .has("td.gl1e")
@@ -61,70 +65,47 @@ export class Parser {
           .first()
           .text()
           .trim();
-        // Debug: elementi che ci aspettiamo sempre
         if (!title) {
-          console.log("[Parser] Missing title (.glink)", {
-            url,
-          });
+          debugPrint("[Parser] Missing title (.glink)");
         }
         if (!url) {
-          console.log("[Parser] Missing manga URL (a)", {
-            title,
-          });
+          debugPrint("[Parser] Missing manga URL (a)");
         }
         if (!image) {
-          console.log("[Parser] Missing image (img)", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] Missing image (img)");
         }
         if (!category) {
-          console.log("[Parser] Missing category (.gl3e .cn)", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] Missing category (.gl3e .cn)");
         }
         if (!date) {
-          console.log("[Parser] Missing date (#posted_*)", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] Missing date (#posted_*)");
         }
         if (!pages) {
-          console.log("[Parser] Missing pages", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] Missing pages");
         }
         let artist = "";
         let lang = "";
         let rating = 0;
-        // Rating
         const ratingElement = container.find("div.ir").first();
         const style = ratingElement.attr("style");
 
         if (!style) {
-          console.log("[Parser] Missing rating element/style (div.ir)", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] Missing rating element/style (div.ir)");
         } else {
           const match = /background-position:\s*(-?\d+)px\s+(-?\d+)px/.exec(style);
 
           if (!match) {
-            console.log("[Parser] Unexpected rating style format", {
-              title,
-              url,
-              style,
-            });
+            debugPrint("[Parser] Unexpected rating style format");
           } else {
             const x = Number(match[1]);
             const y = Number(match[2]);
-
-            rating = (x + 80) / 16 - (Math.abs(y) === 21 ? 0.5 : 0);
+            if (isNaN(x) || isNaN(y)) {
+              rating = 0;
+            } else {
+              rating = (x + 80) / 16 - (Math.abs(y) === 21 ? 0.5 : 0);
+            }
           }
         }
-        // Artist + language in one traversal
         container.find("td.tc").each((_, td) => {
           const cell = $(td);
           const label = cell.text().trim();
@@ -133,10 +114,7 @@ export class Parser {
             artist = cell.next("td").find("div").first().text().trim();
 
             if (!artist) {
-              console.log("[Parser] Artist field exists but value is empty", {
-                title,
-                url,
-              });
+              debugPrint("[Parser] Artist field exists but value is empty");
             }
           } else if (label === "language:") {
             cell
@@ -150,10 +128,7 @@ export class Parser {
                 }
               });
             if (!lang) {
-              console.log("[Parser] Language field exists but no language found", {
-                title,
-                url,
-              });
+              debugPrint("[Parser] Language field exists but no language found");
             }
           }
           cell
@@ -167,10 +142,7 @@ export class Parser {
             });
         });
         if (!lang) {
-          console.log("[Parser] No language found, defaulting to Japanese", {
-            title,
-            url,
-          });
+          debugPrint("[Parser] No language found, defaulting to Japanese");
           lang = `Japanese ${getLangFlag("japanese")}`;
         }
 
@@ -189,14 +161,7 @@ export class Parser {
           tags,
         });
       });
-    if (getDebugMode()) {
-      console.log(`results table: ${results.length}`);
-    }
-
-    if (results.length === 0) {
-      console.log("[Parser] parseTable() found no results");
-    }
-
+    debugPrint(`[Parser] parseTable() found ${results.length} results`);
     return results;
   }
 
@@ -221,9 +186,7 @@ export class Parser {
         contentRating: ContentRating.ADULT,
       };
     }
-    if (getDebugMode()) {
-      console.log(`results search: ${results.length}`);
-    }
+    debugPrint(`[Parser] parseSearchResults() found ${results.length} results`);
     if (results.length === 0) {
       return {
         items: [],
@@ -322,7 +285,7 @@ export class Parser {
   async parseMangaDetail(mangaID: string): Promise<any> {
     const html = await network.mangaDetailRequest(mangaID);
     if (!html || !html.trim()) {
-      console.log("[Parser] Manga detail returned empty HTML", {
+      debugPrint("[Parser] Manga detail returned empty HTML", {
         mangaID,
       });
     }
@@ -331,9 +294,8 @@ export class Parser {
     const tagSectionList: TagSection[] = [];
     const languages: string[] = [];
     let artist = "";
-    // Category
     if (!additionalMangaInfo.category) {
-      console.log("[Parser] Manga category not found", {
+      debugPrint("[Parser] Manga category not found", {
         mangaID,
       });
     }
@@ -348,11 +310,10 @@ export class Parser {
       ],
     });
 
-    // Tags
     const tagList = $("#taglist");
 
     if (tagList.length === 0) {
-      console.log("[Parser] Tag list (#taglist) not found", {
+      debugPrint("[Parser] Tag list (#taglist) not found", {
         mangaID,
       });
     }
@@ -360,7 +321,7 @@ export class Parser {
     const tagRows = tagList.find("tr");
 
     if (tagRows.length === 0) {
-      console.log("[Parser] No tag rows found", {
+      debugPrint("[Parser] No tag rows found", {
         mangaID,
       });
     }
@@ -369,9 +330,8 @@ export class Parser {
       const row = $(el);
       const categoryText = row.find("td.tc").text().trim();
       if (!categoryText) {
-        console.log("[Parser] Tag row has no category", {
+        debugPrint("[Parser] Tag row has no category", {
           mangaID,
-          html: $.html(row),
         });
       }
       const category = categoryText.split(":", 1)[0];
@@ -381,14 +341,14 @@ export class Parser {
         const tagTitle = capitalLetter($(a).text().trim().replaceAll(/\s+/g, " "));
 
         if (!tagId) {
-          console.log("[Parser] Tag found without ID", {
+          debugPrint("[Parser] Tag found without ID", {
             mangaID,
             category,
             tagTitle,
           });
         }
         if (!tagTitle) {
-          console.log("[Parser] Tag found without title", {
+          debugPrint("[Parser] Tag found without title", {
             mangaID,
             category,
             tagId,
@@ -406,7 +366,7 @@ export class Parser {
           const flag = getLangFlag(tagTitle.toLowerCase());
 
           if (!flag) {
-            console.log("[Parser] Language found but no flag available", {
+            debugPrint("[Parser] Language found but no flag available", {
               mangaID,
               language: tagTitle,
             });
@@ -426,19 +386,18 @@ export class Parser {
       }
     });
     if (!artist) {
-      console.log("[Parser] Artist not found", {
+      debugPrint("[Parser] Artist not found", {
         mangaID,
       });
     }
     if (languages.length === 0) {
-      console.log("[Parser] No languages found", {
+      debugPrint("[Parser] No languages found", {
         mangaID,
       });
     }
-    // Cover
     const style = $("#gd1 > div").attr("style") ?? "";
     if (!style) {
-      console.log("[Parser] Manga cover style not found", {
+      debugPrint("[Parser] Manga cover style not found", {
         mangaID,
       });
     }
@@ -446,24 +405,22 @@ export class Parser {
     const imageMatch = /url\(([^)]+)\)/.exec(style);
 
     if (!imageMatch) {
-      console.log("[Parser] Manga cover URL not found", {
+      debugPrint("[Parser] Manga cover URL not found", {
         mangaID,
         style,
       });
     }
 
     const imageUrl = imageMatch?.[1] ?? "";
-
-    // Titles
     const title = $("#gn").text().trim();
     const secondaryTitle = $("#gj").text().trim();
     if (!title) {
-      console.log("[Parser] Manga title (#gn) not found", {
+      debugPrint("[Parser] Manga title (#gn) not found", {
         mangaID,
       });
     }
     if (!secondaryTitle) {
-      console.log("[Parser] Secondary title (#gj) not found", {
+      debugPrint("[Parser] Secondary title (#gj) not found", {
         mangaID,
       });
     }
@@ -471,7 +428,7 @@ export class Parser {
     const secondaryParsedTitle = this.parseTitle(secondaryTitle);
     const info: MangaInfo = {
       thumbnailUrl: imageUrl,
-      synopsis: "",
+      synopsis: additionalMangaInfo.synopsis,
       artist: capitalLetter(artist),
       rating: additionalMangaInfo.rating.average / 500,
       secondaryTitles: [secondaryParsedTitle],
@@ -485,7 +442,7 @@ export class Parser {
         uploaded: additionalMangaInfo.posted.replaceAll(" ", "T"),
         favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
       },
-      shareUrl: `https://${BASE_URL}/g/${mangaID}`,
+      shareUrl: `${BASE_URL}/g/${mangaID}`,
     };
     return {
       mangaId: mangaID,
@@ -522,16 +479,16 @@ export class Parser {
   private parseGalleryInfo($: cheerio.CheerioAPI): GalleryInfo {
     const root = $("#gmid #gd3");
     if (root.length === 0) {
-      console.log("[Parser] Gallery root (#gmid #gd3) not found");
+      debugPrint("[Parser] Gallery root (#gmid #gd3) not found");
     }
     const category = root.find("#gdc div").first().text().trim();
     if (!category) {
-      console.log("[Parser] Gallery category (#gdc) not found");
+      debugPrint("[Parser] Gallery category (#gdc) not found");
     }
     let uploaderName = root.find("#gdn a").first().text().trim();
     const tags = $("#gmid #gd4");
     if (tags.length === 0) {
-      console.log("[Parser] Gallery tags (#gmid #gd4) not found");
+      debugPrint("[Parser] Gallery tags (#gmid #gd4) not found");
     }
 
     tags.find("td.tc").each((_, td) => {
@@ -540,7 +497,7 @@ export class Parser {
         uploaderName = $(td).next("td").find("div").first().text().trim();
 
         if (!uploaderName) {
-          console.log("[Parser] Artist/uploader field is empty");
+          debugPrint("[Parser] Artist/uploader field is empty");
         }
 
         return false;
@@ -549,13 +506,20 @@ export class Parser {
     let posted = "";
     let lengthPages = 0;
     let favsText = "";
-
+    let synopsis = "";
     const galleryDetails = $("#gdd");
-
     if (galleryDetails.length === 0) {
-      console.log("[Parser] Gallery details (#gdd) not found");
+      debugPrint("[Parser] Gallery details (#gdd) not found");
     }
-
+    $("#cdiv.gm div.c1").each((comment, el) => {
+      if ($(el).find("a[name='ulcomment']").length > 0) {
+        let commentHtml = $(el).find("div.c6").html();
+        if (commentHtml) {
+          let textWithNewlines = commentHtml.replace(/(<br\s*\/?>)+/gi, "\n");
+          synopsis = `Uploader Comment:\n${$("<div>").html(textWithNewlines).text().trim()}`;
+        }
+      }
+    });
     $("#gdd .gdt1").each((_, el) => {
       const label = $(el).text().trim();
       const value = $(el).next(".gdt2").text().trim();
@@ -568,29 +532,29 @@ export class Parser {
       }
     });
     if (!posted) {
-      console.log("[Parser] Posted date not found", {
+      debugPrint("[Parser] Posted date not found", {
         availableLabels: $("#gdd .gdt1")
           .map((_, el) => $(el).text().trim())
           .get(),
       });
     }
     if (lengthPages === 0) {
-      console.log("[Parser] Gallery length/pages not found", {
+      debugPrint("[Parser] Gallery length/pages not found", {
         posted,
       });
     }
     if (!favsText) {
-      console.log("[Parser] Favorite count not found", {
+      debugPrint("[Parser] Favorite count not found", {
         posted,
       });
     }
     const ratingText = $("#rating_label").text().replace("Average:", "").replaceAll(".", "").trim();
     if (!ratingText) {
-      console.log("[Parser] Rating text (#rating_label) not found");
+      debugPrint("[Parser] Rating text (#rating_label) not found");
     }
     const ratingAverage = parseFloat(ratingText);
     if (Number.isNaN(ratingAverage)) {
-      console.log("[Parser] Rating could not be parsed", {
+      debugPrint("[Parser] Rating could not be parsed", {
         ratingText,
       });
     }
@@ -609,99 +573,52 @@ export class Parser {
       rating: {
         average: Number.isNaN(ratingAverage) ? 0 : ratingAverage,
       },
+      synopsis: synopsis,
     };
   }
 
   async scrapeAllChapterPagesList(chapter: Chapter) {
     const totalImages = Number(chapter?.additionalInfo?.pages ?? "0");
-    if (!chapter.additionalInfo?.pages) {
-      console.log("[Parser] Chapter has no pages metadata", {
-        chapterId: chapter.chapterId,
-        additionalInfo: chapter.additionalInfo,
+    debugPrint(`[Parser] Chapter has ${totalImages} pages`, {
+      chapterId: chapter.chapterId,
+      additionalInfo: chapter.additionalInfo,
+    });
+    if (totalImages === 0) return [];
+    let imagesPerPage = 20;
+    let totalPages = Math.ceil(totalImages / imagesPerPage);
+    if (loginManager.isLoggedIn() && totalPages > 3) {
+      await Application.scheduleRequest({
+        url: `${BASE_URL}/g/${chapter.chapterId}?inline_set=ts_100`,
+        method: "GET",
       });
+      imagesPerPage = 40;
+      totalPages = Math.ceil(totalImages / imagesPerPage);
+      debugPrint(`[Parser] Changed to 40 items per page`);
     }
-    if (getDebugMode()) {
-      console.log(`totalImages: ${totalImages}`);
-    }
-    if (totalImages === 0) {
-      console.log("[Parser] Chapter has 0 pages", {
-        chapterId: chapter.chapterId,
-        additionalInfo: chapter.additionalInfo,
-      });
-    }
-    const IMAGES_PER_PAGE = 20;
-    const totalPages = Math.ceil(totalImages / IMAGES_PER_PAGE);
-    const pageUrls = Array.from(
-      { length: totalPages },
-      (_, page) => `${BASE_URL}/g/${chapter.chapterId}?p=${page}`,
-    );
-    if (getDebugMode()) {
-      console.log("[Parser] Chapter page URLs", {
-        chapterId: chapter.chapterId,
-        totalImages,
-        totalPages,
-        pageUrls,
-      });
-    }
-    const htmlPages = await Promise.all(pageUrls.map((url) => network.getChapterPages(url)));
-    const results: string[] = [];
-    for (let i = 0; i < htmlPages.length; i++) {
-      const html = htmlPages[i];
+    const pagePromises = Array.from({ length: totalPages }, async (_, page) => {
+      const url = `${BASE_URL}/g/${chapter.chapterId}?p=${page}`;
+      const html = await network.getChapterPages(url);
       const $ = cheerio.load(html);
-      const pageLinks = $("#gdt a");
-      if (pageLinks.length === 0) {
-        console.log("[Parser] No page links found on chapter page", {
-          chapterId: chapter.chapterId,
-          page: i,
-          url: pageUrls[i],
-        });
-      }
-      pageLinks.each((_, el) => {
-        if (results.length >= totalImages) {
-          return false;
-        }
-        const url = $(el).attr("href");
-        if (!url) {
-          console.log("[Parser] Chapter page link has no href", {
-            chapterId: chapter.chapterId,
-            page: i,
-          });
-          return;
-        }
-        results.push(url);
+      const urls: string[] = [];
+      $("#gdt a").each((_, el) => {
+        const href = $(el).attr("href");
+        if (href) urls.push(href);
       });
-
-      if (getDebugMode()) {
-        console.log("[Parser] Chapter page parsed", {
-          chapterId: chapter.chapterId,
-          page: i,
-          linksFound: pageLinks.length,
-          totalResults: results.length,
-        });
-      }
-      if (results.length >= totalImages) {
-        break;
-      }
+      return { page, urls };
+    });
+    const pagesData = await Promise.all(pagePromises);
+    pagesData.sort((a, b) => a.page - b.page);
+    const results: string[] = [];
+    for (let i = 0; i < pagesData.length; i++) {
+      results.push(...pagesData[i].urls);
+      if (results.length >= totalImages) break;
     }
-    if (results.length !== totalImages) {
-      console.log("[Parser] Page count mismatch", {
-        chapterId: chapter.chapterId,
-        expected: totalImages,
-        found: results.length,
-        requestedPages: totalPages,
-      });
+    const finalResults = results.slice(0, totalImages);
+    debugPrint(`[Parser] chapters: ${finalResults.length}`);
+    if (finalResults.length === 0) {
+      debugPrint("[Parser] No pages found, scraping error");
     }
-    if (getDebugMode()) {
-      console.log(`results chapters: ${results.length}`);
-    }
-    if (results.length === 0) {
-      console.log("[Parser] No pages found, scraping error", {
-        chapterId: chapter.chapterId,
-        totalImages,
-        totalPages,
-      });
-    }
-    return results;
+    return finalResults;
   }
 
   async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
@@ -734,17 +651,15 @@ export class Parser {
         try {
           return await this.parseMangaDetail(mangaId);
         } catch (e) {
-          console.log(`Failed to parse manga ${mangaId}`, e);
+          debugPrint(`Failed to parse manga ${mangaId}`, e);
           return null;
         }
       }),
     );
     mangas.push(...parsedMangas.filter((manga): manga is SourceManga => manga !== null));
-    if (getDebugMode()) {
-      console.log(`mangas: ${mangas.length}`);
-    }
+    debugPrint(`[Parser] Favorite mangas: ${mangas.length}`);
     if (mangas.length === 0) {
-      console.log("No favorite found");
+      debugPrint("No favorite found");
     }
     return mangas;
   }
