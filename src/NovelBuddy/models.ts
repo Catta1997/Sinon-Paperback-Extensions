@@ -107,3 +107,20 @@ export type PopularChapter = {
 export type SectionResponse<T> = {
   data: { items: T[] };
 };
+
+export type ListedNovel = {
+  id: string;
+  url: string;
+  name: string;
+  cover: string;
+  rating?: number;
+  is_adult?: boolean | null;
+  latest_chapters?: { number?: number; name?: string }[];
+};
+
+export type ListResponse = {
+  data: {
+    items: ListedNovel[];
+    pagination?: { has_next: boolean };
+  };
+};
