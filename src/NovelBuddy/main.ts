@@ -64,12 +64,6 @@ export class NovelBuddyExtension implements ExtensionImpl<typeof basePbConfig> {
         subtitle: "",
         type: DiscoverSectionType.simpleCarousel,
       },
-      {
-        id: "chapters",
-        title: "Hot Chapters",
-        subtitle: "",
-        type: DiscoverSectionType.chapterUpdates,
-      },
     ];
   }
   async getDiscoverSectionItems(
@@ -90,8 +84,6 @@ export class NovelBuddyExtension implements ExtensionImpl<typeof basePbConfig> {
         return this.network.parseList("latest", page);
       case "new":
         return this.network.parseList("newest", page);
-      case "chapters":
-        return this.network.parseChapters();
       default:
         return { items: [] };
     }
