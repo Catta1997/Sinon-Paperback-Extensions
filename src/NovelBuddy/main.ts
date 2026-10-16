@@ -30,9 +30,39 @@ export class NovelBuddyExtension implements ExtensionImpl<typeof basePbConfig> {
     return [
       {
         id: "trending",
-        title: "Trending",
+        title: "Trending Today",
         subtitle: "",
         type: DiscoverSectionType.prominentCarousel,
+      },
+      {
+        id: "trending_week",
+        title: "Trending This Week",
+        subtitle: "",
+        type: DiscoverSectionType.simpleCarousel,
+      },
+      {
+        id: "popular_today",
+        title: "Popular Updates Today",
+        subtitle: "",
+        type: DiscoverSectionType.simpleCarousel,
+      },
+      {
+        id: "popular_week",
+        title: "Popular Updates This Week",
+        subtitle: "",
+        type: DiscoverSectionType.simpleCarousel,
+      },
+      {
+        id: "latest",
+        title: "Latest Updates",
+        subtitle: "",
+        type: DiscoverSectionType.simpleCarousel,
+      },
+      {
+        id: "new",
+        title: "New Manga",
+        subtitle: "",
+        type: DiscoverSectionType.simpleCarousel,
       },
       {
         id: "chapters",
@@ -44,15 +74,46 @@ export class NovelBuddyExtension implements ExtensionImpl<typeof basePbConfig> {
   }
   async getDiscoverSectionItems(
     section: DiscoverSection,
+    metadata: NovelBuddyMetadata | undefined,
   ): Promise<PagedResults<DiscoverSectionItem>> {
+    const page = metadata?.page ?? 1;
     switch (section.id) {
       case "trending":
-        return this.network.parsePopular();
+        return this.network.parsePopular("today");
+      case "trending_week":
+        return this.trendingAsSimple(await this.network.parsePopular("week"));
+      case "popular_today":
+        return this.network.parseList("bookmarks", page, "today");
+      case "popular_week":
+        return this.network.parseList("bookmarks", page, "week");
+      case "latest":
+        return this.network.parseList("latest", page);
+      case "new":
+        return this.network.parseList("newest", page);
       case "chapters":
         return this.network.parseChapters();
       default:
         return { items: [] };
     }
+  }
+
+  /** Trending This Week shows as a regular row, so its items need the regular row type. */
+  private trendingAsSimple(
+    results: PagedResults<DiscoverSectionItem>,
+  ): PagedResults<DiscoverSectionItem> {
+    return {
+      items: results.items.map((item) =>
+        item.type === "featuredCarouselItem"
+          ? {
+              type: "simpleCarouselItem",
+              mangaId: item.mangaId,
+              imageUrl: item.imageUrl,
+              title: item.title,
+              contentRating: item.contentRating,
+            }
+          : item,
+      ),
+    };
   }
   async initialise(): Promise<void> {}
 

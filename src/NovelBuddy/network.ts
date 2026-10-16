@@ -13,6 +13,8 @@ import type {
   NovelBuddySearchMetadata,
   PopularChapter,
   PopularNovel,
+  ListResponse,
+  ListedNovel,
   SearchResponse,
   SectionResponse,
 } from "./models";
@@ -118,14 +120,16 @@ export class NovelBuddyNetwork {
     return JSON.parse(data) as GenresList;
   }
 
-  async getSections<T>(section: string) {
-    const url = `${this.api}trending/${section}`;
+  async getSections<T>(section: string, window?: "today" | "week") {
+    const url = `${this.api}trending/${section}${window === "week" ? "?window=week" : ""}`;
     const response = await Application.scheduleRequest({ url: url, method: "GET" });
     const data = Application.arrayBufferToUTF8String(response[1]);
     return JSON.parse(data) as SectionResponse<T>;
   }
-  async parsePopular(): Promise<PagedResults<DiscoverSectionItem>> {
-    const novels = await this.getSections<PopularNovel>("titles");
+  async parsePopular(
+    window: "today" | "week" = "today",
+  ): Promise<PagedResults<DiscoverSectionItem>> {
+    const novels = await this.getSections<PopularNovel>("titles", window);
     return {
       items: novels.data.items.map((novel) => ({
         type: "featuredCarouselItem",
@@ -149,6 +153,43 @@ export class NovelBuddyNetwork {
         title: novel.title.name,
         contentRating: ContentRating.EVERYONE,
       })),
+    };
+  }
+
+  /**
+   * The site's search sorted the way its home page sections are:
+   * "bookmarks" with a window for Popular Updates, "latest" for Latest
+   * Updates and "newest" for New Manga.
+   */
+  async getList(sort: string, page: number, window?: "today" | "week"): Promise<ListResponse> {
+    const url = new URL(`${this.api}titles/search`);
+    url.setQueryItem("sort", sort);
+    if (window) url.setQueryItem("window", window);
+    url.setQueryItem("limit", "24");
+    url.setQueryItem("page", page.toString());
+    const response = await Application.scheduleRequest({ url: url.toString(), method: "GET" });
+    return JSON.parse(Application.arrayBufferToUTF8String(response[1])) as ListResponse;
+  }
+
+  async parseList(
+    sort: string,
+    page: number,
+    window?: "today" | "week",
+  ): Promise<PagedResults<DiscoverSectionItem>> {
+    const list = await this.getList(sort, page, window);
+    return {
+      items: list.data.items.map((novel: ListedNovel) => {
+        const chapter = novel.latest_chapters?.[0]?.number;
+        return {
+          type: "simpleCarouselItem",
+          mangaId: novel.url.replace(/^\//, ""),
+          imageUrl: novel.cover,
+          title: novel.name,
+          subtitle: sort === "latest" && chapter !== undefined ? `Chapter ${chapter}` : undefined,
+          contentRating: novel.is_adult === true ? ContentRating.ADULT : ContentRating.EVERYONE,
+        };
+      }),
+      metadata: list.data.pagination?.has_next ? { page: page + 1 } : undefined,
     };
   }
 }
