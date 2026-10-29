@@ -7,21 +7,20 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 ## 📚 Available Sources
 
 Manga:
-
+- BlueSolo (🇫🇷)
 - E-Hentai (🔞 | Multi-Language)
 - ExHentai (🔞 | Multi-Language)
+- FMTeam (🇫🇷)
 - GTOTheGreatSite (🇮🇹)
 - HastaTeam (🇮🇹)
 - HastaTeamDDT (🇮🇹)
 - HentaiHand (🔞 | Multi-Language)
 - LupiTeam (🇮🇹)
+- HNIScanTrad (Multi-Language)
 - OmegaScans (🔞)
 - PhoenixScans (🇮🇹)
 - RokuHentai (🔞 | Multi-Language)
 - TuttoAnimeManga (🇮🇹)
-- BlueSolo (🇫🇷)
-- FMTeam (🇫🇷)
-- HNIScanTrad (Multi-Language)
 
 Novel:
 
