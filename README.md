@@ -28,12 +28,12 @@ Novel:
 - NovelBuddy (ENG)
 - NovelsOnline (ENG)
 
-## Issues
+## Issues and Feature Requests
 
 - [Join][discord] **Inkdex** Discord Server
-- Report issues **[here][issue]**
+- Report issues or ask feature **[here][thread]**
 
-[issue]: https://discord.com/channels/965890377896845352/1441074130089803810
+[thread]: https://discord.com/channels/965890377896845352/1441074130089803810
 [discord]: https://discord.gg/inkdex
 
 ## 🚀 Install
