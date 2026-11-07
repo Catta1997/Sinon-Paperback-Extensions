@@ -5,7 +5,12 @@ import {
   type Request,
   type Response,
 } from "@paperback/types";
-import type { BaseMetadata, ReadChapterResponse } from "./models";
+import type {
+  BaseMetadata,
+  ComicDetailResponse,
+  ComicsListResponse,
+  ReadChapterResponse,
+} from "./models";
 
 export class MainInterceptor extends PaperbackInterceptor {
   private readonly base_url: string = "";
@@ -34,40 +39,32 @@ export class APIRequests {
   constructor(baseUrl: string) {
     this.apiBaseUrl = baseUrl;
   }
-  async apiSearchResult(query: SearchQuery<BaseMetadata>) {
-    const searchApi = new URL(this.apiBaseUrl);
-    const path = query.title.length > 0 ? "search" : "comics";
-    searchApi.addPathComponent(path);
-    searchApi.addPathComponent(query.title);
-    const data = await Application.scheduleRequest({
-      url: searchApi.toString(),
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
+
+  /** GET `<apiBaseUrl>/<...pathComponents>` and parse the body as JSON. */
+  private async getJson<T>(...pathComponents: string[]): Promise<T> {
+    const url = new URL(this.apiBaseUrl);
+    pathComponents.forEach((component) => url.addPathComponent(component));
+    const [, data] = await Application.scheduleRequest({ url: url.toString(), method: "GET" });
+    return JSON.parse(Application.arrayBufferToUTF8String(data)) as T;
   }
 
-  async apiMangaDetails(mangaId: string, section: boolean = false) {
-    const searchApi = new URL(this.apiBaseUrl);
-    searchApi.addPathComponent("comics");
-    if (!section) {
-      searchApi.addPathComponent(mangaId);
-    }
-    const data = await Application.scheduleRequest({
-      url: searchApi.toString(),
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
+  apiSearchResult(query: SearchQuery<BaseMetadata>) {
+    return this.getJson<ComicsListResponse>(
+      query.title.length > 0 ? "search" : "comics",
+      query.title,
+    );
+  }
+
+  apiMangaDetails(mangaId: string) {
+    return this.getJson<ComicDetailResponse>("comics", mangaId);
+  }
+
+  apiLatestComics() {
+    return this.getJson<ComicsListResponse>("comics");
   }
 
   async getChapterPages(chapterId: string) {
-    const searchApi = new URL(this.apiBaseUrl);
-    searchApi.addPathComponent(chapterId);
-    const data = await Application.scheduleRequest({
-      url: searchApi.toString(),
-      method: "GET",
-    });
-    const html = Application.arrayBufferToUTF8String(data[1]);
-    const json = JSON.parse(html) as ReadChapterResponse;
+    const json = await this.getJson<ReadChapterResponse>(chapterId);
     return json.chapter.pages;
   }
 }

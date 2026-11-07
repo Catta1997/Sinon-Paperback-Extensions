@@ -38,7 +38,8 @@ export type MangaElement = {
   pages: string;
   date: string;
   rating: number;
-  tags: string[];
+  tags: string[]; // only the name, for example "stockings"
+  fullTags: string[]; // with the namespace, for example "female:stockings"
 };
 
 export const languageAll = [

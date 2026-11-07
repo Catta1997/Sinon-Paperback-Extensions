@@ -7,6 +7,7 @@ Custom extensions for **[Paperback](https://paperback.moe/)**
 ## 📚 Available Sources
 
 Manga:
+
 - BlueSolo (🇫🇷)
 - E-Hentai (🔞 | Multi-Language)
 - ExHentai (🔞 | Multi-Language)

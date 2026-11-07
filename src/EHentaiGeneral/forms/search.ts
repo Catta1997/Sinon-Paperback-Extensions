@@ -12,34 +12,49 @@ import {
   ToggleRow,
   TriStateSelectRow,
 } from "@paperback/types";
-import { capitalLetter, getDefaultMetadata, getLanguages, type SearchMetadata } from "../utils";
+import {
+  capitalLetter,
+  getDefaultMetadata,
+  getLanguageOptions,
+  getTypeOptions,
+  normalizeLanguageSelection,
+  type LanguageStatus,
+  type SearchMetadata,
+} from "../utils";
 import { type FilterKey, filterKeys, typeFilter } from "../models";
+
+// E-Hentai rejects page ranges that are too narrow
+const MIN_MAX_PAGES = 10;
+const MIN_PAGE_GAP = 20;
+const MAX_PAGES_LIMIT = 999;
+
+/** Selector name prefix -> form method that handles it (see onValueChangeLabelProxy). */
+const PROXY_HANDLERS = {
+  onSelect_: "onChange",
+  handle_: "onHandle",
+  onDelete_: "onDelete",
+} as const;
+
+function matchProxyHandler(p: string | symbol) {
+  if (typeof p !== "string") return undefined;
+  for (const [prefix, method] of Object.entries(PROXY_HANDLERS)) {
+    if (p.startsWith(prefix)) return { method, rowId: p.slice(prefix.length) };
+  }
+  return undefined;
+}
 
 class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   onValueChangeLabelProxy = new Proxy(this, {
     has(target, p) {
-      return typeof p === "string" &&
-        (p.startsWith("onDelete_") || p.startsWith("onSelect_") || p.startsWith("handle_"))
-        ? true
-        : Object.hasOwn(target, p);
+      return matchProxyHandler(p) !== undefined ? true : Object.hasOwn(target, p);
     },
 
     get(target, p) {
-      if (typeof p === "string" && p.startsWith("onSelect_")) {
-        const rowId = p.slice("onSelect_".length);
-
+      const handler = matchProxyHandler(p);
+      if (handler) {
+        const fn = target[handler.method] as (rowId: string, value?: any) => Promise<void>;
         return async (value?: any) => {
-          await target.onChange(rowId, value);
-        };
-      } else if (typeof p === "string" && p.startsWith("handle_")) {
-        const rowId = p.slice("handle_".length);
-        return async (value?: any) => {
-          await target.onHandle(rowId, value);
-        };
-      } else if (typeof p === "string" && p.startsWith("onDelete_")) {
-        const rowId = p.slice("onDelete_".length);
-        return async (value?: any) => {
-          await target.onDelete(rowId, value);
+          await fn.call(target, handler.rowId, value);
         };
       }
       // @ts-ignore
@@ -50,11 +65,28 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   private searchMetadata: SearchMetadata;
   constructor(searchQuery: SearchQuery<SearchMetadata>) {
     super();
-    if (searchQuery.metadata !== undefined) {
-      this.searchMetadata = searchQuery.metadata;
-    } else {
-      this.searchMetadata = getDefaultMetadata();
+    this.searchMetadata = searchQuery.metadata ?? getDefaultMetadata();
+  }
+
+  /** Selector resolved dynamically by onValueChangeLabelProxy (e.g. `onDelete_artist`). */
+  private proxySel(name: string): any {
+    // @ts-expect-error the dynamic selector name is resolved by onValueChangeLabelProxy
+    return Application.Selector(this.onValueChangeLabelProxy, name);
+  }
+
+  private getList(type: string): string[] | undefined {
+    return this.searchMetadata[type as FilterKey];
+  }
+
+  private getPageRangeError(): string | undefined {
+    const { minPages, maxPages } = this.searchMetadata;
+    if (maxPages && maxPages < MIN_MAX_PAGES) {
+      return `Invalid maximum page value: The maximum number of pages cannot be below ${MIN_MAX_PAGES}`;
     }
+    if (minPages && maxPages && maxPages - minPages < MIN_PAGE_GAP) {
+      return `Invalid page range: the maximum number of pages must be at least ${MIN_PAGE_GAP} greater than the minimum.`;
+    }
+    return undefined;
   }
 
   override getSearchQueryMetadata(): SearchMetadata {
@@ -62,20 +94,10 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
   }
 
   override async formDidSubmit(): Promise<void> {
-    if (this.searchMetadata.maxPages && this.searchMetadata.maxPages < 10) {
-      throw new Error("Invalid maximum page value: The maximum number of pages cannot be below 10");
-    }
-
-    if (
-      this.searchMetadata.minPages &&
-      this.searchMetadata.maxPages &&
-      this.searchMetadata.maxPages - this.searchMetadata.minPages < 20
-    ) {
-      throw new Error(
-        "Invalid page range: the maximum number of pages must be at least 20 greater than the minimum.",
-      );
-    }
+    const error = this.getPageRangeError();
+    if (error) throw new Error(error);
   }
+
   override getSections(): FormSectionElement<unknown>[] {
     const inputSections = filterKeys.map((filter) =>
       EditSection(`${filter}`, {
@@ -85,11 +107,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         allowReorder: false,
         id: `${filter}`,
         footer: "Use `-` to exclude a tag",
-        onDeletion: Application.Selector(
-          this.onValueChangeLabelProxy,
-          // @ts-expect-error
-          `onDelete_${filter}`,
-        ),
+        onDeletion: this.proxySel(`onDelete_${filter}`),
         items: this.getInputFilter(filter),
       }),
     );
@@ -103,6 +121,7 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       ...inputSections,
     ];
   }
+
   getTypeFilter(): FormItemElement<unknown>[] {
     return [
       SelectRow("genres", {
@@ -114,12 +133,14 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
             : typeFilter.map((x) => x.id),
         minItemCount: 1,
         maxItemCount: typeFilter.length,
-        options: typeFilter.map((x) => ({ id: x.id, title: x.value })),
+        options: getTypeOptions(),
         onValueChange: Application.Selector(this as EHentaiAdvancedSearchForm, "handleTypeChange"),
       }),
     ];
   }
+
   getLanguageFilter(): FormItemElement<unknown>[] {
+    const items = getLanguageOptions();
     return [
       TriStateSelectRow("language", {
         layout: "list",
@@ -128,8 +149,8 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
         value: this.searchMetadata.language ?? {},
         allowExclusion: true,
         allowEmptySelection: false,
-        maximum: getLanguages().length,
-        items: getLanguages().map((x) => ({ id: x.id, title: `${x.flag} ${x.value}` })),
+        maximum: items.length,
+        items,
         onValueChange: Application.Selector(
           this as EHentaiAdvancedSearchForm,
           "handleLanguagesChange",
@@ -137,31 +158,24 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
   getInputFilter(type: FilterKey): FormItemElement<unknown>[] {
-    const values = this.searchMetadata[type] as string[] | undefined;
     return [
       InputRow(type, {
         title: `Add filter`,
         value: "",
-        onValueChange: Application.Selector(
-          this.onValueChangeLabelProxy,
-          // @ts-expect-error
-          `handle_${type}`,
-        ),
+        onValueChange: this.proxySel(`handle_${type}`),
       }),
-      ...(values?.map((value, index) =>
+      ...(this.getList(type)?.map((value, index) =>
         InputRow(`${type}${index}`, {
           title: `${type} Filter ${index + 1}`,
           value: value,
-          onValueChange: Application.Selector(
-            this.onValueChangeLabelProxy,
-            // @ts-expect-error
-            `onSelect_${index}_${type}`,
-          ),
+          onValueChange: this.proxySel(`onSelect_${index}_${type}`),
         }),
       ) ?? []),
     ];
   }
+
   getRatingFilter(): FormItemElement<unknown>[] {
     return [
       StepperRow(`rating`, {
@@ -178,13 +192,15 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
   getMinPagesFilter(): FormItemElement<unknown>[] {
+    const { minPages, maxPages } = this.searchMetadata;
     return [
       StepperRow(`minPages`, {
         title: "Minimum content pages",
-        value: this.searchMetadata.minPages ?? 0,
+        value: minPages ?? 0,
         minValue: 0,
-        maxValue: this.searchMetadata.maxPages ? this.searchMetadata.maxPages - 20 : 999,
+        maxValue: maxPages ? maxPages - MIN_PAGE_GAP : MAX_PAGES_LIMIT,
         stepValue: 1,
         loopOver: false,
         onValueChange: Application.Selector(
@@ -194,17 +210,15 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
   getMaxPagesFilter(): FormItemElement<unknown>[] {
-    const max = this.searchMetadata.maxPages ?? 0;
-    const min = this.searchMetadata.minPages ?? 0;
-    const range = min != 0 && max - min < 20;
-    const minMaxVale = min != 0 && max < 10;
+    const error = this.getPageRangeError();
     return [
       StepperRow(`maxPages`, {
         title: "Maximum content pages",
         value: this.searchMetadata.maxPages ?? 0,
         minValue: 0,
-        maxValue: 999,
+        maxValue: MAX_PAGES_LIMIT,
         stepValue: 1,
         loopOver: false,
         onValueChange: Application.Selector(
@@ -214,14 +228,12 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
       LabelRow("error", {
         title: "Error",
-        value: range
-          ? "Invalid page range: the maximum number " +
-            "of pages must be at least 20 greater than the minimum."
-          : "Invalid maximum page value: The maximum" + "number of pages cannot be below 10",
-        isHidden: !range && !minMaxVale,
+        value: error ?? "",
+        isHidden: !error,
       }),
     ];
   }
+
   getExpungedFilter(): FormItemElement<unknown>[] {
     return [
       ToggleRow(`expungedGalleries`, {
@@ -234,61 +246,55 @@ class EHentaiAdvancedSearchForm extends AdvancedSearchForm {
       }),
     ];
   }
+
   async onHandle(type: string, value: string): Promise<void> {
     if (value.length > 0) {
       const key = type as FilterKey;
-      const current = this.searchMetadata[key] ?? [];
-      this.searchMetadata[key] = [...current, value];
+      this.searchMetadata[key] = [...(this.searchMetadata[key] ?? []), value];
     }
   }
+
   async onChange(rowId: string, value: string): Promise<void> {
     const [indexStr, type] = rowId.split("_");
-    if (!indexStr || !type) {
-      return;
-    }
+    if (!indexStr || !type) return;
     const index = Number(indexStr);
-    const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
-    if (!arr || isNaN(index)) return;
-    const _ = value.length > 0 ? (arr[index] = value) : arr.splice(index, 1);
-    return;
+    const list = this.getList(type);
+    if (!list || isNaN(index)) return;
+    if (value.length > 0) list[index] = value;
+    else list.splice(index, 1);
   }
+
   async onDelete(type: string, value: number): Promise<void> {
-    const arr = this.searchMetadata[type as keyof SearchMetadata] as string[] | undefined;
-    if (!arr || isNaN(value)) return;
-    arr.splice(value - 1, 1);
-    return;
+    const list = this.getList(type);
+    if (!list || isNaN(value)) return;
+    list.splice(value - 1, 1);
   }
+
   async handleTypeChange(value: string[]): Promise<void> {
     this.searchMetadata.type = value;
   }
-  async handleLanguagesChange(value: Record<string, "included" | "excluded">): Promise<void> {
-    const previous = this.searchMetadata.language ?? { all: "included" };
-    if (value.all === "excluded") {
-      value.all = "included";
-    }
-    const hadAll = previous.all === "included";
-    const hasAll = value.all === "included";
-    if (!hadAll && hasAll) {
-      value = { all: "included" };
-    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
-      delete value.all;
-    }
-    if (Object.keys(value).length === 0) {
-      value = { all: "included" };
-    }
-    this.searchMetadata.language = value;
+
+  async handleLanguagesChange(value: LanguageStatus): Promise<void> {
+    this.searchMetadata.language = normalizeLanguageSelection(
+      this.searchMetadata.language ?? { all: "included" },
+      value,
+    );
   }
+
   async handleRatingChange(value: number): Promise<void> {
     this.searchMetadata.rating = value;
   }
+
   async handleMaxPagesChange(value: number): Promise<void> {
     this.searchMetadata.maxPages = value;
     this.reloadForm();
   }
+
   async handleMinPagesChange(value: number): Promise<void> {
     this.searchMetadata.minPages = value;
     this.reloadForm();
   }
+
   async handleExpungedChange(value: boolean): Promise<void> {
     this.searchMetadata.expunged = value;
     this.reloadForm();

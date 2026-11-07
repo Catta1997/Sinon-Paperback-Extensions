@@ -1,12 +1,16 @@
 import {
   capitalLetter,
   getDebugMode,
-  getDefLangGloablStatus,
+  getDefLangGlobalStatus,
   getDefLangStatus,
   getDisabledCustomLang,
   getDisabledCustomTags,
   getDisabledCustomUploader,
-  getLanguages,
+  getLanguageOptions,
+  getStateList,
+  getTypeOptions,
+  type LanguageStatus,
+  normalizeLanguageSelection,
   tableFix,
 } from "../utils";
 import {
@@ -51,26 +55,13 @@ export class SettingsForm extends Form {
     this.userAgent = userAgent;
   }
   override getSections() {
-    const types: { id: string; title: string }[] = typeFilter.map((tag) => ({
-      id: tag.id,
-      title: tag.value,
-    }));
-    const languages: { id: string; title: string }[] = getLanguages().map((tag) => ({
-      id: tag.id,
-      title: `${tag.flag} ${tag.value}`,
-    }));
+    const types = getTypeOptions();
+    const languages = getLanguageOptions();
     const inputSections = filterKeys.map((filter) =>
       InputRow(`${filter}`, {
         title: `${capitalLetter(filter)}`,
-        value: ((Application.getState(`_${filter}`) as string | undefined) ?? "")
-          .split(",")
-          .filter(Boolean)
-          .join(","),
-        onValueChange: Application.Selector(
-          this.onValueChangeLabelProxy,
-          // @ts-expect-error
-          `onHandle_${filter}`,
-        ),
+        value: getStateList(filter).join(","),
+        onValueChange: this.bind(filter),
       }),
     );
     return [
@@ -129,7 +120,7 @@ export class SettingsForm extends Form {
             items: types,
             minItemCount: 1,
             maxItemCount: types.length,
-            onValueChange: Application.Selector(this as SettingsForm, "handleHideTypeStatusChange"),
+            onValueChange: this.bind("type"),
           }),
           StepperRow("rate_limit", {
             title: "Rate Limit",
@@ -146,31 +137,28 @@ export class SettingsForm extends Form {
             subtitle: "Disable custom filter for languages",
             value: getDisabledCustomLang(),
             isHidden: !loginManager.isLoggedIn(),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomLan"),
+            onValueChange: this.bind("custom_lang"),
           }),
           ToggleRow("custom_upl", {
             title: "Uploader",
             subtitle: "Disable custom filter for uploader",
             value: getDisabledCustomUploader(),
             isHidden: !loginManager.isLoggedIn(),
-            onValueChange: Application.Selector(
-              this as SettingsForm,
-              "handleDisableCustomUploader",
-            ),
+            onValueChange: this.bind("custom_upl"),
           }),
           ToggleRow("custom_tags", {
             title: "Tags",
             subtitle: "Disable custom filter for tags",
             value: getDisabledCustomTags(),
             isHidden: !loginManager.isLoggedIn(),
-            onValueChange: Application.Selector(this as SettingsForm, "handleDisableCustomTags"),
+            onValueChange: this.bind("custom_tags"),
           }),
         ],
       ),
       Section(
         {
           id: "table_fix_section",
-          header: "Account Settings",
+          header: "Table Fix",
         },
         [
           ButtonRow("table_fix", {
@@ -190,10 +178,10 @@ export class SettingsForm extends Form {
           header: "Sections",
         },
         [
-          TriStateSelectRow("def_languages", {
+          TriStateSelectRow("def_languages_global", {
             title: "Languages",
             subtitle: "This settings will not be applied to 'Popular' and 'Favorite' Sections",
-            value: getDefLangGloablStatus(),
+            value: getDefLangGlobalStatus(),
             layout: "list",
             items: languages,
             allowExclusion: true,
@@ -208,7 +196,7 @@ export class SettingsForm extends Form {
             title: "Hide favorite sections with 0 elements",
             subtitle:
               "If this is enabled, on Favorite section you will see `Favorite` with 0 elements",
-            onValueChange: Application.Selector(this as SettingsForm, "handleEmptyFavorite"),
+            onValueChange: this.bind("emptyFav"),
           }),
           NavigationRow("sectionOrder", {
             title: "Sections Order",
@@ -245,37 +233,30 @@ export class SettingsForm extends Form {
             title: "DEBUG",
             value: getDebugMode(),
             subtitle: "WARNING: turn debug on will make extension log a lot",
-            onValueChange: Application.Selector(this as SettingsForm, "handleDebugMode"),
+            onValueChange: this.bind("debug"),
           }),
         ],
       ),
     ];
   }
+
+  /** Selector that stores the new value in the app state under `_${key}` (see onHandle). */
+  private bind(key: string): any {
+    // @ts-expect-error the dynamic `onHandle_*` selector is resolved by onValueChangeLabelProxy
+    return Application.Selector(this.onValueChangeLabelProxy, `onHandle_${key}`);
+  }
+
   public async updateValue<T>(value: T, filter: string): Promise<void> {
     Application.setState(value, filter);
     this.reloadForm();
   }
 
   getHideTypeStatus(): string[] {
-    return (
-      (Application.getState("_type") as string[] | undefined) ?? [
-        "1",
-        "2",
-        "4",
-        "8",
-        "16",
-        "32",
-        "64",
-        "128",
-        "256",
-        "512",
-      ]
-    );
+    return (Application.getState("_type") as string[] | undefined) ?? typeFilter.map((t) => t.id);
   }
 
   async handleLogin(cookies: Cookie[]): Promise<void> {
-    await loginManager.logIn(cookies);
-    Application.invalidateDiscoverSections();
+    await loginManager.logIn(cookies); // also invalidates the discover sections
     this.reloadForm();
     return;
   }
@@ -297,46 +278,15 @@ export class SettingsForm extends Form {
     this.reloadForm();
   }
 
-  async handleDefLangGlobalStatusChange(
-    value: Record<string, "included" | "excluded">,
-  ): Promise<void> {
-    const previous = getDefLangGloablStatus() ?? { all: "included" };
-    if (value.all === "excluded") {
-      value.all = "included";
-    }
-    const hadAll = previous.all === "included";
-    const hasAll = value.all === "included";
-    if (!hadAll && hasAll) {
-      value = { all: "included" };
-    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
-      delete value.all;
-    }
-    if (Object.keys(value).length === 0) {
-      value = { all: "included" };
-    }
-    await this.updateValue(value, "_globalLanguages");
+  async handleDefLangGlobalStatusChange(value: LanguageStatus): Promise<void> {
+    await this.updateValue(
+      normalizeLanguageSelection(getDefLangGlobalStatus(), value),
+      "_globalLanguages",
+    );
   }
 
-  async handleDefLangStatusChange(value: Record<string, "included" | "excluded">): Promise<void> {
-    const previous = getDefLangStatus() ?? { all: "included" };
-    if (value.all === "excluded") {
-      value.all = "included";
-    }
-    const hadAll = previous.all === "included";
-    const hasAll = value.all === "included";
-    if (!hadAll && hasAll) {
-      value = { all: "included" };
-    } else if (hadAll && hasAll && Object.keys(value).length > 1) {
-      delete value.all;
-    }
-    if (Object.keys(value).length === 0) {
-      value = { all: "included" };
-    }
-    await this.updateValue(value, "_languages");
-  }
-
-  async handleHideTypeStatusChange(value: string[]): Promise<void> {
-    await this.updateValue(value, "_type");
+  async handleDefLangStatusChange(value: LanguageStatus): Promise<void> {
+    await this.updateValue(normalizeLanguageSelection(getDefLangStatus(), value), "_languages");
   }
 
   async onHandle(type: string, value: string): Promise<void> {
@@ -353,26 +303,6 @@ export class SettingsForm extends Form {
   async handleRateStatusChange(value: number): Promise<void> {
     await this.updateValue(value, "RateFilter");
     mainRateLimiter.options.numberOfRequests = value;
-  }
-
-  async handleDisableCustomLan(value: boolean): Promise<void> {
-    await this.updateValue(value, "_custom_lang");
-  }
-
-  async handleDisableCustomUploader(value: boolean): Promise<void> {
-    await this.updateValue(value, "_custom_upl");
-  }
-
-  async handleDisableCustomTags(value: boolean): Promise<void> {
-    await this.updateValue(value, "_custom_tags");
-  }
-
-  async handleDebugMode(value: boolean): Promise<void> {
-    await this.updateValue(value, "_debug");
-  }
-
-  async handleEmptyFavorite(value: boolean): Promise<void> {
-    await this.updateValue(value, "_emptyFav");
   }
 
   async handleTableFix(): Promise<void> {

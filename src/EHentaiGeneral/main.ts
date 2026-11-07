@@ -13,7 +13,9 @@ import {
   type AdvancedSearchForm,
   type ExtensionImpl,
   type ManagedCollection,
-  type ManagedCollectionChangeset,
+  type ManagedCollectionChange,
+  type ManagedCollectionChangeFailure,
+  type ManagedCollectionItems,
 } from "@paperback/types";
 import EHentaiAdvancedSearchForm from "./forms/search";
 import { SettingsForm } from "./forms/settings";
@@ -42,6 +44,12 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     return new SettingsForm(await Application.getDefaultUserAgent());
   }
 
+  private requireLogin(): void {
+    if (!loginManager.isLoggedIn()) {
+      throw new Error("This Section is only available with Log-In");
+    }
+  }
+
   async getDiscoverSections(): Promise<DiscoverSection[]> {
     return sections.getFilteredSections();
   }
@@ -50,8 +58,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     section: DiscoverSection,
     metadata: Metadata,
   ): Promise<PagedResults<DiscoverSectionItem>> {
-    debugPrint(`[Home] getDiscoverSectionItems s:${JSON.stringify(metadata)}`);
-    debugPrint(`[Home] getDiscoverSectionItems m:${JSON.stringify(section)}`);
     switch (section.id) {
       case "Featured": {
         return parser.parseFeatured(metadata);
@@ -60,15 +66,11 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
         return parser.parseRecent(metadata);
       }
       case "Watched": {
-        if (!loginManager.isLoggedIn()) {
-          throw new Error("This Section is only available with Log-In");
-        }
+        this.requireLogin();
         return parser.parseWatched(metadata);
       }
       case "Favorite": {
-        if (!loginManager.isLoggedIn()) {
-          throw new Error("This Section is only available with Log-In");
-        }
+        this.requireLogin();
         return parser.parseFavorite();
       }
       default:
@@ -84,7 +86,6 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   async getAdvancedSearchForm(
     searchQuery: SearchQuery<SearchMetadata>,
   ): Promise<AdvancedSearchForm> {
-    debugPrint(`[Home] getAdvancedSF for ${JSON.stringify(searchQuery)}`);
     return new EHentaiAdvancedSearchForm(searchQuery);
   }
 
@@ -95,18 +96,14 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     if (query.metadata === undefined) {
       query.metadata = getDefaultMetadata();
     }
-    debugPrint(`[Home] getSearchResults m:${JSON.stringify(metadata)}`);
-    debugPrint(`[Home] getSearchResults q:${JSON.stringify(query)}`);
     return parser.parseSearchResults(query, metadata);
   }
 
   getChapters(sourceManga: SourceManga): Promise<Chapter[]> {
-    debugPrint(`[Home] getChapters for ${JSON.stringify(sourceManga)}`);
     return parser.parseChapters(sourceManga);
   }
 
   getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
-    debugPrint(`[Home] getChapterDetails for ${JSON.stringify(chapter)}`);
     return parser.scrapeAllChapterPages(chapter);
   }
 
@@ -118,25 +115,43 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
     REQUIRE_LOGIN = requireLogIn;
   }
 
+  async applyManagedCollectionChanges(
+    changes: ManagedCollectionChange[],
+  ): Promise<ManagedCollectionChangeFailure[]> {
+    const deletions: ManagedCollectionChangeFailure[] = [];
+    for (const manga of changes) {
+      if (manga.type === "add" || manga.type === "move") {
+        await network.addToFavorite(manga.id, manga.to.id);
+      }
+      if (manga.type === "remove") {
+        deletions.push({ changeId: manga.id, reason: "Delete not implemented" });
+      }
+    }
+    return deletions;
+  }
+
+  async getManagedCollectionItems(
+    collections: ManagedCollection[],
+  ): Promise<ManagedCollectionItems[]> {
+    const favorites: ManagedCollectionItems[] = [];
+    for (const collection of collections) {
+      const mangas = await parser.parseFavoriteList(collection.id);
+      favorites.push({ collectionId: collection.id, items: mangas });
+    }
+    return favorites;
+  }
+
+  async getManagedCollections(): Promise<ManagedCollection[]> {
+    const favorites = await network.getFevList();
+    return favorites.map((fav) => ({ id: fav.id, title: fav.value, exclusiveGroup: "favorite" }));
+  }
+
   async getManagedLibraryCollections(): Promise<ManagedCollection[]> {
     const favorites = await network.getFevList();
     return favorites.map((fav) => ({ id: fav.id, title: fav.value }));
   }
 
-  async commitManagedCollectionChanges(changeset: ManagedCollectionChangeset): Promise<void> {
-    for (const manga of changeset.additions) {
-      await network.addToFavorite(manga.mangaId, changeset.collection.id);
-    }
-    for (const manga of changeset.deletions) {
-      await network.deleteFromFavorite(manga.mangaId);
-    }
-  }
-
-  getSourceMangaInManagedCollection(managedCollection: ManagedCollection): Promise<SourceManga[]> {
-    return parser.parseFavoriteList(managedCollection.id);
-  }
   async redirectHandler(proposedRequest: Request, _response: Response) {
-    debugPrint(`[Home] redirectHandler called for ${JSON.stringify(proposedRequest)}`);
     if (/exhentai\.org\/\?poni=/.test(proposedRequest.url)) return undefined;
     return proposedRequest;
   }

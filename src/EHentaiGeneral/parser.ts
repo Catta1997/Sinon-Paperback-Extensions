@@ -22,6 +22,7 @@ import {
   tableFix,
 } from "./utils";
 import { BASE_URL, network } from "./main";
+import { galleryIdFromUrl, galleryUrl } from "./network";
 import type { GalleryInfo, MangaElement } from "./models";
 
 export class Parser {
@@ -44,6 +45,81 @@ export class Parser {
       throw new Error("Table Issue, please open extension settings and click on `Fix Table Issue`");
     }
   }
+  private warnIfEmpty(value: unknown, message: string, context?: object) {
+    if (!value) {
+      debugPrint(`[Parser] ${message}`, ...(context ? [context] : []));
+    }
+  }
+
+  /** Value of the `next=` query param of the "next page" link (#unext), if any. */
+  private getNextPage($: cheerio.CheerioAPI): string | undefined {
+    return /next=([^&]+)/.exec($("#unext").attr("href") ?? "")?.[1];
+  }
+
+  /** Text of the first `div` next to the `td.tc` cell labelled `label` (e.g. "artist:"). */
+  private findTagRowValue(
+    $: cheerio.CheerioAPI,
+    scope: cheerio.Cheerio<any>,
+    label: string,
+  ): string | undefined {
+    const cell = scope
+      .find("td.tc")
+      .filter((_, td) => $(td).text().trim() === label)
+      .first();
+    return cell.length > 0 ? cell.next("td").find("div").first().text().trim() : undefined;
+  }
+
+  /** The rating is encoded in the background-position of the star sprite. */
+  private parseRating(container: cheerio.Cheerio<any>): number {
+    const style = container.find("div.ir").first().attr("style");
+    if (!style) {
+      debugPrint("[Parser] Missing rating element/style (div.ir)");
+      return 0;
+    }
+    const match = /background-position:\s*(-?\d+)px\s+(-?\d+)px/.exec(style);
+    if (!match) {
+      debugPrint("[Parser] Unexpected rating style format");
+      return 0;
+    }
+    const x = Number(match[1]);
+    const y = Number(match[2]);
+    return isNaN(x) || isNaN(y) ? 0 : (x + 80) / 16 - (Math.abs(y) === 21 ? 0.5 : 0);
+  }
+
+  /** Language (with flag) and tag names shown in the tag cells of a gallery row. */
+  private parseRowTags($: cheerio.CheerioAPI, container: cheerio.Cheerio<any>) {
+    const tags: string[] = [];
+    const fullTags: string[] = [];
+    let lang = "";
+    container.find("td.tc").each((_, td) => {
+      const cell = $(td);
+      const valueCell = cell.next("td");
+
+      if (cell.text().trim() === "language:") {
+        valueCell.find("div.gt, div.gtl").each((_, el) => {
+          const text = $(el).text().trim();
+          if (text && text.toLowerCase() !== "translated") {
+            lang += `${lang ? " " : ""}${text} ${getLangFlag(text)}`;
+          }
+        });
+        this.warnIfEmpty(lang, "Language field exists but no language found");
+      }
+      valueCell.find("[style]").each((_, el) => {
+        const text = $(el).text().trim();
+        if (text) {
+          tags.push(text);
+          // the title attribute has the namespace: "female:stockings"
+          fullTags.push($(el).attr("title") ?? text);
+        }
+      });
+    });
+    if (!lang) {
+      debugPrint("[Parser] No language found, defaulting to Japanese");
+      lang = `Japanese ${getLangFlag("japanese")}`;
+    }
+    return { lang, tags, fullTags };
+  }
+
   private parseTable($: cheerio.CheerioAPI) {
     if (!this.checkTable($)) {
       return [];
@@ -52,7 +128,6 @@ export class Parser {
     $("tr")
       .has("td.gl1e")
       .each((_, el) => {
-        const tags: string[] = [];
         const container = $(el);
         const title = container.find("div.glink").text().trim();
         const url = container.find("a").first().attr("href") ?? "";
@@ -65,100 +140,33 @@ export class Parser {
           .first()
           .text()
           .trim();
-        if (!title) {
-          debugPrint("[Parser] Missing title (.glink)");
-        }
-        if (!url) {
-          debugPrint("[Parser] Missing manga URL (a)");
-        }
-        if (!image) {
-          debugPrint("[Parser] Missing image (img)");
-        }
-        if (!category) {
-          debugPrint("[Parser] Missing category (.gl3e .cn)");
-        }
-        if (!date) {
-          debugPrint("[Parser] Missing date (#posted_*)");
-        }
-        if (!pages) {
-          debugPrint("[Parser] Missing pages");
-        }
-        let artist = "";
-        let lang = "";
-        let rating = 0;
-        const ratingElement = container.find("div.ir").first();
-        const style = ratingElement.attr("style");
+        this.warnIfEmpty(title, "Missing title (.glink)");
+        this.warnIfEmpty(url, "Missing manga URL (a)");
+        this.warnIfEmpty(image, "Missing image (img)");
+        this.warnIfEmpty(category, "Missing category (.gl3e .cn)");
+        this.warnIfEmpty(date, "Missing date (#posted_*)");
+        this.warnIfEmpty(pages, "Missing pages");
 
-        if (!style) {
-          debugPrint("[Parser] Missing rating element/style (div.ir)");
-        } else {
-          const match = /background-position:\s*(-?\d+)px\s+(-?\d+)px/.exec(style);
-
-          if (!match) {
-            debugPrint("[Parser] Unexpected rating style format");
-          } else {
-            const x = Number(match[1]);
-            const y = Number(match[2]);
-            if (isNaN(x) || isNaN(y)) {
-              rating = 0;
-            } else {
-              rating = (x + 80) / 16 - (Math.abs(y) === 21 ? 0.5 : 0);
-            }
-          }
+        const artistValue = this.findTagRowValue($, container, "artist:");
+        if (artistValue !== undefined) {
+          this.warnIfEmpty(artistValue, "Artist field exists but value is empty");
         }
-        container.find("td.tc").each((_, td) => {
-          const cell = $(td);
-          const label = cell.text().trim();
+        const artist = artistValue ?? "";
+        const { lang, tags, fullTags } = this.parseRowTags($, container);
 
-          if (label === "artist:") {
-            artist = cell.next("td").find("div").first().text().trim();
-
-            if (!artist) {
-              debugPrint("[Parser] Artist field exists but value is empty");
-            }
-          } else if (label === "language:") {
-            cell
-              .next("td")
-              .find("div.gt, div.gtl")
-              .each((_, el) => {
-                const text = $(el).text().trim();
-
-                if (text && text.toLowerCase() !== "translated") {
-                  lang += `${lang ? " " : ""}${text} ${getLangFlag(text)}`;
-                }
-              });
-            if (!lang) {
-              debugPrint("[Parser] Language field exists but no language found");
-            }
-          }
-          cell
-            .next("td")
-            .find("[style]")
-            .each((_, el) => {
-              const text = $(el).text().trim();
-              if (text) {
-                tags.push(text);
-              }
-            });
-        });
-        if (!lang) {
-          debugPrint("[Parser] No language found, defaulting to Japanese");
-          lang = `Japanese ${getLangFlag("japanese")}`;
-        }
-
-        const subtitle = capitalLetter([lang, artist].filter(Boolean).join(" | "));
         results.push({
           title,
           image,
           url,
           lang,
           artist,
-          subtitle,
+          subtitle: capitalLetter([lang, artist].filter(Boolean).join(" | ")),
           pages,
           category,
           date,
-          rating,
+          rating: this.parseRating(container),
           tags,
+          fullTags,
         });
       });
     debugPrint(`[Parser] parseTable() found ${results.length} results`);
@@ -171,39 +179,21 @@ export class Parser {
   ): Promise<PagedResults<SearchResultItem>> {
     const page = metadata?.page ?? "";
     const html = query.metadata?.favoriteID?.length
-      ? await network.favoriteRequest(`${query.metadata.favoriteID}&next=${page}`)
+      ? await network.fetchHtml(`${query.metadata.favoriteID}&next=${page}`)
       : await network.searchRequest(query, metadata);
     const $ = cheerio.load(html);
-    const parsed = this.parseTable($);
-    const results: SearchResultItem[] = Array.from({ length: parsed.length });
-    for (let i = 0; i < parsed.length; i++) {
-      const item = parsed[i];
-      results[i] = {
-        mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
-        title: this.parseTitle(item.title),
-        imageUrl: item.image,
-        subtitle: item.subtitle,
-        contentRating: ContentRating.ADULT,
-      };
-    }
+    const results: SearchResultItem[] = this.parseTable($).map((item) => ({
+      mangaId: galleryIdFromUrl(item.url),
+      title: this.parseTitle(item.title),
+      imageUrl: item.image,
+      subtitle: item.subtitle,
+      contentRating: ContentRating.ADULT,
+    }));
     debugPrint(`[Parser] parseSearchResults() found ${results.length} results`);
-    if (results.length === 0) {
-      return {
-        items: [],
-        metadata: undefined,
-      };
-    }
-    const href = $("#unext").attr("href");
-    if (!href) {
-      return {
-        items: results,
-        metadata: undefined,
-      };
-    }
-    const nextValue = /next=([^&]+)/.exec(href)?.[1] ?? "";
+    const next = this.getNextPage($);
     return {
       items: results,
-      metadata: nextValue ? { page: nextValue } : undefined,
+      metadata: results.length > 0 && next ? { page: next } : undefined,
     };
   }
 
@@ -217,8 +207,13 @@ export class Parser {
     return this.parseDiscover(html, "recent");
   }
 
+  async parseTop(metadata: Metadata) {
+    const html = await network.getSection("toplist", metadata);
+    return this.parseDiscover(html, "toplist");
+  }
+
   async parseWatched(metadata: Metadata) {
-    await Application.scheduleRequest({ url: `${BASE_URL}/mytags`, method: "GET" });
+    await network.fetchHtml(`${BASE_URL}/mytags`);
     const html = await network.getSection("watched", metadata);
     return this.parseDiscover(html, "watched");
   }
@@ -249,17 +244,11 @@ export class Parser {
     path: string,
   ): Promise<PagedResults<DiscoverSectionItem>> {
     const $ = cheerio.load(html);
-    let nextValue = "";
-    const nextEl = $("#unext");
-    if (nextEl.is("a")) {
-      const href = nextEl.attr("href") ?? "";
-      const match = href.match(/next=([^&]+)/);
-      nextValue = match && match[1] ? match[1] : "";
-    }
+    const next = this.getNextPage($);
     return {
       items: this.parseTable($).map((item) => ({
         type: "featuredCarouselItem",
-        mangaId: item.url.replace(`${BASE_URL}/g/`, ""),
+        mangaId: galleryIdFromUrl(item.url),
         title: this.parseTitle(item.title),
         supertitle: item.category,
         summary: this.generateSummary(item, path),
@@ -270,7 +259,7 @@ export class Parser {
         imageUrl: item.image,
         contentRating: ContentRating.ADULT,
       })),
-      metadata: nextValue.length > 0 ? { page: nextValue } : undefined,
+      metadata: next ? { page: next } : undefined,
     };
   }
 
@@ -294,11 +283,7 @@ export class Parser {
     const tagSectionList: TagSection[] = [];
     const languages: string[] = [];
     let artist = "";
-    if (!additionalMangaInfo.category) {
-      debugPrint("[Parser] Manga category not found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(additionalMangaInfo.category, "Manga category not found", { mangaID });
     tagSectionList.push({
       id: "category",
       title: "Category",
@@ -312,48 +297,24 @@ export class Parser {
 
     const tagList = $("#taglist");
 
-    if (tagList.length === 0) {
-      debugPrint("[Parser] Tag list (#taglist) not found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(tagList.length, "Tag list (#taglist) not found", { mangaID });
 
     const tagRows = tagList.find("tr");
 
-    if (tagRows.length === 0) {
-      debugPrint("[Parser] No tag rows found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(tagRows.length, "No tag rows found", { mangaID });
 
     tagRows.each((_, el) => {
       const row = $(el);
       const categoryText = row.find("td.tc").text().trim();
-      if (!categoryText) {
-        debugPrint("[Parser] Tag row has no category", {
-          mangaID,
-        });
-      }
+      this.warnIfEmpty(categoryText, "Tag row has no category", { mangaID });
       const category = categoryText.split(":", 1)[0];
       const tags: Tag[] = [];
       row.find('td div[class^="gt"] > a').each((_, a) => {
         const tagId = $(a).attr("id") ?? "";
         const tagTitle = capitalLetter($(a).text().trim().replaceAll(/\s+/g, " "));
 
-        if (!tagId) {
-          debugPrint("[Parser] Tag found without ID", {
-            mangaID,
-            category,
-            tagTitle,
-          });
-        }
-        if (!tagTitle) {
-          debugPrint("[Parser] Tag found without title", {
-            mangaID,
-            category,
-            tagId,
-          });
-        }
+        this.warnIfEmpty(tagId, "Tag found without ID", { mangaID, category, tagTitle });
+        this.warnIfEmpty(tagTitle, "Tag found without title", { mangaID, category, tagId });
         const tag: Tag = {
           id: tagId,
           title: tagTitle,
@@ -365,12 +326,10 @@ export class Parser {
         if (category === "language" && tagTitle !== "Translated") {
           const flag = getLangFlag(tagTitle.toLowerCase());
 
-          if (!flag) {
-            debugPrint("[Parser] Language found but no flag available", {
-              mangaID,
-              language: tagTitle,
-            });
-          }
+          this.warnIfEmpty(flag, "Language found but no flag available", {
+            mangaID,
+            language: tagTitle,
+          });
 
           if (tagTitle) {
             languages.push(`${tagTitle} ${flag}`);
@@ -385,45 +344,20 @@ export class Parser {
         });
       }
     });
-    if (!artist) {
-      debugPrint("[Parser] Artist not found", {
-        mangaID,
-      });
-    }
-    if (languages.length === 0) {
-      debugPrint("[Parser] No languages found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(artist, "Artist not found", { mangaID });
+    this.warnIfEmpty(languages.length, "No languages found", { mangaID });
     const style = $("#gd1 > div").attr("style") ?? "";
-    if (!style) {
-      debugPrint("[Parser] Manga cover style not found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(style, "Manga cover style not found", { mangaID });
 
     const imageMatch = /url\(([^)]+)\)/.exec(style);
 
-    if (!imageMatch) {
-      debugPrint("[Parser] Manga cover URL not found", {
-        mangaID,
-        style,
-      });
-    }
+    this.warnIfEmpty(imageMatch, "Manga cover URL not found", { mangaID, style });
 
     const imageUrl = imageMatch?.[1] ?? "";
     const title = $("#gn").text().trim();
     const secondaryTitle = $("#gj").text().trim();
-    if (!title) {
-      debugPrint("[Parser] Manga title (#gn) not found", {
-        mangaID,
-      });
-    }
-    if (!secondaryTitle) {
-      debugPrint("[Parser] Secondary title (#gj) not found", {
-        mangaID,
-      });
-    }
+    this.warnIfEmpty(title, "Manga title (#gn) not found", { mangaID });
+    this.warnIfEmpty(secondaryTitle, "Secondary title (#gj) not found", { mangaID });
     const primaryTitle = this.parseTitle(title);
     const secondaryParsedTitle = this.parseTitle(secondaryTitle);
     const info: MangaInfo = {
@@ -442,12 +376,64 @@ export class Parser {
         uploaded: additionalMangaInfo.posted.replaceAll(" ", "T"),
         favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
       },
-      shareUrl: `${BASE_URL}/g/${mangaID}`,
+      shareUrl: galleryUrl(mangaID),
     };
     return {
       mangaId: mangaID,
       mangaInfo: info,
     };
+  }
+
+  parseFavoriteItem(item: MangaElement): SourceManga {
+    const mangaId = galleryIdFromUrl(item.url);
+    const tagSectionList: TagSection[] = [
+      {
+        id: "category",
+        title: "Category",
+        tags: [
+          {
+            id: item.category.toLowerCase().replaceAll(" ", "_"),
+            title: capitalLetter(item.category),
+          },
+        ],
+      },
+    ];
+
+    const tagsByNamespace = new Map<string, Tag[]>();
+    for (const rawTag of item.fullTags) {
+      const hasNamespace = rawTag.includes(":");
+      const namespace = hasNamespace ? rawTag.split(":")[0] : "other";
+      const name = hasNamespace ? rawTag.slice(namespace.length + 1) : rawTag;
+      if (namespace === "artist" || namespace === "language") continue;
+      const tag: Tag = {
+        id: `ta_${rawTag.replaceAll(" ", "_")}`,
+        title: capitalLetter(name),
+      };
+      tagsByNamespace.set(namespace, [...(tagsByNamespace.get(namespace) ?? []), tag]);
+    }
+    tagsByNamespace.forEach((tags, namespace) => {
+      tagSectionList.push({ id: namespace, title: capitalLetter(namespace), tags });
+    });
+
+    const primaryTitle = this.parseTitle(item.title);
+    const info: MangaInfo = {
+      thumbnailUrl: item.image,
+      synopsis: "",
+      artist: capitalLetter(item.artist),
+      rating: item.rating / 5,
+      secondaryTitles: [],
+      primaryTitle,
+      contentRating: ContentRating.ADULT,
+      tagGroups: tagSectionList,
+      additionalInfo: {
+        title: primaryTitle.split("| ")[1] ?? "",
+        pages: (parseInt(item.pages.replaceAll(",", ""), 10) || 0).toString(), // "25 pages" -> "25"
+        language: item.lang,
+        uploaded: item.date.replaceAll(" ", "T"),
+      },
+      shareUrl: galleryUrl(mangaId),
+    };
+    return { mangaId, mangaInfo: info };
   }
 
   async parseChapters(sourceManga: SourceManga): Promise<Chapter[]> {
@@ -478,39 +464,24 @@ export class Parser {
 
   private parseGalleryInfo($: cheerio.CheerioAPI): GalleryInfo {
     const root = $("#gmid #gd3");
-    if (root.length === 0) {
-      debugPrint("[Parser] Gallery root (#gmid #gd3) not found");
-    }
+    this.warnIfEmpty(root.length, "Gallery root (#gmid #gd3) not found");
     const category = root.find("#gdc div").first().text().trim();
-    if (!category) {
-      debugPrint("[Parser] Gallery category (#gdc) not found");
-    }
+    this.warnIfEmpty(category, "Gallery category (#gdc) not found");
     let uploaderName = root.find("#gdn a").first().text().trim();
     const tags = $("#gmid #gd4");
-    if (tags.length === 0) {
-      debugPrint("[Parser] Gallery tags (#gmid #gd4) not found");
+    this.warnIfEmpty(tags.length, "Gallery tags (#gmid #gd4) not found");
+
+    const artistName = this.findTagRowValue($, tags, "artist:");
+    if (artistName !== undefined) {
+      uploaderName = artistName;
+      this.warnIfEmpty(uploaderName, "Artist/uploader field is empty");
     }
-
-    tags.find("td.tc").each((_, td) => {
-      const label = $(td).text().trim();
-      if (label === "artist:") {
-        uploaderName = $(td).next("td").find("div").first().text().trim();
-
-        if (!uploaderName) {
-          debugPrint("[Parser] Artist/uploader field is empty");
-        }
-
-        return false;
-      }
-    });
     let posted = "";
     let lengthPages = 0;
     let favsText = "";
     let synopsis = "";
     const galleryDetails = $("#gdd");
-    if (galleryDetails.length === 0) {
-      debugPrint("[Parser] Gallery details (#gdd) not found");
-    }
+    this.warnIfEmpty(galleryDetails.length, "Gallery details (#gdd) not found");
     $("#cdiv.gm div.c1").each((comment, el) => {
       if ($(el).find("a[name='ulcomment']").length > 0) {
         let commentHtml = $(el).find("div.c6").html();
@@ -538,20 +509,10 @@ export class Parser {
           .get(),
       });
     }
-    if (lengthPages === 0) {
-      debugPrint("[Parser] Gallery length/pages not found", {
-        posted,
-      });
-    }
-    if (!favsText) {
-      debugPrint("[Parser] Favorite count not found", {
-        posted,
-      });
-    }
+    this.warnIfEmpty(lengthPages, "Gallery length/pages not found", { posted });
+    this.warnIfEmpty(favsText, "Favorite count not found", { posted });
     const ratingText = $("#rating_label").text().replace("Average:", "").replaceAll(".", "").trim();
-    if (!ratingText) {
-      debugPrint("[Parser] Rating text (#rating_label) not found");
-    }
+    this.warnIfEmpty(ratingText, "Rating text (#rating_label) not found");
     const ratingAverage = parseFloat(ratingText);
     if (Number.isNaN(ratingAverage)) {
       debugPrint("[Parser] Rating could not be parsed", {
@@ -577,90 +538,67 @@ export class Parser {
     };
   }
 
-  async getThumbnailNumber(chapter: Chapter): Promise<number> {
-    const html = await Application.scheduleRequest({
-      url: `${BASE_URL}/g/${chapter.chapterId}`,
-      method: "GET",
+  // Links of the pages (/s/...) shown in a gallery page
+  private getPageLinks($: cheerio.CheerioAPI): string[] {
+    const urls: string[] = [];
+    $("#gdt a").each((_, el) => {
+      const href = $(el).attr("href");
+      if (href) urls.push(href);
     });
-    const $ = cheerio.load(Application.arrayBufferToUTF8String(html[1]));
-    return $("#gdt a").length;
+    return urls;
   }
 
   async scrapeAllChapterPagesList(chapter: Chapter) {
     const totalImages = Number(chapter?.additionalInfo?.pages ?? "0");
-    const imagesPerPage = await this.getThumbnailNumber(chapter);
+    if (totalImages === 0) return [];
+
+    // The first gallery page is downloaded only once: it also tells how many thumbnails each page has
+    const firstPage = this.getPageLinks(
+      cheerio.load(await network.mangaDetailRequest(chapter.chapterId)),
+    );
+    const imagesPerPage = firstPage.length;
     debugPrint(`[Parser] Chapter has ${imagesPerPage} thumbnails per page`, {
       chapterId: chapter.chapterId,
       additionalInfo: chapter.additionalInfo,
     });
-    if (totalImages === 0) return [];
-    let totalPages = Math.ceil(totalImages / imagesPerPage);
+    if (imagesPerPage === 0) {
+      debugPrint("[Parser] No pages found in the first gallery page, scraping error");
+      return [];
+    }
+    const totalPages = Math.ceil(totalImages / imagesPerPage);
     debugPrint(`[Parser] Chapter has ${totalImages} images and ${totalPages} pages`, {
       chapterId: chapter.chapterId,
       additionalInfo: chapter.additionalInfo,
     });
-    const pagePromises = Array.from({ length: totalPages }, async (_, page) => {
-      const url = `${BASE_URL}/g/${chapter.chapterId}?p=${page}`;
-      const html = await network.getChapterPages(url);
-      const $ = cheerio.load(html);
-      const urls: string[] = [];
-      $("#gdt a").each((_, el) => {
-        const href = $(el).attr("href");
-        if (href) urls.push(href);
-      });
-      return { page, urls };
-    });
-    const pagesData = await Promise.all(pagePromises);
-    pagesData.sort((a, b) => a.page - b.page);
-    const results: string[] = [];
-    for (let i = 0; i < pagesData.length; i++) {
-      results.push(...pagesData[i].urls);
-      if (results.length >= totalImages) break;
-    }
-    const finalResults = results.slice(0, totalImages);
-    debugPrint(`[Parser] chapters: ${finalResults.length}`);
-    if (finalResults.length === 0) {
-      debugPrint("[Parser] No pages found, scraping error");
-    }
-    return finalResults;
+
+    // pages 1, 2, 3... (page 0 is already done)
+    const otherPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, async (_, i) => {
+        const url = `${galleryUrl(chapter.chapterId)}?p=${i + 1}`;
+        return this.getPageLinks(cheerio.load(await network.fetchHtml(url)));
+      }),
+    );
+
+    // Promise.all keeps the order, so the pages are already sorted
+    const results = [...firstPage, ...otherPages.flat()].slice(0, totalImages);
+    debugPrint(`[Parser] chapters: ${results.length}`);
+    this.warnIfEmpty(results.length, "No pages found, scraping error");
+    return results;
   }
 
   async parseFavoriteList(favoriteID: string): Promise<SourceManga[]> {
-    let html = await network.favoriteRequest(favoriteID);
+    let html = await network.fetchHtml(favoriteID);
     const mangas: SourceManga[] = [];
-    let results: { mangaId: string; title: string }[] = [];
     while (true) {
       const $ = cheerio.load(html);
-      results.push(
-        ...this.parseTable($).map((item) => ({
-          mangaId: item.url?.replace(`${BASE_URL}/g/`, "") ?? "",
-          title: this.parseTitle(item.title),
-        })),
-      );
-      if (results.length === 0) {
-        return mangas;
-      }
-      const href = $("#unext").attr("href");
-      if (!href) {
+      // every row of the list already has all the data we need
+      mangas.push(...this.parseTable($).map((item) => this.parseFavoriteItem(item)));
+      const next = this.getNextPage($);
+      if (!next) {
         break;
       }
-      const nextValue = href.match(/next=([^&]+)/)?.[1];
-      if (!nextValue) {
-        break;
-      }
-      html = await network.favoriteRequest(`${favoriteID}&next=${nextValue}`);
+      html = await network.fetchHtml(`${favoriteID}&next=${next}`);
     }
-    const parsedMangas = await Promise.all(
-      results.map(async ({ mangaId }) => {
-        try {
-          return await this.parseMangaDetail(mangaId);
-        } catch (e) {
-          debugPrint(`Failed to parse manga ${mangaId}`, e);
-          return null;
-        }
-      }),
-    );
-    mangas.push(...parsedMangas.filter((manga): manga is SourceManga => manga !== null));
     debugPrint(`[Parser] Favorite mangas: ${mangas.length}`);
     if (mangas.length === 0) {
       debugPrint("No favorite found");
