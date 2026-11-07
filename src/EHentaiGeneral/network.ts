@@ -11,14 +11,20 @@ import {
 import * as cheerio from "cheerio";
 import {
   debugPrint,
-  getDefLangGloablStatus,
+  getDefLangGlobalStatus,
   getDisabledCustomLang,
   getDisabledCustomTags,
   getDisabledCustomUploader,
   type Metadata,
   type SearchMetadata,
 } from "./utils";
+import { filterKeys } from "./models";
 import { BASE_URL, loginManager, REQUIRE_LOGIN } from "./main";
+
+/** Prefix shared by every gallery URL (`${BASE_URL}/g/`). */
+const galleryPrefix = () => `${BASE_URL}/g/`;
+export const galleryUrl = (mangaId: string) => `${galleryPrefix()}${mangaId}`;
+export const galleryIdFromUrl = (url: string) => url.replace(galleryPrefix(), "");
 
 export const mainRateLimiter = new BasicRateLimiter("main", {
   numberOfRequests: (Application.getState("RateFilter") as number | undefined) ?? 5,
@@ -52,7 +58,7 @@ export class MainInterceptor extends PaperbackInterceptor {
           return request;
         }
       }
-    } else if (request.url.includes(`${BASE_URL}/g/`)) {
+    } else if (request.url.includes(galleryPrefix())) {
       request.cookies = {
         nw: "1",
         ...request.cookies,
@@ -86,7 +92,7 @@ export class MainInterceptor extends PaperbackInterceptor {
       }
       throw new Error(loggedIn ? "An Error occurred. Try re-login." : "Please log in on settings");
     }
-    if (request.url.includes(`${BASE_URL}/g/`) && response.status === 404) {
+    if (request.url.includes(galleryPrefix()) && response.status === 404) {
       throw new Error("This Content is no More Available");
     }
     if (request.cookies) {
@@ -158,23 +164,17 @@ export class Network {
   }
 
   buildFilter(query: string, filter: { id: string; value: string[] }) {
-    if (filter.id === "language" && filter.value[0] === "all") {
+    const isLanguage = filter.id === "language";
+    if (isLanguage && filter.value[0] === "all") {
       return query;
     }
-    filter.value.forEach((rawValue) => {
+    // several languages are combined with OR (`~`), weak tags only exist for non-language filters
+    const or = isLanguage && filter.value.length > 1 ? "~" : "";
+    for (const rawValue of filter.value) {
       const { value, negative, weak } = this.parseFilterValue(rawValue);
-      if (filter.id === "language") {
-        if (negative) {
-          query += ` -${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
-        } else {
-          query += ` ${filter.value.length > 1 ? "~" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
-        }
-      } else if (negative) {
-        query += ` -${weak ? "weak:" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
-      } else {
-        query += ` ${weak ? "weak:" : ""}${filter.id}:${this.fixSpacedFilter(value)}`;
-      }
-    });
+      const weakPrefix = !isLanguage && weak ? "weak:" : "";
+      query += ` ${negative ? "-" : ""}${or}${weakPrefix}${filter.id}:${this.fixSpacedFilter(value)}`;
+    }
     return query;
   }
 
@@ -189,92 +189,58 @@ export class Network {
     return toApply;
   }
 
-  async favoriteRequest(favLink: string) {
-    const data = await Application.scheduleRequest({
-      url: favLink,
-      method: "GET",
-    });
+  /** GET `url` and return the body as text. */
+  async fetchHtml(url: string): Promise<string> {
+    const [, data] = await Application.scheduleRequest({ url, method: "GET" });
+    return Application.arrayBufferToUTF8String(data);
+  }
 
-    return Application.arrayBufferToUTF8String(data[1]);
+  /** `{ all: "included", en: "excluded" }` -> `["all", "-en"]` */
+  private languageToTokens(status: Record<string, "included" | "excluded"> | undefined) {
+    return Object.entries(status ?? {}).map(([lang, state]) =>
+      state === "excluded" ? `-${lang}` : lang,
+    );
+  }
+
+  /** f_cats is a bitmask of the categories to *hide*, so the selected ones are subtracted. */
+  private setCategoryFilter(url: URL, types: string[], skipIfEmpty: boolean) {
+    const selected = types.reduce((total, type) => total + Number(type), 0);
+    if (skipIfEmpty && selected <= 0) return;
+    url.setQueryItem("f_cats", String(1023 - selected));
+  }
+
+  /** Applies the "disable my custom filters" account settings. */
+  private applyCustomFilters(url: URL) {
+    if (getDisabledCustomUploader()) url.setQueryItem("f_sfu", "on");
+    if (getDisabledCustomTags()) url.setQueryItem("f_sft", "on");
+    if (getDisabledCustomLang()) url.setQueryItem("f_sfl", "on");
   }
 
   async searchRequest(query: SearchQuery<SearchMetadata>, metadata: Metadata) {
     const url = new URL(BASE_URL);
     const isValid = (n: number) => Number.isFinite(n) && n > 0;
-    const typeFilter = query.metadata?.type ?? [];
-    const languageFilter = Object.entries(query.metadata?.language ?? {}).map(
-      ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
-    );
-    const characterFilter = query.metadata?.character ?? [];
-    const femaleFilter = query.metadata?.female ?? [];
-    const maleFilter = query.metadata?.male ?? [];
-    const artistFilter = query.metadata?.artist ?? [];
-    const otherFilter = query.metadata?.other ?? [];
-    const mixedFilter = query.metadata?.mixed ?? [];
-    const parodyFilter = query.metadata?.parody ?? [];
     const rating = query.metadata?.rating ?? -1;
 
-    if (typeFilter && typeof typeFilter === "object") {
-      const ratingSum = typeFilter.reduce((totale, valore) => totale + Number(valore), 0);
-      if (ratingSum > 0) {
-        url.setQueryItem("f_cats", String(1023 - ratingSum));
-      }
-    }
-    const filterMap = [
-      {
-        id: "language",
-        value: languageFilter,
-      },
-      {
-        id: "character",
-        value: characterFilter,
-      },
-      {
-        id: "female",
-        value: femaleFilter,
-      },
-      {
-        id: "male",
-        value: maleFilter,
-      },
-      {
-        id: "artist",
-        value: artistFilter,
-      },
-      {
-        id: "other",
-        value: otherFilter,
-      },
-      {
-        id: "mixed",
-        value: mixedFilter,
-      },
-      {
-        id: "parody",
-        value: parodyFilter,
-      },
-    ];
+    this.setCategoryFilter(url, query.metadata?.type ?? [], true);
     if (rating >= 0) {
       url.setQueryItem("f_srdd", rating.toString());
     }
-    filterMap.forEach((filter) => {
+
+    const filters = [
+      { id: "language", value: this.languageToTokens(query.metadata?.language) },
+      ...filterKeys.map((id) => ({ id, value: query.metadata?.[id] ?? [] })),
+    ];
+    for (const filter of filters) {
       query.title = this.buildFilter(query.title, filter);
-    });
+    }
     if (query.title) {
       url.setQueryItem("f_search", query.title);
     }
     if (query.metadata?.expunged) {
       url.setQueryItem("f_sh", "on");
     }
-    if (getDisabledCustomUploader()) {
-      url.setQueryItem("f_sfu", "on");
-    }
-    if (getDisabledCustomTags()) {
-      url.setQueryItem("f_sft", "on");
-    }
-    if (getDisabledCustomLang()) {
-      url.setQueryItem("f_sfl", "on");
-    }
+    this.applyCustomFilters(url);
+
     const min = query.metadata?.minPages ?? 0;
     const max = query.metadata?.maxPages ?? 0;
     if (isValid(min)) url.setQueryItem("f_spf", String(min));
@@ -283,17 +249,10 @@ export class Network {
       url.setQueryItem("next", metadata.page);
     }
 
-    const data = await Application.scheduleRequest({
-      url: url.toString(),
-      method: "GET",
-    });
-
-    return Application.arrayBufferToUTF8String(data[1]);
+    return this.fetchHtml(url.toString());
   }
 
   async getSection(path: string = "", metadata: Metadata) {
-    const filterValue = (Application.getState("_type") as string[]) ?? [];
-    const ratingSum = filterValue.reduce((acc, val) => acc + Number(val), 0);
     const url = new URL(BASE_URL);
     if (path.length > 0) {
       url.setPath(path);
@@ -301,53 +260,25 @@ export class Network {
     if (metadata?.page) {
       url.setQueryItem("next", metadata.page);
     }
-    const languageFilter = getDefLangGloablStatus();
-
-    const languageFilterMap = Object.entries(languageFilter ?? {}).map(
-      ([k, v]) => `${v === "excluded" ? "-" : ""}${k}`,
-    );
-    url.setQueryItem("f_cats", String(1023 - ratingSum));
+    this.setCategoryFilter(url, (Application.getState("_type") as string[]) ?? [], false);
     url.setQueryItem(
       "f_search",
-      this.buildFilter("", { id: "language", value: languageFilterMap }),
+      this.buildFilter("", {
+        id: "language",
+        value: this.languageToTokens(getDefLangGlobalStatus()),
+      }),
     );
-    if (getDisabledCustomUploader()) {
-      url.setQueryItem("f_sfu", "on");
-    }
-    if (getDisabledCustomTags()) {
-      url.setQueryItem("f_sft", "on");
-    }
-    if (getDisabledCustomUploader()) {
-      url.setQueryItem("f_sfl", "on");
-    }
-    const data = await Application.scheduleRequest({
-      url: url.toString(),
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
+    this.applyCustomFilters(url);
+
+    return this.fetchHtml(url.toString());
   }
 
-  async mangaDetailRequest(mangaID: string) {
-    const data = await Application.scheduleRequest({
-      url: `${BASE_URL}/g/${mangaID}`,
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
+  mangaDetailRequest(mangaID: string) {
+    return this.fetchHtml(galleryUrl(mangaID));
   }
-  async getChapterPages(url: string) {
-    const data = await Application.scheduleRequest({
-      url: url,
-      method: "GET",
-    });
-    return Application.arrayBufferToUTF8String(data[1]);
-  }
+
   async getFevList() {
-    const data = await Application.scheduleRequest({
-      url: `${BASE_URL}/favorites.php`,
-      method: "GET",
-    });
-    const html = Application.arrayBufferToUTF8String(data[1]);
-    const $ = cheerio.load(html);
+    const $ = cheerio.load(await this.fetchHtml(`${BASE_URL}/favorites.php`));
     return $("div.fp")
       .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
       .map((_, el) => {
@@ -361,23 +292,18 @@ export class Network {
       })
       .get();
   }
-  async addToFavorite(mangaid: string, cetegoryId: string) {
-    const favcat = cetegoryId.split("favcat=")[1];
-    const [gid, t] = mangaid.split("/");
+  private async postFavorite(mangaId: string, body: string) {
+    const [gid, t] = mangaId.split("/");
     await Application.scheduleRequest({
       url: `${BASE_URL}/gallerypopups.php?gid=${gid}&t=${t}&act=addfav`,
       method: "POST",
-      body: `favcat=${favcat}&favnote=&apply=Add+to+Favorites&update=1`,
+      body,
     });
   }
 
-  async deleteFromFavorite(mangaid: string) {
-    const [gid, t] = mangaid.split("/");
-    await Application.scheduleRequest({
-      url: `${BASE_URL}/gallerypopups.php?gid=${gid}&t=${t}&act=addfav`,
-      method: "POST",
-      body: `favcat=favdel&favnote=&apply=Apply+Changes&update=1`,
-    });
+  async addToFavorite(mangaid: string, cetegoryId: string) {
+    const favcat = cetegoryId.split("favcat=")[1];
+    await this.postFavorite(mangaid, `favcat=${favcat}&favnote=&apply=Add+to+Favorites&update=1`);
   }
 }
 
@@ -417,10 +343,8 @@ export class LogInManager {
       cookies
         .filter((cookie) => this.isAuthCookie(cookie))
         .forEach((cookie) => {
-          if (this.AUTH_COOKIE_NAMES.has(cookie.name)) {
-            cookie.domain = BASE_URL.split("https://")[1];
-            this.loginCookieStorageInterceptor.setCookie(cookie);
-          }
+          cookie.domain = BASE_URL.split("https://")[1];
+          this.loginCookieStorageInterceptor.setCookie(cookie);
         });
       Application.setSecureState(this.getAccountID(), `${BASE_URL}_username`);
       Application.invalidateDiscoverSections();

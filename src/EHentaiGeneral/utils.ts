@@ -1,4 +1,4 @@
-import { type BaseMetadata, type FilterKey, languageAll } from "./models";
+import { type BaseMetadata, type FilterKey, filterKeys, languageAll, typeFilter } from "./models";
 
 export type Metadata = { page: string };
 
@@ -7,20 +7,39 @@ export function getLangFlag(lang: string) {
   return langFlag?.flag ?? "";
 }
 
-export function getDefLangStatus(): Record<string, "excluded" | "included"> {
-  return (
-    (Application.getState("_languages") as Record<string, "excluded" | "included"> | undefined) ?? {
-      all: "included",
-    }
-  );
+export type LanguageStatus = Record<string, "excluded" | "included">;
+
+function getLanguageState(key: string): LanguageStatus {
+  return (Application.getState(key) as LanguageStatus | undefined) ?? { all: "included" };
 }
 
-export function getDefLangGloablStatus(): Record<string, "excluded" | "included"> {
-  return (
-    (Application.getState("_globalLanguages") as
-      | Record<string, "excluded" | "included">
-      | undefined) ?? { all: "included" }
-  );
+export function getDefLangStatus(): LanguageStatus {
+  return getLanguageState("_languages");
+}
+
+export function getDefLangGlobalStatus(): LanguageStatus {
+  return getLanguageState("_globalLanguages");
+}
+
+/**
+ * Normalizes a language selection coming from a TriStateSelectRow:
+ * - "all" can never be excluded
+ * - selecting "all" clears every other language
+ * - selecting another language while "all" is active drops "all"
+ * - an empty selection falls back to "all"
+ */
+export function normalizeLanguageSelection(
+  previous: LanguageStatus,
+  value: LanguageStatus,
+): LanguageStatus {
+  if (value.all === "excluded") value.all = "included";
+
+  const hadAll = previous.all === "included";
+  const hasAll = value.all === "included";
+
+  if (!hadAll && hasAll) return { all: "included" };
+  if (hadAll && hasAll && Object.keys(value).length > 1) delete value.all;
+  return Object.keys(value).length === 0 ? { all: "included" } : value;
 }
 
 export function getLanguages() {
@@ -29,85 +48,45 @@ export function getLanguages() {
     : [{ id: "all", value: "All", flag: "🌍" }, ...languageAll];
 }
 
+export function getTypeOptions(): { id: string; title: string }[] {
+  return typeFilter.map((type) => ({ id: type.id, title: type.value }));
+}
+
+export function getLanguageOptions(): { id: string; title: string }[] {
+  return getLanguages().map((lang) => ({ id: lang.id, title: `${lang.flag} ${lang.value}` }));
+}
+
 type FilterMetadata = Partial<Record<FilterKey, string[]>>;
 export type SearchMetadata = BaseMetadata & FilterMetadata;
 
-export function getDefaultCharacter() {
-  return ((Application.getState("_character") as string | undefined) ?? "")
-    .split(",")
-    .filter(Boolean);
+/** Comma separated list stored in the app state, as an array without empty entries. */
+export function getStateList(key: string): string[] {
+  return ((Application.getState(`_${key}`) as string | undefined) ?? "").split(",").filter(Boolean);
 }
-export function getDefaultFemale() {
-  return ((Application.getState("_female") as string | undefined) ?? "").split(",").filter(Boolean);
+
+function getBoolState(key: string): boolean {
+  return (Application.getState(`_${key}`) as boolean | undefined) ?? false;
 }
-export function getDefaultMale() {
-  return ((Application.getState("_male") as string | undefined) ?? "").split(",").filter(Boolean);
-}
-export function getDefaultOther() {
-  return ((Application.getState("_other") as string | undefined) ?? "").split(",").filter(Boolean);
-}
-export function getDefaultCosplayer() {
-  return ((Application.getState("_cosplayer") as string | undefined) ?? "")
-    .split(",")
-    .filter(Boolean);
-}
-export function getDefaultArtist() {
-  return ((Application.getState("_artist") as string | undefined) ?? "").split(",").filter(Boolean);
-}
-export function getDefaultParody() {
-  return ((Application.getState("_parody") as string | undefined) ?? "").split(",").filter(Boolean);
-}
-export function getDefaultMixed() {
-  return ((Application.getState("_mixed") as string | undefined) ?? "").split(",").filter(Boolean);
-}
-export function getDefaultGroup() {
-  return ((Application.getState("_group") as string | undefined) ?? "").split(",").filter(Boolean);
-}
+
 export function getDefaultMetadata(favoriteID: string = ""): SearchMetadata {
-  const character = getDefaultCharacter();
-  const female = getDefaultFemale();
-  const male = getDefaultMale();
-  const other = getDefaultOther();
-  const cosplayer = getDefaultCosplayer();
-  const artist = getDefaultArtist();
-  const parody = getDefaultParody();
-  const mixed = getDefaultMixed();
-  const group = getDefaultGroup();
+  const filters: FilterMetadata = {};
+  for (const key of filterKeys) {
+    const list = getStateList(key);
+    if (list.length > 0) filters[key] = list;
+  }
   return {
     type: (Application.getState("_type") as string[]) ?? [],
     language: getDefLangStatus(),
-    ...(character.length > 0 && { character }),
-    ...(female.length > 0 && { female }),
-    ...(male.length > 0 && { male }),
-    ...(other.length > 0 && { other }),
-    ...(cosplayer.length > 0 && { cosplayer }),
-    ...(artist.length > 0 && { artist }),
-    ...(parody.length > 0 && { parody }),
-    ...(mixed.length > 0 && { mixed }),
-    ...(group.length > 0 && { group }),
+    ...filters,
     ...(favoriteID.length > 0 && { favoriteID }),
   };
 }
 
-export function getDisabledCustomLang() {
-  return (Application.getState("_custom_lang") as boolean | undefined) ?? false;
-}
-
-export function getDisabledCustomUploader() {
-  return (Application.getState("_custom_upl") as boolean | undefined) ?? false;
-}
-
-export function getDisabledCustomTags() {
-  return (Application.getState("_custom_tags") as boolean | undefined) ?? false;
-}
-
-export function getDebugMode() {
-  return (Application.getState("_debug") as boolean | undefined) ?? false;
-}
-
-export function getHideEmptyFav() {
-  return (Application.getState("_emptyFav") as boolean | undefined) ?? false;
-}
+export const getDisabledCustomLang = () => getBoolState("custom_lang");
+export const getDisabledCustomUploader = () => getBoolState("custom_upl");
+export const getDisabledCustomTags = () => getBoolState("custom_tags");
+export const getDebugMode = () => getBoolState("debug");
+export const getHideEmptyFav = () => getBoolState("emptyFav");
 
 export function capitalLetter(str: string): string {
   return str

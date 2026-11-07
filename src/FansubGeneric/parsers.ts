@@ -13,40 +13,30 @@ import {
   type TagSection,
 } from "@paperback/types";
 import FansubGeneral from "./main";
-import type {
-  BaseMetadata,
-  ComicDetailResponse,
-  ComicListItem,
-  ComicsListResponse,
-} from "./models";
+import type { BaseMetadata, ComicListItem } from "./models";
+
+const toContentRating = (adult: number) =>
+  adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE;
 
 export class FansubGeneralParsers {
   async parseSearchResults(
     query: SearchQuery<BaseMetadata>,
     source: FansubGeneral,
   ): Promise<PagedResults<SearchResultItem>> {
-    const jsonRequest = await source.requestManager.apiSearchResult(query);
-    const json = JSON.parse(jsonRequest) as ComicsListResponse;
-    const mangas: SearchResultItem[] = [];
-    json.comics.forEach((comic: ComicListItem) => {
-      mangas.push({
+    const json = await source.requestManager.apiSearchResult(query);
+    return {
+      items: json.comics.map((comic: ComicListItem) => ({
         mangaId: comic.slug,
         title: comic.title,
         imageUrl: comic.thumbnail,
-        contentRating: comic.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
-      });
-    });
-    return {
-      items: mangas,
+        contentRating: toContentRating(comic.adult),
+      })),
     };
   }
 
   async parseMangaDetails(mangaid: string, source: FansubGeneral): Promise<SourceManga> {
-    const jsonRequest = await source.requestManager.apiMangaDetails(mangaid);
-    const json = JSON.parse(jsonRequest) as ComicDetailResponse;
-    const comic = json.comic;
-    const tags = comic.genres;
-    const genres: Tag[] = tags.map((tag) => ({
+    const { comic } = await source.requestManager.apiMangaDetails(mangaid);
+    const genres: Tag[] = comic.genres.map((tag) => ({
       id: tag.slug,
       title: tag.name,
     }));
@@ -56,7 +46,7 @@ export class FansubGeneralParsers {
       synopsis: comic.description ?? "",
       primaryTitle: comic.title,
       secondaryTitles: comic.alt_titles,
-      contentRating: comic.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
+      contentRating: toContentRating(comic.adult),
       status: comic.status ?? "",
       artist: comic.artist ?? "",
       author: comic.author ?? "",
@@ -67,32 +57,24 @@ export class FansubGeneralParsers {
   }
 
   async parseChapters(sourceManga: SourceManga, source: FansubGeneral): Promise<Chapter[]> {
-    const chapters: Chapter[] = [];
-    const jsonRequest = await source.requestManager.apiMangaDetails(sourceManga.mangaId);
-    const json = JSON.parse(jsonRequest) as ComicDetailResponse;
-    const comic = json.comic;
-    comic.chapters.forEach((chapter) => {
-      chapters.push({
-        chapterId: chapter.url,
-        sourceManga: sourceManga,
-        langCode: chapter.language,
-        chapNum: chapter.chapter ?? 0,
-        title: chapter.title ?? chapter.full_title ?? "",
-        version: chapter.teams[0]?.name ?? "",
-        volume: chapter.volume ?? 0,
-        publishDate: new Date(chapter.published_on),
-      });
-    });
-    return chapters;
+    const { comic } = await source.requestManager.apiMangaDetails(sourceManga.mangaId);
+    return comic.chapters.map((chapter) => ({
+      chapterId: chapter.url,
+      sourceManga: sourceManga,
+      langCode: chapter.language,
+      chapNum: chapter.chapter ?? 0,
+      title: chapter.title ?? chapter.full_title ?? "",
+      version: chapter.teams[0]?.name ?? "",
+      volume: chapter.volume ?? 0,
+      publishDate: new Date(chapter.published_on),
+    }));
   }
 
   async parseSectionHome(
     source: FansubGeneral,
-    section: DiscoverSection,
+    _section: DiscoverSection,
   ): Promise<PagedResults<DiscoverSectionItem>> {
-    const _ = section;
-    const jsonRequest = await source.requestManager.apiMangaDetails("", true);
-    const json = JSON.parse(jsonRequest) as ComicsListResponse;
+    const json = await source.requestManager.apiLatestComics();
     const items: DiscoverSectionItem[] = json.comics.map((manga) => ({
       type: "chapterUpdatesCarouselItem",
       mangaId: manga.slug,
@@ -101,7 +83,7 @@ export class FansubGeneralParsers {
       title: manga.title,
       subtitle: manga.last_chapter.title ?? manga.last_chapter.full_title,
       publishDate: new Date(manga.last_chapter.published_on),
-      contentRating: manga.adult == 1 ? ContentRating.ADULT : ContentRating.EVERYONE,
+      contentRating: toContentRating(manga.adult),
     }));
     return { items: items };
   }
