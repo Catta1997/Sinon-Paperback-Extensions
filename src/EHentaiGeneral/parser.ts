@@ -233,7 +233,7 @@ export class Parser {
           title: "",
           metadata: getDefaultMetadata(favorite.id),
         },
-        name: favorite.value,
+        name: favorite.title,
         contentRating: ContentRating.ADULT,
       })),
     };

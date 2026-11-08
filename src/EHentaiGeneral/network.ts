@@ -283,11 +283,11 @@ export class Network {
       .filter((_, el) => $(el).children("div").length === 3) // Skip "Show All Favorites"
       .map((_, el) => {
         const $el = $(el);
-        const rating = Number($el.children("div").eq(0).text().trim());
+        const favNumber = Number($el.children("div").eq(0).text().trim());
         return {
           id: $el.attr("onclick")?.match(/'([^']+)'/)?.[1] ?? "",
-          value: $el.children("div").eq(2).text().trim(),
-          number: isNaN(rating) ? rating : 0,
+          title: $el.children("div").eq(2).text().trim(),
+          number: isNaN(favNumber) ? 0 : favNumber,
         };
       })
       .get();
