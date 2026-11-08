@@ -118,16 +118,15 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
   async applyManagedCollectionChanges(
     changes: ManagedCollectionChange[],
   ): Promise<ManagedCollectionChangeFailure[]> {
-    const deletions: ManagedCollectionChangeFailure[] = [];
+    const unsupported: ManagedCollectionChangeFailure[] = [];
     for (const manga of changes) {
       if (manga.type === "add" || manga.type === "move") {
-        await network.addToFavorite(manga.id, manga.to.id);
-      }
-      if (manga.type === "remove") {
-        deletions.push({ changeId: manga.id, reason: "Delete not implemented" });
+        await network.addToFavorite(manga.sourceManga.mangaId, manga.to.id);
+      } else {
+        unsupported.push({ changeId: manga.sourceManga.mangaId, reason: `Method “${manga.type}“ not implemented` });
       }
     }
-    return deletions;
+    return unsupported;
   }
 
   async getManagedCollectionItems(
@@ -143,12 +142,7 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
 
   async getManagedCollections(): Promise<ManagedCollection[]> {
     const favorites = await network.getFevList();
-    return favorites.map((fav) => ({ id: fav.id, title: fav.value, exclusiveGroup: "favorite" }));
-  }
-
-  async getManagedLibraryCollections(): Promise<ManagedCollection[]> {
-    const favorites = await network.getFevList();
-    return favorites.map((fav) => ({ id: fav.id, title: fav.value }));
+    return favorites.map((fav) => ({ id: fav.id, title: fav.title, exclusiveGroup: "favorite" }));
   }
 
   async redirectHandler(proposedRequest: Request, _response: Response) {
