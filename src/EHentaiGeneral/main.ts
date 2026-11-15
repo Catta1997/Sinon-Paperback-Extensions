@@ -123,7 +123,10 @@ export class EHentaiGeneralExtension implements ExtensionImpl<typeof basePbConfi
       if (manga.type === "add" || manga.type === "move") {
         await network.addToFavorite(manga.sourceManga.mangaId, manga.to.id);
       } else {
-        unsupported.push({ changeId: manga.sourceManga.mangaId, reason: `Method “${manga.type}“ not implemented` });
+        unsupported.push({
+          changeId: manga.sourceManga.mangaId,
+          reason: `Method “${manga.type}“ not implemented`,
+        });
       }
     }
     return unsupported;

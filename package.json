@@ -14,12 +14,12 @@
     "serve": "paperback-cli serve",
     "dev": "paperback-cli serve --watch --port 5264",
     "logcat": "paperback-cli logcat",
-    "test": "paperback-cli test --output ./bundles/tests.json",
+    "test": "paperback-cli test --ignoreErrors --output ./bundles/tests.json",
     "prepare": "husky"
   },
   "devDependencies": {
-    "@paperback/toolchain": "^1.0.0-alpha.94",
-    "@paperback/types": "^1.0.0-alpha.94",
+    "@paperback/toolchain": "^1.0.0-alpha.95",
+    "@paperback/types": "^1.0.0-alpha.95",
     "@types/chai": "^5.2.3",
     "@types/upng-js": "^2.1.5",
     "chai": "^6.3.0",

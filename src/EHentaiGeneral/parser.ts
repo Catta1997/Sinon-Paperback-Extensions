@@ -3,6 +3,8 @@ import {
   ContentRating,
   type DiscoverSectionItem,
   type MangaInfo,
+  type MangaInfoPerson,
+  type MangaInfoStaffSection,
   type PagedResults,
   type SearchQuery,
   type SearchResultItem,
@@ -294,15 +296,12 @@ export class Parser {
         },
       ],
     });
-
     const tagList = $("#taglist");
-
     this.warnIfEmpty(tagList.length, "Tag list (#taglist) not found", { mangaID });
-
     const tagRows = tagList.find("tr");
-
     this.warnIfEmpty(tagRows.length, "No tag rows found", { mangaID });
-
+    const characters: MangaInfoPerson[] = [];
+    const artists: MangaInfoPerson[] = [];
     tagRows.each((_, el) => {
       const row = $(el);
       const categoryText = row.find("td.tc").text().trim();
@@ -312,7 +311,6 @@ export class Parser {
       row.find('td div[class^="gt"] > a').each((_, a) => {
         const tagId = $(a).attr("id") ?? "";
         const tagTitle = capitalLetter($(a).text().trim().replaceAll(/\s+/g, " "));
-
         this.warnIfEmpty(tagId, "Tag found without ID", { mangaID, category, tagTitle });
         this.warnIfEmpty(tagTitle, "Tag found without title", { mangaID, category, tagId });
         const tag: Tag = {
@@ -343,16 +341,29 @@ export class Parser {
           tags,
         });
       }
+      if (category === "character") {
+        tags.forEach((t) => {
+          characters.push({
+            imageUrl: "",
+            title: capitalLetter(t.title),
+          });
+        });
+      }
+      if (category === "artist") {
+        tags.forEach((t) => {
+          artists.push({
+            imageUrl: "",
+            title: capitalLetter(t.title),
+          });
+        });
+      }
     });
     this.warnIfEmpty(artist, "Artist not found", { mangaID });
     this.warnIfEmpty(languages.length, "No languages found", { mangaID });
     const style = $("#gd1 > div").attr("style") ?? "";
     this.warnIfEmpty(style, "Manga cover style not found", { mangaID });
-
     const imageMatch = /url\(([^)]+)\)/.exec(style);
-
     this.warnIfEmpty(imageMatch, "Manga cover URL not found", { mangaID, style });
-
     const imageUrl = imageMatch?.[1] ?? "";
     const title = $("#gn").text().trim();
     const secondaryTitle = $("#gj").text().trim();
@@ -360,6 +371,20 @@ export class Parser {
     this.warnIfEmpty(secondaryTitle, "Secondary title (#gj) not found", { mangaID });
     const primaryTitle = this.parseTitle(title);
     const secondaryParsedTitle = this.parseTitle(secondaryTitle);
+    const staffSection: MangaInfoStaffSection[] = [
+      {
+        type: "staff",
+        id: "character",
+        title: "Characters",
+        items: characters.map((c) => ({ id: c.title, staff: c })),
+      },
+      {
+        type: "staff",
+        id: "artist",
+        title: "Artists",
+        items: artists.map((c) => ({ id: c.title, staff: c })),
+      },
+    ];
     const info: MangaInfo = {
       thumbnailUrl: imageUrl,
       synopsis: additionalMangaInfo.synopsis,
@@ -369,12 +394,13 @@ export class Parser {
       primaryTitle,
       contentRating: ContentRating.ADULT,
       tagGroups: tagSectionList,
+      extras: staffSection,
       additionalInfo: {
-        title: primaryTitle.split("| ")[1] ?? "",
-        pages: additionalMangaInfo.length.pages.toString(),
-        language: languages.join(" | "),
-        uploaded: additionalMangaInfo.posted.replaceAll(" ", "T"),
-        favorite: additionalMangaInfo.favs.text.replaceAll("times", "favorite"),
+        Title: primaryTitle.split("| ")[1] ?? "",
+        Pages: additionalMangaInfo.length.pages.toString(),
+        Language: languages.join(" | "),
+        Uploaded: additionalMangaInfo.posted,
+        Favorite: additionalMangaInfo.favs.text.replaceAll("times", ""),
       },
       shareUrl: galleryUrl(mangaID),
     };
@@ -400,6 +426,8 @@ export class Parser {
     ];
 
     const tagsByNamespace = new Map<string, Tag[]>();
+    const characters: MangaInfoPerson[] = [];
+    const artists: MangaInfoPerson[] = [];
     for (const rawTag of item.fullTags) {
       const hasNamespace = rawTag.includes(":");
       const namespace = hasNamespace ? rawTag.split(":")[0] : "other";
@@ -409,12 +437,37 @@ export class Parser {
         id: `ta_${rawTag.replaceAll(" ", "_")}`,
         title: capitalLetter(name),
       };
+      if (namespace === "character") {
+        characters.push({
+          imageUrl: "",
+          title: capitalLetter(name),
+        });
+      }
+      if (namespace === "artist") {
+        artists.push({
+          imageUrl: "",
+          title: capitalLetter(name),
+        });
+      }
       tagsByNamespace.set(namespace, [...(tagsByNamespace.get(namespace) ?? []), tag]);
     }
     tagsByNamespace.forEach((tags, namespace) => {
       tagSectionList.push({ id: namespace, title: capitalLetter(namespace), tags });
     });
-
+    const staffSection: MangaInfoStaffSection[] = [
+      {
+        type: "staff",
+        id: "character",
+        title: "Characters",
+        items: characters.map((c) => ({ id: c.title, staff: c })),
+      },
+      {
+        type: "staff",
+        id: "artist",
+        title: "Artists",
+        items: artists.map((c) => ({ id: c.title, staff: c })),
+      },
+    ];
     const primaryTitle = this.parseTitle(item.title);
     const info: MangaInfo = {
       thumbnailUrl: item.image,
@@ -424,12 +477,13 @@ export class Parser {
       secondaryTitles: [],
       primaryTitle,
       contentRating: ContentRating.ADULT,
+      extras: staffSection,
       tagGroups: tagSectionList,
       additionalInfo: {
-        title: primaryTitle.split("| ")[1] ?? "",
-        pages: (parseInt(item.pages.replaceAll(",", ""), 10) || 0).toString(), // "25 pages" -> "25"
-        language: item.lang,
-        uploaded: item.date.replaceAll(" ", "T"),
+        Title: primaryTitle.split("| ")[1] ?? "",
+        Pages: (parseInt(item.pages.replaceAll(",", ""), 10) || 0).toString(), // "25 pages" -> "25"
+        Language: item.lang,
+        Uploaded: item.date,
       },
       shareUrl: galleryUrl(mangaId),
     };
@@ -446,9 +500,9 @@ export class Parser {
         chapNum: 1,
         volume: 0,
         langCode: info?.language ?? "",
-        publishDate: new Date(info?.uploaded ?? ""),
-        version: info?.pages ? `${info?.pages} Pages` : "",
-        additionalInfo: { pages: info?.pages ?? "0" },
+        publishDate: new Date(info?.uploaded ? info.uploaded.replaceAll(" ", "T") : ""),
+        version: info?.pages ? `${info?.Pages} Pages` : "",
+        additionalInfo: { Pages: info?.Pages ?? "0" },
       },
     ];
   }
@@ -549,7 +603,7 @@ export class Parser {
   }
 
   async scrapeAllChapterPagesList(chapter: Chapter) {
-    const totalImages = Number(chapter?.additionalInfo?.pages ?? "0");
+    const totalImages = Number(chapter?.additionalInfo?.Pages ?? "0");
     if (totalImages === 0) return [];
 
     // The first gallery page is downloaded only once: it also tells how many thumbnails each page has

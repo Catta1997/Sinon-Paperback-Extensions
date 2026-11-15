@@ -34,8 +34,8 @@ abstract class FansubGeneral implements ExtensionImpl<typeof basePbConfig> {
   requestManager: APIRequests;
   mainRateLimiter: BasicRateLimiter;
   mainInterceptor: MainInterceptor;
-  cloudflareInterceptor: CloudflareInterceptor;
   httpErrorInterceptor: HttpErrorInterceptor;
+  cloudflareInterceptor: CloudflareInterceptor;
 
   protected constructor(params: FansubGenericParams) {
     this.name = params.name;
@@ -61,8 +61,8 @@ abstract class FansubGeneral implements ExtensionImpl<typeof basePbConfig> {
   async initialise(): Promise<void> {
     this.mainRateLimiter.registerInterceptor();
     this.mainInterceptor.registerInterceptor();
-    this.cloudflareInterceptor.registerInterceptor();
     this.httpErrorInterceptor.registerInterceptor();
+    this.cloudflareInterceptor.registerInterceptor();
   }
 
   getChapterDetails(chapter: Chapter): Promise<ChapterDetails> {
