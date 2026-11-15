@@ -343,17 +343,21 @@ export class Parser {
       }
       if (category === "character") {
         tags.forEach((t) => {
+          const parts = t.id?.split("ta_character:");
+          const normId = parts && parts.length > 1 ? parts[1].replaceAll("_", " ") : "";
           characters.push({
             imageUrl: "",
-            title: capitalLetter(t.title),
+            title: capitalLetter(normId),
           });
         });
       }
       if (category === "artist") {
         tags.forEach((t) => {
+          const parts = t.id?.split("ta_artist:");
+          const normId = parts && parts.length > 1 ? parts[1].replaceAll("_", " ") : "";
           artists.push({
             imageUrl: "",
-            title: capitalLetter(t.title),
+            title: capitalLetter(normId),
           });
         });
       }
@@ -438,15 +442,19 @@ export class Parser {
         title: capitalLetter(name),
       };
       if (namespace === "character") {
+        const parts = rawTag.split("ta_character:");
+        const normId = parts && parts.length > 1 ? parts[1].replaceAll("_", " ") : "";
         characters.push({
           imageUrl: "",
-          title: capitalLetter(name),
+          title: capitalLetter(normId),
         });
       }
       if (namespace === "artist") {
+        const parts = rawTag.split("ta_artist:");
+        const normId = parts && parts.length > 1 ? parts[1].replaceAll("_", " ") : "";
         artists.push({
           imageUrl: "",
-          title: capitalLetter(name),
+          title: capitalLetter(normId),
         });
       }
       tagsByNamespace.set(namespace, [...(tagsByNamespace.get(namespace) ?? []), tag]);
