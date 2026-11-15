@@ -330,7 +330,7 @@ export class Parser {
           });
 
           if (tagTitle) {
-            languages.push(`${tagTitle} ${flag}`);
+            languages.push(`${tagTitle.split("|")[0]} ${flag}`);
           }
         }
       });
@@ -495,13 +495,13 @@ export class Parser {
     return [
       {
         chapterId: sourceManga.mangaId,
-        title: info?.title ?? undefined,
+        title: info?.Title ?? undefined,
         sourceManga: sourceManga,
         chapNum: 1,
         volume: 0,
-        langCode: info?.language ?? "",
-        publishDate: new Date(info?.uploaded ? info.uploaded.replaceAll(" ", "T") : ""),
-        version: info?.pages ? `${info?.Pages} Pages` : "",
+        langCode: info?.Language ?? "",
+        publishDate: new Date(info?.Uploaded ? info.Uploaded.replaceAll(" ", "T") : ""),
+        version: info?.Pages ? `${info?.Pages} Pages` : "",
         additionalInfo: { Pages: info?.Pages ?? "0" },
       },
     ];
