@@ -1,5 +1,5 @@
 {
-  "buildTime": "2026-11-15T16:16:04.347Z",
+  "buildTime": "2026-11-15T18:32:35.906Z",
   "builtWith": {
     "toolchain": "1.0.0-alpha.95",
     "types": "1.0.0-alpha.95"
@@ -39,7 +39,7 @@
     {
       "name": "EHentai",
       "description": "Extension that pulls content from EHentai.org",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
@@ -61,7 +61,7 @@
     {
       "name": "ExHentai",
       "description": "Extension that pulls content from ExHentai.org\nRequire a login to work",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "icon": "icon.png",
       "contentRating": "ADULT",
       "capabilities": [
