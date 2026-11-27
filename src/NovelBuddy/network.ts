@@ -74,7 +74,7 @@ export class NovelBuddyNetwork {
 
   async getNovel(id: string) {
     const request: Request = {
-      url: `https://novelbuddy.com/${id}`,
+      url: `${this.domain}${id}`,
       method: "GET",
     };
 
